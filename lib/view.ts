@@ -155,3 +155,31 @@ export function safetyLine(c: { row: { points: number }; remaining: number; safe
   if (need === 0) return "Already past 38 points. Annoying.";
   return `They need ${need} more points to reach 38, the usual survival mark. That's ${(need / Math.max(1, c.remaining)).toFixed(1)} a game. Good luck with that.`;
 }
+
+/** Real numbers for the Sunderland roast banner (league games only for wins). */
+export function roastFacts(s: Snapshot) {
+  const sun = clubView(s, SUNDERLAND_ID);
+  const nufc = clubView(s, NEWCASTLE_ID);
+  if (!sun || !nufc) return null;
+  const r = (f: Fixture) => {
+    const home = f.homeId === SUNDERLAND_ID;
+    const gf = home ? f.homeGoals! : f.awayGoals!;
+    const ga = home ? f.awayGoals! : f.homeGoals!;
+    return { r: (gf > ga ? "W" : gf === ga ? "D" : "L") as "W" | "D" | "L", gf, ga, opp: clubName(s, home ? f.awayId : f.homeId) };
+  };
+  const last = sun.fixtures.recent[0];
+  const lastWin = sun.fixtures.recent.filter((f) => (f.leagueId ?? 39) === 39).find((f) => r(f).r === "W");
+  const day = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "Europe/London" });
+  return {
+    position: sun.row.position,
+    leagueSize: s.table.length,
+    points: sun.row.points,
+    won: sun.row.won,
+    played: sun.row.played,
+    daysSinceWin: lastWin ? Math.floor((Date.now() - Date.parse(lastWin.kickoff)) / 86_400_000) : null,
+    lastWinAgainst: lastWin ? `${r(lastWin).opp}, ${day(lastWin.kickoff)}` : null,
+    lastResult: last ? r(last) : null,
+    belowUs: nufc.row.position < sun.row.position,
+    gapToUs: nufc.row.points - sun.row.points,
+  };
+}

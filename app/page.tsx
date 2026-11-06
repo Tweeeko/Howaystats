@@ -3,10 +3,12 @@ import { getNews, getSnapshot } from "@/lib/database/queries";
 import { buildLivePayload } from "@/lib/live";
 import { NEWCASTLE_ID, SUNDERLAND_ID } from "@/lib/football/provider";
 import { backPageHeadline } from "@/lib/headline";
-import { clubName, clubView, meterView, ordinal } from "@/lib/view";
+import { clubName, clubView, meterView, ordinal, roastFacts } from "@/lib/view";
 import type { Fixture } from "@/lib/types";
 import { Form, NotConnected } from "@/components/football";
 import { LiveScoreboards } from "@/components/live";
+import { Roast } from "@/components/roast";
+import { TearJar } from "@/components/tear-jar";
 import { Advert, Banner, Page, PrintStory, Scoreboard, Ticket, programmeDay } from "@/components/programme";
 
 export const revalidate = 60;
@@ -89,6 +91,8 @@ export default async function Home() {
 
   const [sunLead, ...sunRest] = sunNews;
 
+  const roast = roastFacts(s);
+
   return (
     <div>
       {live.fixtures.length > 0 && (
@@ -96,6 +100,8 @@ export default async function Home() {
           <LiveScoreboards initial={live} />
         </section>
       )}
+
+      {roast && <Roast f={roast} />}
 
       {/* COVER */}
       <section className="relative">
@@ -109,7 +115,7 @@ export default async function Home() {
           </div>
           {head && (
             <>
-              <h1 className="tabloid mt-8 max-w-4xl text-[clamp(3.6rem,13vw,8.5rem)] drop-shadow-[0_3px_14px_rgba(0,0,0,.75)]">{head.main}</h1>
+              <h2 className="tabloid mt-8 max-w-4xl text-[clamp(2.8rem,10vw,6rem)] drop-shadow-[0_3px_14px_rgba(0,0,0,.75)]">{head.main}</h2>
               <p className="serif mt-4 max-w-2xl text-xl leading-snug text-chalk drop-shadow-[0_2px_8px_rgba(0,0,0,.9)] sm:text-2xl">{head.sub}</p>
             </>
           )}
@@ -130,29 +136,42 @@ export default async function Home() {
       </section>
 
       <div className="mx-auto grid max-w-5xl gap-12 px-4">
-        {/* p.2 Result of the week + scoreboard */}
+        {/* p.2 Result of the week, the jar, the scoreboard */}
         <div id="result" className="grid items-start gap-8 md:grid-cols-2">
-          <div className="grid gap-8">
-            {sLast && (
-              <div>
-                <div className="kicker mb-3 !text-chalk">p.2 · Result of the week</div>
-                <Ticket
-                  mackem
-                  label={(sLast.leagueId ?? 39) === 39 ? "Premier League" : sLast.competition ?? "Cup"}
-                  home={name(sLast.homeId)}
-                  away={name(sLast.awayId)}
-                  hg={sLast.homeGoals!}
-                  ag={sLast.awayGoals!}
-                  when={programmeDay(sLast.kickoff)}
-                  where={sLast.homeId === SUNDERLAND_ID ? "Stadium of Light" : "Away end"}
-                  stub={stubFor}
-                />
-              </div>
-            )}
+          {sLast && (
+            <div>
+              <div className="kicker mb-3 !text-chalk">p.2 · Result of the week</div>
+              <Ticket
+                mackem
+                label={(sLast.leagueId ?? 39) === 39 ? "Premier League" : sLast.competition ?? "Cup"}
+                home={name(sLast.homeId)}
+                away={name(sLast.awayId)}
+                hg={sLast.homeGoals!}
+                ag={sLast.awayGoals!}
+                when={programmeDay(sLast.kickoff)}
+                where={sLast.homeId === SUNDERLAND_ID ? "Stadium of Light" : "Away end"}
+                stub={stubFor}
+              />
+            </div>
+          )}
+          <div className="md:pt-8">
             <Banner chant={banner.chant} note={banner.note} />
           </div>
-          {meter && <Scoreboard m={meter} />}
         </div>
+
+        {meter && (
+          <div className="grid items-center gap-8 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+            <div className="flex flex-col items-center">
+              <div className="kicker mb-2 !text-chalk">The jar of Mackem tears</div>
+              <TearJar percent={meter.total ? (100 * meter.bad) / meter.total : 0} size={340} />
+              <p className="mt-2 max-w-xs text-center text-sm text-mist">
+                Fills up with every bad sign on the meter. Right now: {meter.bad} of {meter.total}
+                {meter.bad === meter.total && meter.total > 0 ? ". Overflowing. Lovely." : meter.bad === 0 ? ". Empty. Annoying." : "."}
+              </p>
+            </div>
+            <Scoreboard m={meter} />
+          </div>
+        )}
 
         {/* p.3 Notes from the Wear */}
         <div id="wear">

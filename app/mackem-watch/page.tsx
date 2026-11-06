@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getSnapshot } from "@/lib/database/queries";
 import { SUNDERLAND_ID } from "@/lib/football/provider";
-import { clubName, clubView, meterView, ordinal, safetyLine } from "@/lib/view";
+import { clubName, clubView, meterView, ordinal, roastFacts, safetyLine } from "@/lib/view";
+import { Roast } from "@/components/roast";
 import { NotConnected } from "@/components/football";
 import { Scoreboard } from "@/components/programme";
 import { SectionTitle } from "@/components/stadium";
@@ -47,11 +48,14 @@ export default async function MackemWatch() {
             : "Hardly any chance. Gutted.";
 
   const results = c.fixtures.recent.slice(0, 8);
+  const roast = roastFacts(s);
   const next = c.fixtures.upcoming.slice(0, 5);
 
   return (
+    <>
+    {roast && <Roast f={roast} />}
     <div className="mx-auto max-w-5xl px-4 py-12">
-      <h1 className="tabloid text-[clamp(3.4rem,11vw,7rem)]">Mackem Watch</h1>
+      <h2 className="tabloid text-[clamp(3.4rem,11vw,7rem)]">Mackem Watch</h2>
       <p className="serif mt-2 max-w-2xl text-xl text-mist">
         Sunderland, {ordinal(c.row.position)} in the league on {c.row.points} points. Here&apos;s the state of them.
       </p>
@@ -131,5 +135,6 @@ export default async function MackemWatch() {
         </section>
       </div>
     </div>
+    </>
   );
 }

@@ -90,3 +90,17 @@ test("voice check: catches the slop that actually got published", () => {
   assert.equal(classifyStory("Sunderland fan thinks Regis Le Bris deserves more time").category, null);
   assert.equal(classifyStory("Newcastle United 0-1 Everton: Premier League – as it happened").category, null);
 });
+
+import { roastCopy, roastHeat } from "../components/roast";
+test("roast: volume follows the real table", () => {
+  const base = { leagueSize: 20, points: 5, won: 1, played: 9, daysSinceWin: 68, lastWinAgainst: "Fulham", belowUs: true, gapToUs: 6 };
+  const L = { r: "L" as const, gf: 1, ga: 3, opp: "Coventry" };
+  const W = { r: "W" as const, gf: 2, ga: 0, opp: "Fulham" };
+  assert.equal(roastHeat({ ...base, position: 20, lastResult: L }), 4);
+  assert.equal(roastHeat({ ...base, position: 18, lastResult: W }), 3);
+  assert.equal(roastHeat({ ...base, position: 14, lastResult: W }), 2);
+  assert.equal(roastHeat({ ...base, position: 8, lastResult: W }), 1);
+  assert.equal(roastHeat({ ...base, position: 5, lastResult: W, belowUs: false }), 0);
+  assert.equal(roastCopy({ ...base, position: 5, lastResult: W, belowUs: false }).laugh, null, "no laughing when they're above us");
+  assert.match(roastCopy({ ...base, position: 12, lastResult: W }).big, /12th/, "always shows the live position");
+});

@@ -155,3 +155,45 @@ body {
 
 /* Programme advert. */
 .advert { border: 3px double var(--ink-print); background: #fbf7ea; color: var(--ink-print); }
+
+/* ───────── The roast: in your face, on purpose ───────── */
+.roast { position: relative; overflow: hidden; isolation: isolate; background: radial-gradient(120% 90% at 50% 0%, rgba(224,22,31,.55), rgba(40,4,6,.92) 60%, rgba(5,6,7,.95)); }
+.marquee { overflow: hidden; white-space: nowrap; }
+.marquee > div { display: inline-flex; animation: marquee 14s linear infinite; }
+.marquee.rev > div { animation-direction: reverse; animation-duration: 18s; }
+@keyframes marquee { to { transform: translateX(-50%); } }
+.haha { font-family: var(--font-display); font-weight: 900; font-style: italic; text-transform: uppercase; line-height: .9; padding-right: .4em; }
+.outline-text { color: transparent; -webkit-text-stroke: 2px rgba(244,244,240,.9); }
+.tear { position: absolute; top: -40px; width: 14px; height: 20px; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; background: linear-gradient(180deg, #bfe6ff, #5bb6ff); opacity: .85; animation: tear-fall linear infinite; z-index: 1; pointer-events: none; }
+.tear::before { content: ""; position: absolute; left: 50%; top: -7px; width: 8px; height: 10px; transform: translateX(-50%) rotate(45deg); background: #bfe6ff; border-radius: 0 50% 0 50%; }
+@keyframes tear-fall { 0% { transform: translateY(0); opacity: 0 } 10% { opacity: .9 } 100% { transform: translateY(110vh); opacity: .2 } }
+.stamp { display: inline-block; border: 6px solid currentColor; padding: .1em .35em; transform: rotate(-8deg); font-family: var(--font-display); font-weight: 900; text-transform: uppercase; line-height: 1; box-shadow: inset 0 0 0 3px rgba(0,0,0,.15); }
+.wobble { animation: wobble 2.4s ease-in-out infinite; display: inline-block; }
+@keyframes wobble { 0%,100% { transform: rotate(-2deg) } 50% { transform: rotate(2deg) scale(1.03) } }
+
+/* ───────── The jar of tears ───────── */
+@keyframes wave { to { transform: translateX(-50%); } }
+@keyframes bubble { 0% { transform: translateY(0) scale(.6); opacity: 0 } 15% { opacity: .9 } 100% { transform: translateY(-220px) scale(1); opacity: 0 } }
+@keyframes milestone { 0% { transform: scale(.6); opacity: 0 } 30% { transform: scale(1.08); opacity: 1 } 80% { opacity: 1 } 100% { transform: scale(1); opacity: 0 } }
+@keyframes fall { 0% { transform: translateY(-30px); opacity: 0 } 15% { opacity: 1 } 85% { opacity: 1 } 100% { transform: translateY(var(--fall, 160px)); opacity: 0 } }
+@keyframes slosh { 0%,100% { transform: rotate(0) } 20% { transform: rotate(-4deg) } 45% { transform: rotate(3deg) } 70% { transform: rotate(-1.5deg) } }
+@keyframes quip { 0% { opacity: 0; transform: translateY(6px) } 15%, 80% { opacity: 1; transform: none } 100% { opacity: 0 } }
+.jar-wave { animation: wave 6s linear infinite; transform-box: fill-box; }
+.jar-wave.slow { animation-duration: 9s; }
+.jar-bubble { animation: bubble 5s ease-in infinite; }
+.milestone-pop { animation: milestone 2.8s ease-out forwards; }
+.tear-fall { animation: fall 2.6s cubic-bezier(.5,0,.9,.6) infinite; }
+.jar-slosh { animation: slosh .9s ease-in-out; transform-origin: 50% 90%; }
+.quip { animation: quip 2.6s ease forwards; }
+.ribbon { background: var(--color-mackem); color: var(--color-chalk); font-family: var(--font-display); font-weight: 800; font-style: italic; text-transform: uppercase; letter-spacing: .06em; padding: .15rem .6rem; }
+
+/* ───────── The Stadium of Light, having a moment ───────── */
+@keyframes stream { 0% { stroke-dashoffset: 40 } 100% { stroke-dashoffset: 0 } }
+.stream { stroke-dasharray: 8 6; animation: stream .7s linear infinite; }
+@keyframes sob { 0%,100% { transform: translateY(0) } 50% { transform: translateY(3px) } }
+.sob { animation: sob .5s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes puddle { 0%,100% { transform: scaleX(1) } 50% { transform: scaleX(1.06) } }
+.puddle { animation: puddle 2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes splash { 0% { transform: translateY(0) scale(.4); opacity: 1 } 100% { transform: translateY(-60px) translateX(var(--dx,0)) scale(1); opacity: 0 } }
+.splash { animation: splash .9s ease-out forwards; }
+@keyframes spill { 0% { transform: scaleY(0) } 100% { transform: scaleY(1) } }
