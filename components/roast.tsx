@@ -9,8 +9,7 @@
  *
  * Every number shown is live. The tears are decoration, never a statistic.
  */
-import { CryingStadium } from "./crying-stadium";
-import { CryingFans } from "./crying-fans";
+import { Crowd, StadiumScene } from "./scenes";
 import { TearJar } from "./tear-jar";
 
 const ord = (n: number) => {
@@ -30,6 +29,7 @@ export interface RoastFacts {
   lastResult: { r: "W" | "D" | "L"; gf: number; ga: number; opp: string } | null;
   belowUs: boolean;
   gapToUs: number;
+  lastScore?: string | null; // e.g. "COV 3 - 1 SUN" for the scoreboard
 }
 
 export function roastHeat(f: RoastFacts) {
@@ -144,15 +144,15 @@ export function Roast({ f, jar, compact = false }: { f: RoastFacts; jar?: { perc
         </div>
 
         {(c.heat >= 2 || jar) && (
-          <div className="grid items-end gap-4 sm:grid-cols-[1.3fr_1fr] lg:grid-cols-1 xl:grid-cols-[1.3fr_1fr]">
+          <div className="grid items-center gap-4 sm:grid-cols-[1.6fr_1fr] lg:grid-cols-1">
             {L && c.heat >= 2 ? (
-              <CryingStadium mood={L.r} caption={L.r === "L" ? `The Stadium of Shite, after losing to ${L.opp}` : L.r === "D" ? `The Stadium of Light, after drawing with ${L.opp}. Haway, they said.` : `The Stadium of Light, after beating ${L.opp}. Enjoy it, it won't last.`} />
+              <StadiumScene club="sun" result={L.r} score={f.lastScore ?? undefined} caption={L.r === "L" ? `The Stadium of Shite, after losing to ${L.opp}` : L.r === "D" ? `The Stadium of Light, after drawing with ${L.opp}. Haway, they said.` : `The Stadium of Light, after beating ${L.opp}. Enjoy it, it won't last.`} />
             ) : (
               <div />
             )}
             {jar && (
               <div className="flex flex-col items-center">
-                <TearJar percent={jar.percent} size={270} />
+                <TearJar percent={jar.percent} size={240} />
                 <p className="mt-1 max-w-[220px] text-center font-mono text-[11px] font-bold uppercase tracking-wider text-chalk/85">{jar.note}</p>
               </div>
             )}
@@ -161,8 +161,8 @@ export function Roast({ f, jar, compact = false }: { f: RoastFacts; jar?: { perc
       </div>
 
       {c.heat >= 2 && (
-        <div className="relative z-[2] px-2">
-          <CryingFans heat={c.heat} count={c.heat >= 3 ? 11 : 7} />
+        <div className="relative z-[2]">
+          <Crowd club="sun" result={L?.r ?? null} />
         </div>
       )}
 

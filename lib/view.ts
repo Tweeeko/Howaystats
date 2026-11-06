@@ -181,7 +181,14 @@ export function roastFacts(s: Snapshot) {
     lastResult: last ? r(last) : null,
     belowUs: nufc.row.position < sun.row.position,
     gapToUs: nufc.row.points - sun.row.points,
+    lastScore: last ? scoreLine(s, last) : null,
   };
+}
+
+/** "COV 3 - 1 SUN", for the scoreboards in the illustrations. */
+export function scoreLine(s: Snapshot, f: Fixture) {
+  const code = (id: number) => (s.clubs.get(id)?.code || clubName(s, id).slice(0, 3)).toUpperCase();
+  return `${code(f.homeId)} ${f.homeGoals} - ${f.awayGoals} ${code(f.awayId)}`;
 }
 
 /** Real numbers for the Toon hero. */
@@ -216,5 +223,6 @@ export function toonFacts(s: Snapshot) {
     goalsFor: nufc.row.goalsFor,
     sunPoints: sun?.row.points ?? null,
     sunWon: sun?.row.won ?? null,
+    lastScore: last ? scoreLine(s, last) : null,
   };
 }
