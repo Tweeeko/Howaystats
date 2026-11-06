@@ -68,3 +68,12 @@ test("voice check: swearing allowed, but not for the sake of it", () => {
   assert.equal(voiceCheck("Shite. Absolute shite. Fucking shite.").ok, false);
   assert.equal(voiceCheck("In a surprising turn of events, Sunderland won.").ok, false);
 });
+
+import { classifyStory } from "../lib/news/classify";
+test("news: tragedies, children and crime are never turned into banter", () => {
+  for (const h of ["Boy arrested following Bradley Lowery taunt", "Newcastle's Dedic stopped by police after being spotted with bow and arrows", "Tributes paid after former Sunderland player dies"]) {
+    assert.equal(classifyStory(h).category, null, h);
+  }
+  assert.equal(classifyStory("Europa League: Sunderland lose at home to Zagreb").storyType, "loss");
+  assert.notEqual(classifyStory("Sakamoto sparks Coventry win to keep 10-man Sunderland rock-bottom").category, null);
+});

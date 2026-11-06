@@ -73,8 +73,22 @@ export interface Classification {
   category: NewsCategory | null;
 }
 
+/**
+ * Stories we never joke about, whoever they involve: children, deaths, illness, crime, arrests,
+ * abuse, violence. These are skipped outright, never rewritten, never queued.
+ */
+export const SENSITIVE =
+  /\b(bradley lowery|lowery|child(ren)?|boy|girl|teen(ager)?s?|aged \d+|\d+-year-old|died|dies|death|dead|funeral|tribute|tragedy|cancer|illness|hospital|charity|arrest\w*|police|charged|court|jail\w*|prison|assault\w*|stab\w*|abuse\w*|racis\w*|homophob\w*|weapon|bow and arrow|knife)\b/i;
+
+export function isSensitive(title: string, summary = "") {
+  return SENSITIVE.test(`${title} ${summary}`);
+}
+
 export function classifyStory(title: string, summary = ""): Classification {
   const text = `${title}. ${summary}`;
+  if (isSensitive(title, summary)) {
+    return { aboutSunderland: SUNDERLAND.test(text), aboutNewcastle: NEWCASTLE.test(text), storyType: "other", negativity: 0, category: null };
+  }
   const aboutSunderland = SUNDERLAND.test(text) && !NOT_THE_CLUB.test(text);
   const aboutNewcastle = NEWCASTLE.test(text);
 
@@ -82,6 +96,7 @@ export function classifyStory(title: string, summary = ""): Classification {
   // Who beat whom matters: "Chelsea beat Sunderland" is a defeat, "Sunderland beat Chelsea" a win.
   if (/\b(beat|beats|thrash\w*|hammer\w*|stun\w*|edge\w*|batter\w*|down\w*|sink\w*)\s+(struggling\s+|bottom[- ]club\s+)?sunderland\b/i.test(title)) storyType = "loss";
   else if (/\bsunderland\s+(beat|beats|edge|edges|stun|stuns|thrash|cruise|win|wins|won)\b/i.test(title)) storyType = "win";
+  else if (/\bsunderland\s+(lose|loses|lost|beaten|thrashed|hammered|humbled|stunned|fall|falls|slump|slumps)\b|\bsunderland\b[^.]{0,30}\b(beaten|defeat)\b/i.test(title)) storyType = "loss";
   if (storyType === "other") for (const { t, re } of TYPES) {
     if (re.test(title)) {
       storyType = t;

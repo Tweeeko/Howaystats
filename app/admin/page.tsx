@@ -74,6 +74,7 @@ export default async function Admin() {
             <div key={n.id} className={`panel p-4 ${n.status === "pending" ? "panel-top mackem" : ""}`}>
               <div className="flex flex-wrap items-center gap-2 font-mono text-[11px] uppercase text-silver"><span>{n.status}</span>·<span>{n.category}</span>·<span>{n.source}</span>·<a className="underline" href={n.url} target="_blank" rel="noreferrer">original</a></div>
               <p className="mt-1 text-sm text-mist">Original: {n.original_headline}</p>
+              {n.status === "pending" && n.rewrite_note && <p className="mt-1 text-xs text-mackem">Held back: {n.rewrite_note}</p>}
               <p className="text-xs text-silver">{n.original_summary}</p>
               <EditNews id={n.id} headline={n.howay_headline ?? ""} commentary={n.howay_commentary ?? ""} punchline={n.howay_punchline ?? ""} breaking={n.breaking} />
               <div className="mt-2 flex gap-2">

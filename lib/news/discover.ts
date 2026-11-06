@@ -67,7 +67,7 @@ export function rewritePasses(r: Rewrite, item: { title: string; summary: string
 export const NEWCASTLE_ANGLE =
   "A Newcastle story, written for our own fans. Good news: enjoy it, a bit smug. Bad news: moan about it honestly and take the piss out of our own club, the way fans do. Either way we're still above Sunderland in our heads. A dig at the Mackems only if it fits naturally.";
 
-export async function rewriteStory(item: FeedItem, club: "sunderland" | "newcastle", type: StoryType): Promise<(Rewrite & { model: string }) | null> {
+export async function rewriteStory(item: FeedItem, club: "sunderland" | "newcastle", type: StoryType): Promise<(Rewrite & { model: string; note?: string }) | { failed: string }> {
   const angle = club === "sunderland" ? ANGLES[type] : NEWCASTLE_ANGLE;
   const system = `${GEORDIE_VOICE}
 
@@ -85,13 +85,20 @@ Return JSON only:
 - If the source says "reportedly" or it's a rumour, say so. No quotation marks anywhere.
 
 The voice, for feel only (never copy these): "Well, that's another lovely weekend for the Mackems." · "They've won a football match, not the fucking World Cup." · "Meanwhile wor lot are doing what wor lot do best. Making life difficult for ourselves." · "Another day on Wearside. Another reason to keep the kettle on."`;
-  for (let attempt = 0; attempt < 2; attempt++) {
-    const text = await aiComplete(system, `Publisher: ${item.source}\nHeadline: ${item.title}\nSummary: ${item.summary}${attempt ? "\n(Previous attempt failed our checks. Stick strictly to the source and the voice rules.)" : ""}`);
+  let lastReason = "";
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const retry = lastReason ? `\n(Your last attempt was rejected because: ${lastReason}. Fix exactly that. Stick to the source.)` : "";
+    const text = await aiComplete(system, `Publisher: ${item.source}\nHeadline: ${item.title}\nSummary: ${item.summary}${retry}`);
     const r = extractJson<Rewrite>(text);
-    if (!r || typeof r.headline !== "string" || typeof r.summary !== "string" || typeof r.punchline !== "string" || !Array.isArray(r.facts)) continue;
-    if (rewritePasses(r, item).ok) return { ...r, model: `${env.aiProvider()}:${env.aiModel() ?? "default"}` };
+    if (!r || typeof r.headline !== "string" || typeof r.summary !== "string" || typeof r.punchline !== "string" || !Array.isArray(r.facts)) {
+      lastReason = "the reply wasn't the JSON object asked for";
+      continue;
+    }
+    const check = rewritePasses(r, item);
+    if (check.ok) return { ...r, model: `${env.aiProvider()}:${env.aiModel() ?? "default"}` };
+    lastReason = check.reason ?? "failed checks";
   }
-  return null;
+  return { failed: lastReason || "no reply" };
 }
 
 const slug = (title: string, url: string) =>
@@ -121,10 +128,14 @@ export async function discoverNews() {
     seen.push(candidate);
 
     const club = c.aboutSunderland ? "sunderland" : "newcastle";
-    let rw: Awaited<ReturnType<typeof rewriteStory>> = null;
+    let rw: (Rewrite & { model: string }) | null = null;
+    let note: string | null = null;
     try {
-      rw = await rewriteStory(item, club, c.storyType);
+      const out = await rewriteStory(item, club, c.storyType);
+      if ("failed" in out) note = out.failed;
+      else rw = out;
     } catch (e) {
+      note = `AI error: ${(e as Error).message}`.slice(0, 200);
       errors.push(`rewrite: ${(e as Error).message}`);
     }
     const url = canonicalUrl(item.link);
@@ -146,6 +157,7 @@ export async function discoverNews() {
       howay_punchline: rw?.punchline ?? null,
       story_type: c.storyType,
       image_url: item.imageUrl,
+      rewrite_note: note,
       rewrite_model: rw?.model ?? null,
       status,
     });
