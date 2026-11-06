@@ -186,7 +186,7 @@ function HeldScarf({ l, r, kit }: { l: number[]; r: number[]; kit: Kit }) {
 }
 
 /** One fan, seen from behind, facing the pitch. Shoulder centre at (0,0). */
-function Fan({ pose, top, head, kit, club, skin, hair, jacket, num, scarfDraped }: { pose: Pose; top: Top; head: Head; kit: Kit; club: "sun" | "nufc"; skin: string; hair: string; jacket: string; num: string; scarfDraped: boolean }) {
+function Fan({ pose, top, head, kit, club, skin, hair, jacket, name, num, scarfDraped }: { pose: Pose; top: Top; head: Head; kit: Kit; club: "sun" | "nufc"; skin: string; hair: string; jacket: string; name: string; num: string; scarfDraped: boolean }) {
   const shirt = top === "shirt";
   const sleeve = shirt ? kit.a : jacket;
   const forearm = shirt ? skin : jacket;
@@ -198,7 +198,7 @@ function Fan({ pose, top, head, kit, club, skin, hair, jacket, num, scarfDraped 
     armsUp: [[-30, -20], [-26, -54]],
     scarfUp: [[-34, -16], [-30, -48]],
     fist: [[-28, -22], [-20, -58]],
-    clap: [[-28, 22], [-6, 6]],
+    clap: [[-31, 20], [-27, 2]],
     point: [[-30, -12], [-44, -40]],
     handsOnHead: [[-34, -22], [-9, -36]],
     bowed: null,
@@ -231,7 +231,8 @@ function Fan({ pose, top, head, kit, club, skin, hair, jacket, num, scarfDraped 
       <path d={torso} fill={shirt ? `url(#stripes-${club})` : jacket} />
       {shirt && (
         <>
-          <text x="0" y="30" textAnchor="middle" fontSize={num.length > 2 ? 12 : 17} fontWeight="900" fontFamily="var(--font-barlow), 'Arial Narrow', sans-serif" fill={kit.num} stroke={kit.text} strokeWidth="2.2" paintOrder="stroke">{num}</text>
+          <text x="0" y={13 + hunch} textAnchor="middle" fontSize="7.5" fontWeight="900" letterSpacing=".4" fontFamily="var(--font-barlow), 'Arial Narrow', sans-serif" fill={kit.num} stroke={kit.text} strokeWidth="1.6" paintOrder="stroke" textLength={name.length > 4 ? 30 : undefined} lengthAdjust="spacingAndGlyphs">{name}</text>
+          <text x="0" y={32 + hunch} textAnchor="middle" fontSize="17" fontWeight="900" fontFamily="var(--font-barlow), 'Arial Narrow', sans-serif" fill={kit.num} stroke={kit.text} strokeWidth="2.2" paintOrder="stroke">{num}</text>
           <path d={`M-9 ${hunch} Q0 ${4 + hunch} 9 ${hunch}`} fill="none" stroke={kit.a} strokeWidth="3" />
         </>
       )}
@@ -244,16 +245,21 @@ function Fan({ pose, top, head, kit, club, skin, hair, jacket, num, scarfDraped 
           {arm([21, 8 + hunch], right[0], right[1], "r")}
         </>
       )}
-      {pose === "armsFolded" && <path d="M-26 34 Q0 44 26 34 L26 44 Q0 54 -26 44 Z" fill={sleeve} />}
+      {pose === "armsFolded" && (
+        <>
+          <path d={`M-24 ${10 + hunch} Q-31 ${24 + hunch} -24 ${34 + hunch}`} fill="none" stroke={sleeve} strokeWidth="8" strokeLinecap="round" />
+          <path d={`M24 ${10 + hunch} Q31 ${24 + hunch} 24 ${34 + hunch}`} fill="none" stroke={sleeve} strokeWidth="8" strokeLinecap="round" />
+        </>
+      )}
 
       {/* draped scarf round the neck, tails down the back */}
       {scarfDraped && (
         <g>
           <path d={`M-13 ${hunch - 1} Q0 ${7 + hunch} 13 ${hunch - 1}`} fill="none" stroke={kit.a} strokeWidth="7" strokeLinecap="round" />
-          {[0, 1, 2, 3, 4].map((k) => (
+          {!shirt && [0, 1, 2, 3, 4].map((k) => (
             <rect key={k} x="-12" y={3 + hunch + k * 7} width="9" height="7" fill={k % 2 ? kit.b : kit.a} transform={`rotate(4 -8 ${hunch})`} />
           ))}
-          {[-11, -9, -7, -5].map((fx) => <path key={fx} d={`M${fx} ${38 + hunch} l0.5 4`} stroke={kit.a} strokeWidth="1" transform={`rotate(4 -8 ${hunch})`} />)}
+          {!shirt && [-11, -9, -7, -5].map((fx) => <path key={fx} d={`M${fx} ${38 + hunch} l0.5 4`} stroke={kit.a} strokeWidth="1" transform={`rotate(4 -8 ${hunch})`} />)}
         </g>
       )}
 
@@ -313,7 +319,8 @@ export function Crowd({ club, result }: { club: "sun" | "nufc"; result: Result |
     { y: 100, scale: 0.78, n: 15, shade: 0.3 },
     { y: 134, scale: 1, n: 12, shade: 0 },
   ];
-  const nums = sun ? ["0", "0", "SMB", "0"] : ["9", "10", "7", "8", "4", "TOON", "1892", "11"];
+  const names = sun ? ["SMB", "SAD", "MACKEM", "BOTTLER", "SMB", "WEAR"] : ["TOON", "HOWAY", "GEORDIE", "UTM", "HWTL", "TOON"];
+  const nums = sun ? ["0"] : ["9", "10", "7", "8", "4", "11", "5", "1"];
 
   return (
     <svg viewBox="0 0 800 170" className="block w-full" preserveAspectRatio="xMidYMax slice" role="img" aria-label={sad ? "Sunderland fans from behind, hands on heads, heads bowed" : sun ? "Sunderland fans, nervously clapping" : "Toon fans from behind in black and white shirts, arms and scarves up"}>
@@ -344,13 +351,14 @@ export function Crowd({ club, result }: { club: "sun" | "nufc"; result: Result |
             const hair = HAIR[Math.floor(rand() * HAIR.length)];
             const jacket = JACKET[Math.floor(rand() * JACKET.length)];
             const num = nums[Math.floor(rand() * nums.length)];
+            const name = names[Math.floor(rand() * names.length)];
             const scarfDraped = pose !== "scarfUp" && rand() < (top === "jacket" ? 0.7 : 0.25);
             const bob = !sad && (pose === "armsUp" || pose === "scarfUp" || pose === "fist");
             const lh = pose === "scarfUp" ? [-30, -48] : null;
             return (
               <g key={i} transform={`translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s.toFixed(3)})`}>
                 <g className={bob ? "bounce" : undefined} style={bob ? { animationDelay: `${(rand() * 0.7).toFixed(2)}s` } : undefined}>
-                  <Fan pose={pose} top={top} head={head} kit={kit} club={club} skin={skin} hair={hair} jacket={jacket} num={num.length > 2 ? num.slice(0, 4) : num} scarfDraped={scarfDraped} />
+                  <Fan pose={pose} top={top} head={head} kit={kit} club={club} skin={skin} hair={hair} jacket={jacket} name={name} num={num} scarfDraped={scarfDraped} />
                   {lh && (
                     <>
                       <HeldScarf l={[-30, -48]} r={[30, -48]} kit={kit} />
