@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES2022", "module": "esnext", "moduleResolution": "bundler", "jsx": "react-jsx", "strict": false, "skipLibCheck": true, "esModuleInterop": true,
+    "paths": {
+      "@/lib/database/queries": ["./preview/mock-queries.ts"],
+      "@/lib/live": ["./preview/stubs/live.ts"],
+      "@/*": ["./*"],
+      "server-only": ["./preview/stubs/empty.ts"],
+      "next/link": ["./preview/stubs/link.tsx"],
+      "next/image": ["./preview/stubs/image.tsx"],
+      "next/navigation": ["./preview/stubs/navigation.ts"]
+    }
+  }
+}
