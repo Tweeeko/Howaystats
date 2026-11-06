@@ -3,7 +3,8 @@ import { getNews, getSnapshot } from "@/lib/database/queries";
 import { buildLivePayload } from "@/lib/live";
 import { NEWCASTLE_ID, SUNDERLAND_ID } from "@/lib/football/provider";
 import { backPageHeadline } from "@/lib/headline";
-import { clubName, clubView, meterView, ordinal, roastFacts } from "@/lib/view";
+import { clubName, clubView, meterView, ordinal, roastFacts, toonFacts } from "@/lib/view";
+import { Passport, toonCopy } from "@/components/toon";
 import type { Fixture } from "@/lib/types";
 import { Form, NotConnected } from "@/components/football";
 import { LiveScoreboards } from "@/components/live";
@@ -77,13 +78,6 @@ export default async function Home() {
 
   const stubFor = sRes === "L" ? "Admit one Mackem · No refunds" : sRes === "W" ? "Souvenir edition · Rare" : "Admit one · Nobody won";
 
-  const toonLine =
-    nRes === "W"
-      ? "Three points. Nobody died. Howay the lads."
-      : nRes === "D"
-        ? "A point. Could be worse. Could be a Mackem."
-        : "Meanwhile, wor lot are doing what wor lot do best. Making life difficult for wersels.";
-
   const advert =
     safc.row.position > n - 3
       ? { title: "Wearside Coaches", body: "Tuesday nights in the Championship. Seats available. Loads of them.", small: "Not a real advert. Not a real company. Very real league position." }
@@ -92,6 +86,8 @@ export default async function Home() {
   const [sunLead, ...sunRest] = sunNews;
 
   const roast = roastFacts(s);
+  const tf = toonFacts(s);
+  const toon = tf ? toonCopy(tf) : null;
 
   return (
     <div>
@@ -206,7 +202,17 @@ export default async function Home() {
                 />
               </div>
             )}
-            <p className="serif text-xl leading-snug text-chalk drop-shadow-[0_2px_8px_rgba(0,0,0,.9)]">{toonLine}</p>
+            {toon && (
+              <div>
+                <p className="tabloid text-4xl text-chalk drop-shadow-[0_3px_0_rgba(0,0,0,.6)] sm:text-5xl">{toon.head}</p>
+                <p className="serif mt-2 text-xl leading-snug text-chalk drop-shadow-[0_2px_8px_rgba(0,0,0,.9)]">{toon.sub}</p>
+              </div>
+            )}
+            {toon && (
+              <div className="max-w-[220px]">
+                <Passport stamp={toon.stamp} pEurope={tf?.pEurope} />
+              </div>
+            )}
             <p className="text-mist drop-shadow-[0_2px_8px_rgba(0,0,0,.9)]">
               {ordinal(nufc.row.position)} on {nufc.row.points} points.{" "}
               {nufc.row.position < safc.row.position

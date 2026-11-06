@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { getNews, getSnapshot } from "@/lib/database/queries";
 import { NEWCASTLE_ID } from "@/lib/football/provider";
-import { clubName, clubView, ordinal } from "@/lib/view";
+import { clubName, clubView, ordinal, toonFacts } from "@/lib/view";
+import { ToonHype } from "@/components/toon";
 import { NotConnected } from "@/components/football";
 import { StoryCard } from "@/components/news";
 import { SectionTitle } from "@/components/stadium";
@@ -30,24 +31,14 @@ export default async function Newcastle() {
   const p = c.pred;
   const results = c.fixtures.recent.slice(0, 6);
   const next = c.fixtures.upcoming.slice(0, 5);
-  const wins = c.row.form.filter((r) => r === "W").length;
-  const mood =
-    c.row.form.length === 0
-      ? "Season's barely started. Calm down."
-      : wins >= 4
-        ? "Flying. Don't say it out loud."
-        : wins >= 2
-          ? "Not bad, not great. Very Newcastle."
-          : "Doing what wor lot do best. Making it hard for wersels.";
   const europe = p ? Math.round(p.pTop7 * 100) : null;
   const top4 = p ? Math.round(p.pTop4 * 100) : null;
 
+  const hype = toonFacts(s);
   return (
+    <>
+    {hype && <ToonHype f={hype} />}
     <div className="mx-auto max-w-5xl px-4 py-12">
-      <h1 className="tabloid text-[clamp(3.4rem,11vw,7rem)]">The Toon</h1>
-      <p className="serif mt-2 max-w-2xl text-xl text-mist">
-        {ordinal(c.row.position)} on {c.row.points} points. {mood}
-      </p>
 
       {europe !== null && top4 !== null && (
         <section className="mt-10 grid gap-4 sm:grid-cols-2">
@@ -118,5 +109,6 @@ export default async function Newcastle() {
         </section>
       )}
     </div>
+    </>
   );
 }

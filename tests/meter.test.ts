@@ -104,3 +104,16 @@ test("roast: volume follows the real table", () => {
   assert.equal(roastCopy({ ...base, position: 5, lastResult: W, belowUs: false }).laugh, null, "no laughing when they're above us");
   assert.match(roastCopy({ ...base, position: 12, lastResult: W }).big, /12th/, "always shows the live position");
 });
+
+import { toonCopy, toonMood } from "../components/toon";
+test("toon: mood follows the real table and always minds the Mackems", () => {
+  const base = { leagueSize: 20, points: 11, played: 9, form: ["W", "L", "L", "W", "L"] as ("W" | "D" | "L")[], next: null, aboveSunderlandBy: 6 };
+  const L = { r: "L" as const, gf: 0, ga: 1, opp: "Everton", home: true };
+  assert.equal(toonMood({ ...base, position: 13, lastResult: L }), 1, "13th and losing = self-deprecating");
+  assert.equal(toonMood({ ...base, position: 3, lastResult: L }), 4);
+  assert.equal(toonMood({ ...base, position: 9, lastResult: L, pEurope: 0.3 }), 3);
+  assert.equal(toonMood({ ...base, position: 19, lastResult: L }), 0);
+  assert.equal(toonCopy({ ...base, position: 13, lastResult: L, pEurope: 0.05 }).stamp, "Denied");
+  assert.equal(toonCopy({ ...base, position: 3, lastResult: L, pEurope: 0.8 }).stamp, "Approved");
+  assert.equal(toonCopy({ ...base, position: 13, lastResult: L }).stamp, "Pending", "no model yet = pending, not a guess");
+});

@@ -183,3 +183,34 @@ export function roastFacts(s: Snapshot) {
     gapToUs: nufc.row.points - sun.row.points,
   };
 }
+
+/** Real numbers for the Toon hero. */
+export function toonFacts(s: Snapshot) {
+  const nufc = clubView(s, NEWCASTLE_ID);
+  const sun = clubView(s, SUNDERLAND_ID);
+  if (!nufc) return null;
+  const last = nufc.fixtures.recent[0];
+  const next = nufc.fixtures.upcoming[0];
+  const name = (id: number) => clubName(s, id);
+  const when = (iso: string) =>
+    `${new Date(iso).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "Europe/London" })}, ${new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/London" })}`;
+  let lastResult = null as null | { r: "W" | "D" | "L"; gf: number; ga: number; opp: string; home: boolean };
+  if (last) {
+    const home = last.homeId === NEWCASTLE_ID;
+    const gf = home ? last.homeGoals! : last.awayGoals!;
+    const ga = home ? last.awayGoals! : last.homeGoals!;
+    lastResult = { r: gf > ga ? "W" : gf === ga ? "D" : "L", gf, ga, opp: name(home ? last.awayId : last.homeId), home };
+  }
+  return {
+    position: nufc.row.position,
+    leagueSize: s.table.length,
+    points: nufc.row.points,
+    played: nufc.row.played,
+    form: nufc.row.form as ("W" | "D" | "L")[],
+    pEurope: nufc.pred?.pTop7,
+    pTop4: nufc.pred?.pTop4,
+    lastResult,
+    next: next ? `${next.homeId === NEWCASTLE_ID ? name(next.awayId) : name(next.homeId)} (${next.homeId === NEWCASTLE_ID ? "H" : "A"}), ${when(next.kickoff)}${(next.leagueId ?? 39) !== 39 && next.competition ? ` · ${next.competition}` : ""}` : null,
+    aboveSunderlandBy: sun && nufc.row.position < sun.row.position ? nufc.row.points - sun.row.points : sun ? null : null,
+  };
+}
