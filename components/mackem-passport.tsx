@@ -47,6 +47,9 @@ function Grime({ x, y, w, h, id, mirror = false }: { x: number; y: number; w: nu
         <ellipse cx={X(0.88)} cy={y + h * 0.12} rx="14" ry="9" opacity=".45" />
         <ellipse cx={X(0.52)} cy={y + h * 0.48} rx="7" ry="5" opacity=".3" />
       </g>
+      {/* the smell */}
+      <Stink x={X(0.16)} y={y + h * 0.9 - 14} />
+      <Stink x={X(0.88)} y={y + h * 0.12 - 10} small />
       {/* smudged thumbprint */}
       <g fill="none" stroke="#3b2a18" strokeOpacity=".18" strokeWidth=".8">
         {[0, 1, 2, 3, 4, 5].map((i) => (
@@ -57,13 +60,30 @@ function Grime({ x, y, w, h, id, mirror = false }: { x: number; y: number; w: nu
   );
 }
 
-function Fly({ x, y, r }: { x: number; y: number; r: number }) {
+/** Wavy stink lines that rise and fade. */
+function Stink({ x, y, small = false }: { x: number; y: number; small?: boolean }) {
+  const k = small ? 0.7 : 1;
   return (
-    <g transform={`translate(${x} ${y}) rotate(${r})`}>
-      <ellipse cx="-3" cy="-2.5" rx="3.2" ry="1.8" fill="#c9d3d8" opacity=".75" transform="rotate(-30)" />
-      <ellipse cx="3" cy="-2.5" rx="3.2" ry="1.8" fill="#c9d3d8" opacity=".75" transform="rotate(30)" />
-      <ellipse cx="0" cy="0" rx="1.8" ry="3" fill="#15181a" />
-      <circle cx="0" cy="-3" r="1.4" fill="#15181a" />
+    <g transform={`translate(${x} ${y}) scale(${k})`} fill="none" stroke="#5c6a17" strokeWidth="2.3" strokeLinecap="round">
+      {[-9, 0, 9].map((dx, i) => (
+        <path key={dx} className="stink" style={{ animationDelay: `${i * 0.6}s` }} d={`M${dx} 0 q-5 -6 0 -12 q5 -6 0 -12 q-5 -6 0 -12`} />
+      ))}
+    </g>
+  );
+}
+
+/** A fly that buzzes about in a little loop, wings going. */
+function Fly({ x, y, r, delay = 0 }: { x: number; y: number; r: number; delay?: number }) {
+  return (
+    <g transform={`translate(${x} ${y})`}>
+      <g className="buzz" style={{ animationDelay: `${delay}s` }}>
+        <g transform={`rotate(${r})`}>
+          <g transform="rotate(-30)"><ellipse className="wing" cx="-3" cy="-2.5" rx="3.2" ry="1.8" fill="#c9d3d8" opacity=".8" /></g>
+          <g transform="rotate(30)"><ellipse className="wing" cx="3" cy="-2.5" rx="3.2" ry="1.8" fill="#c9d3d8" opacity=".8" /></g>
+          <ellipse cx="0" cy="0" rx="1.8" ry="3" fill="#15181a" />
+          <circle cx="0" cy="-3" r="1.4" fill="#15181a" />
+        </g>
+      </g>
     </g>
   );
 }
@@ -135,7 +155,8 @@ export function MackemPassport({ now = new Date() }: { now?: Date }) {
         </g>
 
         <Grime x={14} y={14} w={304} h={392} id="mp" mirror />
-        <Fly x={248} y={352} r={20} />
+        <Fly x={262} y={346} r={20} />
+        <Fly x={60} y={70} r={-40} delay={1.1} />
 
         {/* ===== RIGHT PAGE: data page ===== */}
         <path d="M322 14 L620 14 Q626 14 626 20 L626 386 L600 406 L328 406 Q322 406 322 400 Z" fill="url(#mp-right)" />
@@ -180,8 +201,8 @@ export function MackemPassport({ now = new Date() }: { now?: Date }) {
         <text x="332" y="384" fontSize="11.2" fontFamily={MONO} fill="#2a241a" textLength="284" lengthAdjust="spacingAndGlyphs">{mrz2}</text>
 
         <Grime x={322} y={14} w={304} h={392} id="mp" />
-        <Fly x={400} y={140} r={-35} />
-        <Fly x={590} y={60} r={60} />
+        <Fly x={380} y={352} r={-35} delay={0.5} />
+        <Fly x={590} y={60} r={60} delay={1.7} />
 
         <rect x="300" y="14" width="40" height="392" fill="url(#mp-spine)" />
         <path d="M320 14 L320 406" stroke="#000" strokeOpacity=".45" strokeWidth="1" />

@@ -219,3 +219,27 @@ body {
 .bounce { animation: bounce .7s ease-in-out infinite; }
 @keyframes lightning { 0%, 88%, 100% { opacity: 0 } 89% { opacity: .55 } 90% { opacity: .1 } 91% { opacity: .4 } 93% { opacity: 0 } }
 .lightning-flash { animation: lightning 6s linear infinite; opacity: 0; }
+
+/* Mackem passport: stink and flies */
+.stink { animation: stink 2.4s ease-in-out infinite; opacity: 0; transform-box: fill-box; transform-origin: center bottom; }
+@keyframes stink {
+  0% { opacity: 0; transform: translateY(6px) scaleX(.85); }
+  35% { opacity: .9; }
+  100% { opacity: 0; transform: translateY(-14px) scaleX(1.15); }
+}
+.buzz { animation: buzz 3.4s ease-in-out infinite; }
+@keyframes buzz {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  15% { transform: translate(9px, -7px) rotate(25deg); }
+  30% { transform: translate(16px, 2px) rotate(70deg); }
+  45% { transform: translate(6px, 9px) rotate(160deg); }
+  60% { transform: translate(-8px, 5px) rotate(220deg); }
+  75% { transform: translate(-12px, -6px) rotate(300deg); }
+  88% { transform: translate(-3px, -9px) rotate(345deg); }
+}
+.wing { animation: wing .07s linear infinite alternate; transform-box: fill-box; transform-origin: center; }
+@keyframes wing { to { transform: scale(1, .35); } }
+@media (prefers-reduced-motion: reduce) {
+  .stink { animation: none; opacity: .6; }
+  .buzz, .wing { animation: none; }
+}
