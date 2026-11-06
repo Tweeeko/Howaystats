@@ -39,48 +39,53 @@ const pad44 = (s: string) => (s + "<".repeat(44)).slice(0, 44);
 
 const STATUS_INK: Record<string, string> = { Approved: "#1f7a43", Pending: "#a8740a", "Next year": "#b3261e" };
 
-/** Real European away days. Dates and results checked against the record books. */
-const VISAS = [
-  { city: "BUDAPEST", date: "11 JUN 1969", line1: "FAIRS CUP FINAL", line2: "ÚJPEST 2-3 NUFC", foot: "WINNERS", ink: "#1d3f8f", shape: "rect" as const, x: 30, y: 52, rot: -6 },
-  { city: "MILANO", date: "19 SEP 2023", line1: "SAN SIRO", line2: "MILAN 0-0 NUFC", foot: "SEEN IN MILAN", ink: "#a51d24", shape: "circle" as const, x: 248, y: 98, rot: 9 },
-  { city: "PARIS", date: "28 NOV 2023", line1: "PARC DES PRINCES", line2: "PSG 1-1 NUFC", foot: "ROBBED", ink: "#4b2a7b", shape: "oval" as const, x: 92, y: 170, rot: -12 },
-  { city: "DORTMUND", date: "07 NOV 2023", line1: "SIGNAL IDUNA PARK", line2: "AWAY END", foot: "LOUDER", ink: "#2d5f5d", shape: "rect" as const, x: 186, y: 182, rot: 7 },
+/**
+ * The best European nights, home and away. Every date and score checked:
+ * Fairs Cup final 1969; Champions League 1997, 2002, 2023, 2025/26.
+ */
+type Stamp = { city: string; venue: string; score: string; date: string; foot: string; ink: string; shape: "rect" | "circle" | "oval"; x: number; y: number; rot: number };
+const VISAS: Stamp[] = [
+  { city: "BUDAPEST", venue: "FAIRS CUP FINAL", score: "ÚJPEST 2-3 NUFC", date: "11 JUN 1969", foot: "WINNERS", ink: "#1d3f8f", shape: "rect", x: 26, y: 46, rot: -6 },
+  { city: "TOON", venue: "ST JAMES' PARK", score: "NUFC 4-1 PSG", date: "04 OCT 2023", foot: "BATTERED", ink: "#a51d24", shape: "circle", x: 236, y: 92, rot: 9 },
+  { city: "TOON", venue: "ST JAMES' PARK", score: "NUFC 3-2 BARÇA", date: "17 SEP 1997", foot: "ASPRILLA HAT-TRICK", ink: "#4b2a7b", shape: "oval", x: 88, y: 152, rot: -10 },
+  { city: "ROTTERDAM", venue: "DE KUIP", score: "FEYENOORD 2-3 NUFC", date: "13 NOV 2002", foot: "LATE WINNER", ink: "#2d5f5d", shape: "rect", x: 168, y: 150, rot: 6 },
+  { city: "BAKU", venue: "QARABAĞ", score: "QARABAĞ 1-6 NUFC", date: "18 FEB 2026", foot: "SIX. SIX.", ink: "#8a3b12", shape: "circle", x: 74, y: 256, rot: 7 },
+  { city: "MILANO", venue: "SAN SIRO", score: "MILAN 0-0 NUFC", date: "19 SEP 2023", foot: "SEEN IN MILAN", ink: "#a51d24", shape: "oval", x: 186, y: 250, rot: -8 },
+  { city: "BELGIË", venue: "UNION SG", score: "UNION 0-4 NUFC", date: "01 OCT 2025", foot: "CRUISED", ink: "#1d3f8f", shape: "rect", x: 184, y: 292, rot: 4 },
 ];
 
-function Visa({ v }: { v: (typeof VISAS)[number] }) {
+function Visa({ v }: { v: Stamp }) {
   const common = { fill: "none", stroke: v.ink, strokeWidth: 2.2 } as const;
+  const text = (cy: number) => (
+    <>
+      <text x="0" y={cy - 12} textAnchor="middle" fontSize="12" fontWeight="700" fontFamily={DISPLAY} letterSpacing="1">{v.city}</text>
+      <text x="0" y={cy - 2} textAnchor="middle" fontSize="6">{v.venue}</text>
+      <text x="0" y={cy + 9} textAnchor="middle" fontSize="7.2" fontWeight="700">{v.score}</text>
+      <text x="0" y={cy + 18} textAnchor="middle" fontSize="5.8">{v.date}</text>
+      <text x="0" y={cy + 26} textAnchor="middle" fontSize="5.6" fontWeight="700">{v.foot}</text>
+    </>
+  );
   return (
-    <g transform={`translate(${v.x} ${v.y}) rotate(${v.rot})`} opacity=".85" fontFamily={MONO} fill={v.ink}>
+    <g transform={`translate(${v.x} ${v.y}) rotate(${v.rot})`} opacity=".86" fontFamily={MONO} fill={v.ink}>
       {v.shape === "rect" && (
-        <>
-          <rect x="0" y="0" width="104" height="62" rx="4" {...common} />
-          <rect x="4" y="4" width="96" height="54" rx="2" {...common} strokeWidth={0.8} />
-          <text x="52" y="18" textAnchor="middle" fontSize="12" fontWeight="700" fontFamily={DISPLAY} letterSpacing="1">{v.city}</text>
-          <text x="52" y="29" textAnchor="middle" fontSize="6.5">{v.line1}</text>
-          <text x="52" y="39" textAnchor="middle" fontSize="7" fontWeight="700">{v.line2}</text>
-          <text x="52" y="52" textAnchor="middle" fontSize="6.5">{v.date} · {v.foot}</text>
-        </>
+        <g transform="translate(52 0)">
+          <rect x="-54" y="0" width="108" height="66" rx="4" {...common} />
+          <rect x="-50" y="4" width="100" height="58" rx="2" {...common} strokeWidth={0.8} />
+          {text(30)}
+        </g>
       )}
       {v.shape === "circle" && (
         <>
-          <circle cx="0" cy="0" r="44" {...common} />
-          <circle cx="0" cy="0" r="39" {...common} strokeWidth={0.8} />
-          <text x="0" y="-14" textAnchor="middle" fontSize="12" fontWeight="700" fontFamily={DISPLAY} letterSpacing="1">{v.city}</text>
-          <text x="0" y="-3" textAnchor="middle" fontSize="6">{v.line1}</text>
-          <text x="0" y="8" textAnchor="middle" fontSize="7" fontWeight="700">{v.line2}</text>
-          <text x="0" y="18" textAnchor="middle" fontSize="6">{v.date}</text>
-          <text x="0" y="27" textAnchor="middle" fontSize="5.5" fontWeight="700">{v.foot}</text>
+          <circle r="44" {...common} />
+          <circle r="39" {...common} strokeWidth={0.8} />
+          {text(0)}
         </>
       )}
       {v.shape === "oval" && (
         <>
-          <ellipse cx="0" cy="0" rx="62" ry="34" {...common} />
-          <ellipse cx="0" cy="0" rx="57" ry="29.5" {...common} strokeWidth={0.8} />
-          <text x="0" y="-9" textAnchor="middle" fontSize="12" fontWeight="700" fontFamily={DISPLAY} letterSpacing="1">{v.city}</text>
-          <text x="0" y="1" textAnchor="middle" fontSize="6">{v.line1}</text>
-          <text x="0" y="11" textAnchor="middle" fontSize="7" fontWeight="700">{v.line2}</text>
-          <text x="0" y="20" textAnchor="middle" fontSize="5.5">{v.date}</text>
-          <text x="0" y="28" textAnchor="middle" fontSize="5.5" fontWeight="700">{v.foot}</text>
+          <ellipse rx="62" ry="36" {...common} />
+          <ellipse rx="57" ry="31.5" {...common} strokeWidth={0.8} />
+          {text(0)}
         </>
       )}
     </g>
@@ -143,7 +148,7 @@ export function Passport({ stamp, pEurope }: { stamp: string; pEurope?: number }
 
   return (
     <figure className="relative mx-auto w-full max-w-[560px]">
-      <svg viewBox="0 0 640 420" className="w-full drop-shadow-[0_22px_28px_rgba(0,0,0,.65)]" role="img" aria-label={`Toon Army passport open at the visa page. Stamps from Budapest 1969, Milan, Paris and Dortmund. This season: ${stamp}.`}>
+      <svg viewBox="0 0 640 420" className="w-full drop-shadow-[0_22px_28px_rgba(0,0,0,.65)]" role="img" aria-label={`Toon Army passport. Stamps: Fairs Cup winners 1969, 4-1 v PSG, 3-2 v Barcelona, 3-2 at Feyenoord, 6-1 at Qarabag, Milan, 4-0 at Union SG. This season: ${stamp}.`}>
         <defs>
           <linearGradient id="pp-left" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0" stopColor="#f3ede0" />
@@ -176,13 +181,13 @@ export function Passport({ stamp, pEurope }: { stamp: string; pEurope?: number }
         </g>
         <path d={rosette(166, 210, 70, 18, 9)} fill="none" stroke="#b9a98a" strokeOpacity=".3" strokeWidth=".7" />
         <path d={rosette(166, 210, 48, 12, 7)} fill="none" stroke="#b9a98a" strokeOpacity=".3" strokeWidth=".7" />
-        <text x="30" y="34" fontSize="7" letterSpacing="3" fill="#8a7a5c" fontFamily={MONO}>VISAS · EUROPEAN AWAY DAYS</text>
+        <text x="30" y="34" fontSize="7" letterSpacing="3" fill="#8a7a5c" fontFamily={MONO}>VISAS · EUROPEAN NIGHTS</text>
         <text x="302" y="34" textAnchor="end" fontSize="7" fill="#8a7a5c" fontFamily={MONO}>4</text>
 
         {VISAS.map((v) => <Visa key={v.city} v={v} />)}
 
         {/* this season's stamp, from the real odds */}
-        <g transform="translate(110 318) rotate(-13)" fontFamily={MONO} fill={ink}>
+        <g transform="translate(78 334) rotate(-13) scale(.82)" fontFamily={MONO} fill={ink}>
           <circle r="62" fill="none" stroke={ink} strokeWidth="3.4" />
           <circle r="56" fill="none" stroke={ink} strokeWidth="1" />
           <circle r="36" fill="none" stroke={ink} strokeWidth="1" />
@@ -200,11 +205,9 @@ export function Passport({ stamp, pEurope }: { stamp: string; pEurope?: number }
         </g>
 
         {/* the Mackem page */}
-        <g transform="translate(192 300) rotate(-4)">
-          <text x="0" y="0" fontSize="13" fill="#3b3a36" fontFamily={SERIF} fontStyle="italic">Mackem stamps:</text>
-          <text x="6" y="20" fontSize="17" fill="#a51d24" fontFamily={SERIF} fontStyle="italic" fontWeight="600">none. Ever.</text>
-          <path d="M2 27 C30 31 60 24 86 29" fill="none" stroke="#a51d24" strokeWidth="1.4" />
-          <text x="0" y="44" fontSize="7" fill="#6d665a" fontFamily={MONO}>SEEN IN MILAN: 0</text>
+        <g transform="translate(132 396) rotate(-3)" fontFamily={SERIF} fontStyle="italic">
+          <text x="0" y="0" fontSize="10.5" fill="#3b3a36">Mackem stamps: <tspan fill="#a51d24" fontWeight="600" fontSize="13">none. Ever.</tspan></text>
+          <path d="M74 5 C96 8 118 3 140 6" fill="none" stroke="#a51d24" strokeWidth="1.3" />
         </g>
 
         {/* ===== RIGHT PAGE: DATA PAGE ===== */}
