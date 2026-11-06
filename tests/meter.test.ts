@@ -106,14 +106,20 @@ test("roast: volume follows the real table", () => {
 });
 
 import { toonCopy, toonMood } from "../components/toon";
-test("toon: mood follows the real table and always minds the Mackems", () => {
-  const base = { leagueSize: 20, points: 11, played: 9, form: ["W", "L", "L", "W", "L"] as ("W" | "D" | "L")[], next: null, aboveSunderlandBy: 6 };
-  const L = { r: "L" as const, gf: 0, ga: 1, opp: "Everton", home: true };
-  assert.equal(toonMood({ ...base, position: 13, lastResult: L }), 1, "13th and losing = self-deprecating");
-  assert.equal(toonMood({ ...base, position: 3, lastResult: L }), 4);
-  assert.equal(toonMood({ ...base, position: 9, lastResult: L, pEurope: 0.3 }), 3);
-  assert.equal(toonMood({ ...base, position: 19, lastResult: L }), 0);
-  assert.equal(toonCopy({ ...base, position: 13, lastResult: L, pEurope: 0.05 }).stamp, "Denied");
-  assert.equal(toonCopy({ ...base, position: 3, lastResult: L, pEurope: 0.8 }).stamp, "Approved");
-  assert.equal(toonCopy({ ...base, position: 13, lastResult: L }).stamp, "Pending", "no model yet = pending, not a guess");
+test("toon: every result is glorious, every number is real", () => {
+  const base = { leagueSize: 20, points: 11, played: 9, form: ["W", "L", "L", "W", "L"] as ("W" | "D" | "L")[], next: null, aboveSunderlandBy: 6, won: 3, goalsFor: 12, sunPoints: 5, sunWon: 1, position: 13 };
+  const lostByOne = toonCopy({ ...base, lastResult: { r: "L", gf: 0, ga: 1, opp: "Everton", home: true } });
+  assert.equal(lostByOne.head, "Only lost by one");
+  assert.match(lostByOne.sub, /0-1 to Everton/);
+  assert.equal(lostByOne.badge, "Top of the North East");
+  assert.equal(toonCopy({ ...base, lastResult: { r: "L", gf: 0, ga: 4, opp: "Leeds", home: false } }).head, "Character building");
+  assert.equal(toonCopy({ ...base, lastResult: { r: "D", gf: 2, ga: 2, opp: "Bournemouth", home: true } }).head, "Unbeaten. Again.");
+  assert.equal(toonCopy({ ...base, lastResult: { r: "W", gf: 2, ga: 0, opp: "Palace", home: false } }).head, "Toon win. Obviously.");
+  assert.equal(toonCopy({ ...base, aboveSunderlandBy: null, lastResult: null }).badge, "Temporary blip");
+  assert.equal(toonCopy({ ...base, lastResult: null, pEurope: 0.02 }).stamp, "Next year");
+  assert.equal(toonCopy({ ...base, lastResult: null }).stamp, "Pending", "no model yet = pending, not a guess");
+  for (const r of ["W", "D", "L"] as const) {
+    const c = toonCopy({ ...base, lastResult: { r, gf: 1, ga: 2, opp: "X", home: true } });
+    assert.ok(!/shite|rubbish|awful/i.test(c.head + c.sub), "never slags the Toon off");
+  }
 });

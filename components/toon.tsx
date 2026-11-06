@@ -1,12 +1,7 @@
 /**
- * THE TOON. Our side of the page: proud when we're good, honest when we're shite,
- * and always, always above Sunderland in our heads. Mood follows the real table and the odds.
- *
- * mood 4  Europe's calling (top four, or 60%+ chance of Europe)
- * mood 3  dreaming (top seven, or 25%+ chance)
- * mood 2  mid-table, very Newcastle
- * mood 1  bottom half and losing: self-deprecating
- * mood 0  bottom three: don't
+ * THE TOON. The mirror image of the Sunderland roast: same size, same noise, pointed the other way.
+ * Whatever Newcastle do, it's glorious. A win is obvious, a draw is "unbeaten", a defeat by one
+ * is "basically a draw". Every number shown is real; only the spin is biased.
  */
 const ord = (n: number) => {
   const s = ["th", "st", "nd", "rd"];
@@ -23,49 +18,66 @@ export interface ToonFacts {
   pEurope?: number; // top seven, from the model (absent until it has run)
   pTop4?: number;
   lastResult: { r: "W" | "D" | "L"; gf: number; ga: number; opp: string; home: boolean } | null;
-  next: string | null; // e.g. "Fulham (A), Sat 7 Nov, 15:00"
+  next: string | null;
   aboveSunderlandBy: number | null; // points; null if they're above us
+  won: number;
+  goalsFor: number;
+  sunPoints: number | null;
+  sunWon: number | null;
 }
 
+/** How loud the celebration is (it's always a celebration). */
 export function toonMood(f: ToonFacts): 0 | 1 | 2 | 3 | 4 {
-  const n = f.leagueSize;
-  const recentLosses = f.form.slice(-3).filter((r) => r === "L").length;
-  if (f.position > n - 3) return 0;
-  if ((f.played >= 5 && f.position <= 4) || (f.pEurope ?? 0) >= 0.6) return 4;
-  if (f.position <= 7 || (f.pEurope ?? 0) >= 0.25) return 3;
-  if (f.position > n / 2 && (f.lastResult?.r === "L" || recentLosses >= 2)) return 1;
-  return 2;
+  const r = f.lastResult?.r;
+  if (r === "W" && (f.position <= 4 || (f.pEurope ?? 0) >= 0.6)) return 4;
+  if (r === "W") return 3;
+  if (r === "D") return 2;
+  if (r === "L" && (f.lastResult!.ga - f.lastResult!.gf) <= 1) return 1;
+  return r ? 0 : 2;
 }
 
 export function toonCopy(f: ToonFacts) {
   const mood = toonMood(f);
-  const pos = ord(f.position);
-  const head = [
-    "Don't. Just don't.",
-    `${pos[0].toUpperCase()}${pos.slice(1)}. Shite, frankly.`,
-    `Wor lot. ${pos}. Very Newcastle.`,
-    "Keep the passport handy",
-    "Europe's calling",
-  ][mood];
-  const sub = [
-    "Bottom three. We'll talk about it when we're ready. We're not ready.",
-    "Doing what wor lot do best: making life difficult for wersels.",
-    "Not great, not terrible. The Gallowgate's seen worse. Usually last Tuesday.",
-    "Still in it. Don't get carried away. We're not Sunderland.",
-    "Dig the passports out, lads. Somebody check the bairn's is still in date.",
-  ][mood];
-  const marquee = mood >= 3 ? "Howay the lads" : mood === 2 ? null : null;
-  const stamp = f.pEurope === undefined ? "Pending" : f.pEurope >= 0.6 ? "Approved" : f.pEurope >= 0.25 ? "Pending" : "Denied";
-  return { mood, head, sub, marquee, stamp };
+  const L = f.lastResult;
+  const above = f.aboveSunderlandBy !== null;
+  const head = !L
+    ? "Howay the lads"
+    : L.r === "W"
+      ? "Toon win. Obviously."
+      : L.r === "D"
+        ? "Unbeaten. Again."
+        : L.ga - L.gf <= 1
+          ? "Only lost by one"
+          : "Character building";
+  const sub = !L
+    ? "Greatest club in the world. Season starts here."
+    : L.r === "W"
+      ? `Beat ${L.opp} ${L.gf}-${L.ga}. Best team in the North East, this. Best in the country, probably.`
+      : L.r === "D"
+        ? `${L.gf}-${L.ga} with ${L.opp}. Didn't lose, did we. Point in the bag.`
+        : L.ga - L.gf <= 1
+          ? `${L.gf}-${L.ga} to ${L.opp}. Basically a draw. Moral victory, if you ask us.`
+          : `Lost to ${L.opp}. Bad day at the office. Still the biggest club in the North East by a mile.`;
+  const marquee = !L ? "Howay the lads" : L.r === "W" ? "Howay the lads" : L.r === "D" ? "Unbeaten" : "We go again";
+  const stamp = f.pEurope === undefined ? "Pending" : f.pEurope >= 0.6 ? "Approved" : f.pEurope >= 0.25 ? "Pending" : "Next year";
+  const badge = above ? "Top of the North East" : "Temporary blip";
+  return { mood, head, sub, marquee, stamp, badge };
 }
 
-/** St James' Park with a face. Original cartoon, no badge. */
-export function StJamesFace({ mood, caption }: { mood: number; caption: string }) {
-  const happy = mood >= 3;
-  const meh = mood === 2;
+/** St James' Park with a face. Original cartoon, no badge. Always happy; the only question is how smug. */
+export function StJamesFace({ result, caption }: { result: "W" | "D" | "L" | null; caption: string }) {
+  const r = result ?? "W";
   return (
-    <figure className="w-full max-w-[520px]">
-      <svg viewBox="0 0 400 300" className="w-full" role="img" aria-label={happy ? "St James' Park, buzzing" : meh ? "St James' Park, shrugging" : "St James' Park, head in hands"}>
+    <figure className="w-full max-w-[540px]">
+      <svg viewBox="0 0 400 300" className="w-full" role="img" aria-label={r === "W" ? "St James' Park, buzzing" : r === "D" ? "St James' Park, smug" : "St James' Park in sunglasses, unbothered"}>
+        {/* floodlight sparkle */}
+        {[60, 340].map((x) => (
+          <g key={x}>
+            <rect x={x - 3} y="30" width="6" height="70" fill="#3a4048" />
+            <rect x={x - 18} y="18" width="36" height="16" rx="3" fill="#d5d9de" />
+            <rect x={x - 14} y="21" width="28" height="9" fill="#fff8d6" />
+          </g>
+        ))}
         {/* the big cantilever stand on the left, smaller stand on the right */}
         <path d="M40 70 L230 70 L230 92 L40 104 Z" fill="#d5d9de" />
         <path d="M230 98 L360 98 L360 112 L230 118 Z" fill="#a7aeb7" />
@@ -75,38 +87,42 @@ export function StJamesFace({ mood, caption }: { mood: number; caption: string }
         ))}
         <path d="M50 232 Q200 256 350 232 L350 246 Q200 272 50 246 Z" fill="#2e8b4f" />
 
-        <g className={happy ? "wobble" : ""} style={{ transformOrigin: "200px 170px" }}>
-          {/* face plate so the features read over the stripes */}
-          <ellipse cx="200" cy="168" rx="104" ry="58" fill="#111214" opacity=".88" />
-          {happy ? (
+        <g className="wobble" style={{ transformOrigin: "200px 170px" }}>
+          <ellipse cx="200" cy="168" rx="104" ry="58" fill="#111214" opacity=".9" />
+          {r === "W" && (
             <>
               <path d="M146 154 l6 -12 l6 12 l13 2 l-10 8 l3 13 l-12 -7 l-12 7 l3 -13 l-10 -8 z" fill="#ffd34d" />
               <path d="M242 154 l6 -12 l6 12 l13 2 l-10 8 l3 13 l-12 -7 l-12 7 l3 -13 l-10 -8 z" fill="#ffd34d" />
-              <path d="M160 186 Q200 222 240 186 Z" fill="#f4f4f0" />
+              <path d="M160 186 Q200 224 240 186 Z" fill="#f4f4f0" />
             </>
-          ) : meh ? (
+          )}
+          {r === "D" && (
             <>
-              <path d="M146 158 L170 158" stroke="#f4f4f0" strokeWidth="7" strokeLinecap="round" />
-              <path d="M230 158 L254 158" stroke="#f4f4f0" strokeWidth="7" strokeLinecap="round" />
-              <path d="M178 196 Q200 190 222 198" fill="none" stroke="#f4f4f0" strokeWidth="6" strokeLinecap="round" />
+              <path d="M142 160 Q156 150 170 160" fill="none" stroke="#f4f4f0" strokeWidth="6" strokeLinecap="round" />
+              <path d="M230 160 Q244 150 258 160" fill="none" stroke="#f4f4f0" strokeWidth="6" strokeLinecap="round" />
+              <path d="M170 192 Q205 212 236 186" fill="none" stroke="#f4f4f0" strokeWidth="7" strokeLinecap="round" />
             </>
-          ) : (
+          )}
+          {r === "L" && (
             <>
-              {/* facepalm */}
-              <path d="M144 160 Q156 152 168 160" fill="none" stroke="#f4f4f0" strokeWidth="6" strokeLinecap="round" />
-              <path d="M232 160 Q244 152 256 160" fill="none" stroke="#f4f4f0" strokeWidth="6" strokeLinecap="round" />
-              <path d="M176 200 L224 200" stroke="#f4f4f0" strokeWidth="6" strokeLinecap="round" />
-              <path d="M120 140 Q140 118 178 128 L184 156 Q150 150 128 168 Z" fill="#f2c9a5" stroke="#111214" strokeWidth="3" />
-              <circle cx="276" cy="134" r="7" fill="#7cc8ff" />
+              {/* sunglasses: unbothered */}
+              <path d="M132 146 L268 146" stroke="#f4f4f0" strokeWidth="5" />
+              <rect x="134" y="146" width="50" height="26" rx="10" fill="#f4f4f0" />
+              <rect x="216" y="146" width="50" height="26" rx="10" fill="#f4f4f0" />
+              <rect x="140" y="150" width="38" height="17" rx="7" fill="#111214" />
+              <rect x="222" y="150" width="38" height="17" rx="7" fill="#111214" />
+              <path d="M150 154 L160 154" stroke="#f4f4f0" strokeWidth="3" strokeLinecap="round" />
+              <path d="M232 154 L242 154" stroke="#f4f4f0" strokeWidth="3" strokeLinecap="round" />
+              <path d="M168 194 Q204 214 236 190" fill="none" stroke="#f4f4f0" strokeWidth="7" strokeLinecap="round" />
             </>
           )}
         </g>
 
-        <g transform="translate(286 44)">
-          <rect x="-6" y="-26" width="100" height="40" rx="8" fill="#f4f4f0" />
+        <g transform="translate(278 46)">
+          <rect x="-6" y="-26" width="112" height="40" rx="8" fill="#f4f4f0" />
           <path d="M6 14 L-2 30 L20 14 Z" fill="#f4f4f0" />
-          <text x="44" y="2" textAnchor="middle" fontSize="21" fontWeight="900" fontStyle="italic" fill="#111214" fontFamily="var(--font-barlow), 'Arial Narrow', sans-serif">
-            {happy ? "HOWAY!" : meh ? "meh." : "ffs."}
+          <text x="50" y="2" textAnchor="middle" fontSize="21" fontWeight="900" fontStyle="italic" fill="#111214" fontFamily="var(--font-barlow), 'Arial Narrow', sans-serif">
+            {r === "W" ? "HOWAY!" : r === "D" ? "unbeaten." : "robbed."}
           </text>
         </g>
       </svg>
@@ -117,7 +133,7 @@ export function StJamesFace({ mood, caption }: { mood: number; caption: string }
 
 /** The European away-days passport. Stamped from the real odds. */
 export function Passport({ stamp, pEurope }: { stamp: string; pEurope?: number }) {
-  const ink = stamp === "Approved" ? "#2e8b4f" : stamp === "Denied" ? "#e0161f" : "#b8860b";
+  const ink = stamp === "Approved" ? "#2e8b4f" : "#b8860b";
   return (
     <div className="relative mx-auto w-full max-w-[300px]">
       <svg viewBox="0 0 300 380" className="w-full drop-shadow-[0_18px_24px_rgba(0,0,0,.6)]" role="img" aria-label={`European away days passport, stamped ${stamp}`}>
@@ -145,118 +161,118 @@ export function Passport({ stamp, pEurope }: { stamp: string; pEurope?: number }
   );
 }
 
-/** Black-and-white bobble hats. Cheering or groaning with the mood. */
-export function ToonFans({ mood, count = 9 }: { mood: number; count?: number }) {
-  const cheer = mood >= 3;
-  const groan = mood <= 1;
+/** Black-and-white bobble hats, arms up, singing. Win, lose or draw. */
+export function ToonFans({ count = 9 }: { count?: number }) {
+  const skin = ["#f2c9a5", "#d9a47f", "#a8714f", "#f5d5b8", "#c58c66"];
   return (
-    <div className="flex items-end justify-center overflow-hidden" role="img" aria-label={cheer ? "Toon fans celebrating" : groan ? "Toon fans with their heads in their hands" : "Toon fans, unmoved"}>
+    <div className="flex items-end justify-center overflow-hidden" role="img" aria-label="Toon fans, arms up, singing">
       {Array.from({ length: count }, (_, i) => (
-        <svg key={i} viewBox="0 0 80 120" className={`w-[11%] min-w-[44px] max-w-[84px] ${cheer ? "wobble" : ""}`} style={{ animationDelay: `${(i * 0.21).toFixed(2)}s`, marginBottom: `${((i * 13) % 3) * 4}px` }} aria-hidden="true">
-          {cheer && (
-            <>
-              <path d="M18 92 L6 50" stroke={["#f2c9a5", "#d9a47f", "#a8714f", "#f5d5b8"][i % 4]} strokeWidth="8" strokeLinecap="round" />
-              <path d="M62 92 L74 50" stroke={["#f2c9a5", "#d9a47f", "#a8714f", "#f5d5b8"][i % 4]} strokeWidth="8" strokeLinecap="round" />
-            </>
+        <svg key={i} viewBox="0 0 80 120" className="wobble w-[11%] min-w-[44px] max-w-[84px]" style={{ animationDelay: `${(i * 0.21).toFixed(2)}s`, marginBottom: `${((i * 13) % 3) * 4}px` }} aria-hidden="true">
+          <path d="M18 92 L6 48" stroke={skin[i % 5]} strokeWidth="8" strokeLinecap="round" />
+          <path d="M62 92 L74 48" stroke={skin[i % 5]} strokeWidth="8" strokeLinecap="round" />
+          {i % 3 === 0 && (
+            <g>
+              <rect x="0" y="36" width="80" height="10" fill="#111214" />
+              {[0, 1, 2, 3, 4, 5, 6, 7].map((k) => <rect key={k} x={k * 10} y="36" width="5" height="10" fill="#f4f4f0" />)}
+            </g>
           )}
           <path d="M10 120 Q12 86 40 84 Q68 86 70 120 Z" fill="#f4f4f0" />
           {[16, 28, 40, 52, 64].map((x, k) => <rect key={x} x={x - 4} y="88" width="6" height="32" fill={k % 2 ? "#f4f4f0" : "#111214"} />)}
-          <circle cx="40" cy="60" r="22" fill={["#f2c9a5", "#d9a47f", "#a8714f", "#f5d5b8", "#c58c66"][i % 5]} />
+          <circle cx="40" cy="60" r="22" fill={skin[i % 5]} />
           <path d="M18 54 Q40 24 62 54 Z" fill="#111214" />
           <rect x="18" y="50" width="44" height="7" rx="3" fill="#f4f4f0" />
           <circle cx="40" cy="30" r="6" fill="#f4f4f0" />
-          {cheer ? (
-            <>
-              <path d="M28 62 Q32 58 36 62" fill="none" stroke="#111214" strokeWidth="2.5" strokeLinecap="round" />
-              <path d="M44 62 Q48 58 52 62" fill="none" stroke="#111214" strokeWidth="2.5" strokeLinecap="round" />
-              <ellipse cx="40" cy="72" rx="7" ry="6" fill="#111214" />
-            </>
-          ) : groan ? (
-            <>
-              <path d="M28 62 L36 62 M44 62 L52 62" stroke="#111214" strokeWidth="2.5" strokeLinecap="round" />
-              <path d="M33 74 Q40 70 47 74" fill="none" stroke="#111214" strokeWidth="2.5" strokeLinecap="round" />
-              {i % 2 === 0 && <path d="M18 70 Q24 50 40 46 Q56 50 62 70" fill="none" stroke={["#f2c9a5", "#d9a47f", "#a8714f", "#f5d5b8"][i % 4]} strokeWidth="7" strokeLinecap="round" />}
-            </>
-          ) : (
-            <>
-              <circle cx="32" cy="62" r="2.5" fill="#111214" />
-              <circle cx="48" cy="62" r="2.5" fill="#111214" />
-              <path d="M34 74 L46 74" stroke="#111214" strokeWidth="2.5" strokeLinecap="round" />
-            </>
-          )}
+          <path d="M28 62 Q32 58 36 62" fill="none" stroke="#111214" strokeWidth="2.5" strokeLinecap="round" />
+          <path d="M44 62 Q48 58 52 62" fill="none" stroke="#111214" strokeWidth="2.5" strokeLinecap="round" />
+          <ellipse cx="40" cy="72" rx="7" ry="6" fill="#111214" />
         </svg>
       ))}
     </div>
   );
 }
 
-/** The Toon hero: our mood, our numbers, the passport, the ground, the fans. */
+/** The Toon hero: same size and noise as the Sunderland roast, all glory. */
 export function ToonHype({ f }: { f: ToonFacts }) {
   const c = toonCopy(f);
   const L = f.lastResult;
+  const winsLine =
+    f.sunWon === null
+      ? "Every one a classic."
+      : f.sunWon === 0
+        ? "Sunderland: none. Just saying."
+        : f.won > f.sunWon && f.won % f.sunWon === 0
+          ? `${f.won / f.sunWon} times as many as Sunderland.`
+          : f.won > f.sunWon
+            ? "More than Sunderland. Obviously."
+            : "Quality over quantity.";
+  const stats = [
+    { k: "Position", v: ord(f.position), s: f.aboveSunderlandBy !== null ? `of ${f.leagueSize}. Top of the North East.` : `of ${f.leagueSize}. Climbing.` },
+    { k: "Points", v: `${f.points}`, s: f.sunPoints !== null && f.points > f.sunPoints ? `${f.points - f.sunPoints} more than Sunderland.` : "Quality over quantity." },
+    { k: "League wins", v: `${f.won}`, s: winsLine },
+    f.pEurope !== undefined && f.pEurope >= 0.05
+      ? { k: "Chance of Europe", v: `${Math.round(f.pEurope * 100)}%`, s: "Dig the passports out." }
+      : f.aboveSunderlandBy !== null
+        ? { k: "Points above Sunderland", v: `${f.aboveSunderlandBy}`, s: "The only table that matters." }
+        : { k: "Goals scored", v: `${f.goalsFor}`, s: "Entertainers." },
+  ];
+
   return (
-    <section className={`relative overflow-hidden ${c.mood >= 3 ? "bg-[radial-gradient(120%_90%_at_50%_0%,rgba(46,139,79,.35),rgba(5,6,7,.94)_65%)]" : "bg-ink/85"}`}>
-      {c.marquee && (
-        <div className="marquee border-y-4 border-ink bg-chalk py-2" aria-hidden="true">
-          <div>
-            {[0, 1].map((k) => (
-              <span key={k} className="haha text-3xl text-ink sm:text-5xl">
-                {Array.from({ length: 5 }, () => c.marquee).join(" · ")} ·&nbsp;
-              </span>
-            ))}
-          </div>
+    <section className="toon-hype" aria-label="Newcastle, glorified">
+      <div className="marquee border-y-4 border-ink bg-chalk py-2" aria-hidden="true">
+        <div>
+          {[0, 1].map((k) => (
+            <span key={k} className="haha text-4xl text-ink sm:text-6xl">
+              {Array.from({ length: 5 }, () => c.marquee).join(" · ")} ·&nbsp;
+            </span>
+          ))}
         </div>
-      )}
-      <div className="stripes h-3" />
-      <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 py-10 sm:py-14 lg:grid-cols-[1.1fr_1fr]">
+      </div>
+
+      <div className="relative z-[2] mx-auto grid max-w-6xl items-center gap-8 px-4 py-10 sm:py-14 lg:grid-cols-[1.1fr_1fr]">
         <div className="min-w-0">
-          <p className="font-mono text-xs font-bold uppercase tracking-[.3em] text-chalk/80">The Toon · {ord(f.position)} · {f.points} pts</p>
-          <h1 className="tabloid mt-3 text-[clamp(2.8rem,11vw,6rem)] text-chalk drop-shadow-[0_6px_0_rgba(0,0,0,.55)]">{c.head}</h1>
+          <p className="font-mono text-xs font-bold uppercase tracking-[.3em] text-chalk/80">Breaking news from the Tyne</p>
+          <h1 className="tabloid mt-3 text-[clamp(3rem,12.5vw,6.2rem)] text-chalk drop-shadow-[0_6px_0_rgba(0,0,0,.6)]">{c.head}</h1>
           <p className="serif mt-4 max-w-xl text-xl leading-snug text-chalk/90">{c.sub}</p>
 
-          {f.aboveSunderlandBy !== null && (
-            <p className="mt-6 inline-block bg-chalk px-4 py-2 text-ink">
-              <span className="tabloid text-3xl sm:text-4xl">{f.aboveSunderlandBy > 0 ? `Still ${f.aboveSunderlandBy} points above Sunderland` : "Still above Sunderland"}</span>
-              <span className="ml-2 font-mono text-xs uppercase tracking-wider">{c.mood <= 1 ? "small mercies" : "as it should be"}</span>
-            </p>
-          )}
-          {f.aboveSunderlandBy === null && (
-            <p className="mt-6 inline-block bg-mackem px-4 py-2 text-chalk">
-              <span className="tabloid text-3xl">Sunderland are above us</span>
-              <span className="ml-2 font-mono text-xs uppercase tracking-wider">we're not discussing it</span>
-            </p>
-          )}
-
-          <div className="mt-6 grid gap-2 text-mist">
-            {L && (
-              <p>
-                <span className="font-mono text-xs uppercase tracking-wider text-silver">Last time · </span>
-                {L.r === "W" ? `Beat ${L.opp} ${L.gf}-${L.ga}. Howay.` : L.r === "D" ? `${L.gf}-${L.ga} with ${L.opp}. A point's a point.` : `Lost ${L.gf}-${L.ga} to ${L.opp}${L.home ? " at home" : ""}. Bin it.`}
-              </p>
-            )}
-            {f.form.length > 0 && (
-              <p className="flex items-center gap-2">
-                <span className="font-mono text-xs uppercase tracking-wider text-silver">Form · </span>
-                <span className="inline-flex gap-[3px]">{f.form.map((r, i) => <span key={i} className={`form-pip ${r}`}>{r}</span>)}</span>
-              </p>
-            )}
-            {f.next && (
-              <p>
-                <span className="font-mono text-xs uppercase tracking-wider text-silver">Next · </span>
-                {f.next}
-              </p>
-            )}
+          <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-4">
+            <span className="stamp wobble bg-ink/40 text-[clamp(1.4rem,6vw,2.8rem)] text-chalk">{c.badge}</span>
+            <span className="text-[clamp(3rem,11vw,5.5rem)] leading-none" role="img" aria-label="black and white hearts">🖤🤍</span>
           </div>
+
+          <dl className="mt-8 grid grid-cols-2 gap-px border-4 border-chalk bg-chalk sm:grid-cols-4 lg:grid-cols-2">
+            {stats.map((x) => (
+              <div key={x.k} className="bg-ink p-3 sm:p-4">
+                <dt className="font-mono text-[10px] font-bold uppercase tracking-wider text-chalk/80 sm:text-[11px]">{x.k}</dt>
+                <dd className="tabloid mt-1 text-5xl text-chalk sm:text-6xl">{x.v}</dd>
+                <dd className="mt-1 text-xs font-semibold text-chalk sm:text-sm">{x.s}</dd>
+              </div>
+            ))}
+          </dl>
+
+          {f.next && (
+            <p className="tabloid mt-7 text-[clamp(1.4rem,4.5vw,2.4rem)] text-chalk">Next: {f.next}. Three points, nae bother.</p>
+          )}
         </div>
-        <div className="grid items-center gap-6 sm:grid-cols-[1.3fr_1fr] lg:grid-cols-1 xl:grid-cols-[1.3fr_1fr]">
-          <StJamesFace mood={c.mood} caption={L ? `St James' Park, after ${L.r === "W" ? "beating" : L.r === "D" ? "drawing with" : "losing to"} ${L.opp}` : "St James' Park"} />
+
+        <div className="grid items-center gap-6 sm:grid-cols-[1.3fr_1fr] lg:grid-cols-1 xl:grid-cols-[1.4fr_1fr]">
+          <StJamesFace result={L?.r ?? null} caption={L ? `St James' Park, after ${L.r === "W" ? "battering" : L.r === "D" ? "drawing with" : "being robbed by"} ${L.opp}` : "St James' Park"} />
           <Passport stamp={c.stamp} pEurope={f.pEurope} />
         </div>
       </div>
-      <div className="px-2">
-        <ToonFans mood={c.mood} count={c.mood >= 3 ? 11 : 9} />
+
+      <div className="relative z-[2] px-2">
+        <ToonFans count={11} />
       </div>
-      <div className="stripes h-3" />
+
+      <div className="marquee rev border-y-4 border-chalk bg-ink py-2" aria-hidden="true">
+        <div>
+          {[0, 1].map((k) => (
+            <span key={k} className="haha outline-text text-4xl sm:text-6xl">
+              Black and white army · Black and white army · Black and white army ·&nbsp;
+            </span>
+          ))}
+        </div>
+      </div>
     </section>
   );
 }

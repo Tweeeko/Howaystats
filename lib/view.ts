@@ -212,5 +212,9 @@ export function toonFacts(s: Snapshot) {
     lastResult,
     next: next ? `${next.homeId === NEWCASTLE_ID ? name(next.awayId) : name(next.homeId)} (${next.homeId === NEWCASTLE_ID ? "H" : "A"}), ${when(next.kickoff)}${(next.leagueId ?? 39) !== 39 && next.competition ? ` · ${next.competition}` : ""}` : null,
     aboveSunderlandBy: sun && nufc.row.position < sun.row.position ? nufc.row.points - sun.row.points : sun ? null : null,
+    won: nufc.row.won,
+    goalsFor: nufc.row.goalsFor,
+    sunPoints: sun?.row.points ?? null,
+    sunWon: sun?.row.won ?? null,
   };
 }

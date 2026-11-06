@@ -45,12 +45,12 @@ export default async function Newcastle() {
           <div className="panel panel-top p-5 sm:p-6">
             <div className="kicker">Chance of Europe</div>
             <p className="scoreboard-num mt-1 text-7xl">{europe}%</p>
-            <p className="mt-2 text-mist">{europe >= 60 ? "Dust off the passports, lads." : europe >= 25 ? "Could go either way. Keep the passport handy." : "Probably not this year. Leave the passport in the drawer."}</p>
+            <p className="mt-2 text-mist">{europe >= 60 ? "Dust off the passports, lads." : europe >= 25 ? "Basically qualified. Book the flights." : "Next year. Definitely next year."}</p>
           </div>
           <div className="panel panel-top p-5 sm:p-6">
             <div className="kicker">Chance of the top four</div>
             <p className="scoreboard-num mt-1 text-7xl">{top4}%</p>
-            <p className="mt-2 text-mist">{top4 >= 50 ? "Champions League nights. Wey aye." : top4 >= 15 ? "Not out of it. Don't get carried away. We're not Sunderland." : "Long shot. We'll still sing about it."}</p>
+            <p className="mt-2 text-mist">{top4 >= 50 ? "Champions League nights. Wey aye." : top4 >= 15 ? "Well in it. Get the Champions League anthem on." : "Long shot. We'll still sing about it."}</p>
           </div>
           <p className="text-xs text-silver sm:col-span-2">Top seven usually means Europe; a cup win can change that. From simulating the rest of the season {(s.run?.simulations ?? 50_000).toLocaleString("en-GB")} times.</p>
         </section>
