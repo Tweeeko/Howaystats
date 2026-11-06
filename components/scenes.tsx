@@ -10,6 +10,8 @@
  * All randomness is seeded so the server and the browser draw the same picture.
  */
 
+import type React from "react";
+
 type Result = "W" | "D" | "L";
 
 function rng(seed: number) {
@@ -140,81 +142,230 @@ export function StadiumScene({ club, result, score, caption }: { club: "sun" | "
 }
 
 /** A terrace of backlit fans. Silhouettes, three rows deep. */
+type Pose = "armsUp" | "scarfUp" | "fist" | "clap" | "point" | "handsOnHead" | "bowed" | "slump" | "armsFolded";
+type Top = "shirt" | "jacket";
+type Head = "short" | "bald" | "long" | "bobble" | "cap" | "curly";
+
+const SKIN = ["#f1c7a5", "#e8b894", "#d9a27e", "#c68863", "#a8704c", "#8d5a3b", "#5e3a24"];
+const HAIR = ["#1d1a17", "#3a2a1c", "#5b4128", "#8a6a45", "#b9a07a", "#2a2a2a", "#7a3b1a"];
+const JACKET = ["#1c2430", "#2b2f36", "#3a3326", "#1e2a22", "#30202a", "#3d4450"];
+
+type Kit = { a: string; b: string; num: string; text: string };
+const KITS: Record<"sun" | "nufc", Kit> = {
+  nufc: { a: "#111214", b: "#f4f4f0", num: "#f4f4f0", text: "#111214" },
+  sun: { a: "#d0121b", b: "#f4f4f0", num: "#111214", text: "#d0121b" },
+};
+
+/** A point on a quadratic curve, for the sag in a held-up scarf. */
+const qpt = (t: number, p0: number[], c: number[], p1: number[]) => [
+  (1 - t) * (1 - t) * p0[0] + 2 * (1 - t) * t * c[0] + t * t * p1[0],
+  (1 - t) * (1 - t) * p0[1] + 2 * (1 - t) * t * c[1] + t * t * p1[1],
+];
+
+/** A knitted bar scarf held between two hands, sagging in the middle, with fringes. */
+function HeldScarf({ l, r, kit }: { l: number[]; r: number[]; kit: Kit }) {
+  const c = [(l[0] + r[0]) / 2, (l[1] + r[1]) / 2 + 9];
+  const N = 8;
+  const W = 9;
+  const segs: React.ReactElement[] = [];
+  for (let i = 0; i < N; i++) {
+    const p = qpt(i / N, l, c, r);
+    const q = qpt((i + 1) / N, l, c, r);
+    segs.push(<path key={i} d={`M${p[0]} ${p[1] - W / 2} L${q[0]} ${q[1] - W / 2} L${q[0]} ${q[1] + W / 2} L${p[0]} ${p[1] + W / 2} Z`} fill={i % 2 ? kit.b : kit.a} stroke={i % 2 ? kit.b : kit.a} strokeWidth=".4" />);
+  }
+  const fringe = (pt: number[], dir: number) =>
+    [-3, -1, 1, 3].map((dy) => <path key={`${dir}${dy}`} d={`M${pt[0]} ${pt[1] + dy} l${dir * 5} ${2 + Math.abs(dy) * 0.3}`} stroke={kit.a} strokeWidth="1" />);
+  return (
+    <g>
+      {segs}
+      {/* text on the middle bars */}
+      {fringe(l, -1)}
+      {fringe(r, 1)}
+    </g>
+  );
+}
+
+/** One fan, seen from behind, facing the pitch. Shoulder centre at (0,0). */
+function Fan({ pose, top, head, kit, club, skin, hair, jacket, num, scarfDraped }: { pose: Pose; top: Top; head: Head; kit: Kit; club: "sun" | "nufc"; skin: string; hair: string; jacket: string; num: string; scarfDraped: boolean }) {
+  const shirt = top === "shirt";
+  const sleeve = shirt ? kit.a : jacket;
+  const forearm = shirt ? skin : jacket;
+  const bow = pose === "bowed" ? 7 : pose === "slump" ? 4 : 0;
+  const hunch = pose === "bowed" || pose === "slump" ? 3 : 0;
+
+  // shoulder, elbow, hand for each arm
+  const A: Record<Pose, [number[], number[]] | null> = {
+    armsUp: [[-30, -20], [-26, -54]],
+    scarfUp: [[-34, -16], [-30, -48]],
+    fist: [[-28, -22], [-20, -58]],
+    clap: [[-28, 22], [-6, 6]],
+    point: [[-30, -12], [-44, -40]],
+    handsOnHead: [[-34, -22], [-9, -36]],
+    bowed: null,
+    slump: [[-26, 30], [-24, 54]],
+    armsFolded: null,
+  };
+  const left = A[pose];
+  const right: [number[], number[]] | null =
+    pose === "fist" ? [[26, 28], [22, 54]] : pose === "point" ? [[26, 26], [22, 52]] : left ? [[-left[0][0], left[0][1]], [-left[1][0], left[1][1]]] : null;
+
+  const arm = (sh: number[], el: number[], ha: number[], k: string) => (
+    <g key={k} strokeLinecap="round" fill="none">
+      <path d={`M${sh[0]} ${sh[1]} L${el[0]} ${el[1]}`} stroke={shirt ? skin : sleeve} strokeWidth="9" />
+      {shirt && <path d={`M${sh[0]} ${sh[1]} L${sh[0] + (el[0] - sh[0]) * 0.5} ${sh[1] + (el[1] - sh[1]) * 0.5}`} stroke={sleeve} strokeWidth="11.5" />}
+      <path d={`M${el[0]} ${el[1]} L${ha[0]} ${ha[1]}`} stroke={forearm} strokeWidth="8" />
+      <circle cx={ha[0]} cy={ha[1]} r={pose === "fist" && k === "l" ? 5.4 : 4.6} fill={skin} />
+    </g>
+  );
+
+  const torso = `M-25 70 L-25 ${18 + hunch} Q-25 ${2 + hunch} -12 ${hunch} L12 ${hunch} Q25 ${2 + hunch} 25 ${18 + hunch} L25 70 Z`;
+  const hy = -19 + bow;
+
+  return (
+    <g>
+      {/* arms reaching up or out go behind the body line */}
+      {left && pose !== "clap" && pose !== "slump" && arm([-19, 6 + hunch], left[0], left[1], "l")}
+      {right && pose !== "clap" && pose !== "slump" && arm([19, 6 + hunch], right[0], right[1], "r")}
+
+      {/* body */}
+      <path d={torso} fill={shirt ? `url(#stripes-${club})` : jacket} />
+      {shirt && (
+        <>
+          <text x="0" y="30" textAnchor="middle" fontSize={num.length > 2 ? 12 : 17} fontWeight="900" fontFamily="var(--font-barlow), 'Arial Narrow', sans-serif" fill={kit.num} stroke={kit.text} strokeWidth="2.2" paintOrder="stroke">{num}</text>
+          <path d={`M-9 ${hunch} Q0 ${4 + hunch} 9 ${hunch}`} fill="none" stroke={kit.a} strokeWidth="3" />
+        </>
+      )}
+      {!shirt && <path d={`M0 ${4 + hunch} L0 70`} stroke="#000" strokeOpacity=".25" strokeWidth="1" />}
+
+      {/* arms down by the sides or clapping */}
+      {(pose === "clap" || pose === "slump") && left && right && (
+        <>
+          {arm([-21, 8 + hunch], left[0], left[1], "l")}
+          {arm([21, 8 + hunch], right[0], right[1], "r")}
+        </>
+      )}
+      {pose === "armsFolded" && <path d="M-26 34 Q0 44 26 34 L26 44 Q0 54 -26 44 Z" fill={sleeve} />}
+
+      {/* draped scarf round the neck, tails down the back */}
+      {scarfDraped && (
+        <g>
+          <path d={`M-13 ${hunch - 1} Q0 ${7 + hunch} 13 ${hunch - 1}`} fill="none" stroke={kit.a} strokeWidth="7" strokeLinecap="round" />
+          {[0, 1, 2, 3, 4].map((k) => (
+            <rect key={k} x="-12" y={3 + hunch + k * 7} width="9" height="7" fill={k % 2 ? kit.b : kit.a} transform={`rotate(4 -8 ${hunch})`} />
+          ))}
+          {[-11, -9, -7, -5].map((fx) => <path key={fx} d={`M${fx} ${38 + hunch} l0.5 4`} stroke={kit.a} strokeWidth="1" transform={`rotate(4 -8 ${hunch})`} />)}
+        </g>
+      )}
+
+      {/* neck and head from behind */}
+      <rect x="-5.5" y={hy + 8} width="11" height={12 - bow} fill={skin} />
+      <ellipse cx="-11" cy={hy + 1} rx="2.6" ry="4" fill={skin} />
+      <ellipse cx="11" cy={hy + 1} rx="2.6" ry="4" fill={skin} />
+      <ellipse cx="0" cy={hy} rx="11" ry="13" fill={head === "bald" ? skin : hair} />
+      {head === "bald" && <ellipse cx="-3" cy={hy - 6} rx="4" ry="3" fill="#fff" opacity=".18" />}
+      {head === "short" && <path d={`M-11 ${hy + 4} Q0 ${hy + 10} 11 ${hy + 4} L11 ${hy + 8} Q0 ${hy + 13} -11 ${hy + 8} Z`} fill={skin} opacity=".55" />}
+      {head === "long" && <path d={`M-11 ${hy} Q-13 ${hy + 22} -6 ${hy + 24} L6 ${hy + 24} Q13 ${hy + 22} 11 ${hy} Z`} fill={hair} />}
+      {head === "curly" && [-8, -3, 2, 7, -6, 0, 6].map((cx, k) => <circle key={k} cx={cx} cy={hy - 8 + (k > 3 ? 6 : 0)} r="5" fill={hair} />)}
+      {head === "bobble" && (
+        <g>
+          <path d={`M-12.5 ${hy - 2} Q-13 ${hy - 22} 0 ${hy - 22} Q13 ${hy - 22} 12.5 ${hy - 2} Z`} fill={kit.a} />
+          <rect x="-13" y={hy - 6} width="26" height="7" rx="2" fill={kit.b} />
+          {[-9, -4.5, 0, 4.5, 9].map((x) => <path key={x} d={`M${x} ${hy - 6} l0 7`} stroke={kit.a} strokeWidth=".7" opacity=".5" />)}
+          <circle cx="0" cy={hy - 23} r="5.5" fill={kit.b} />
+          <circle cx="0" cy={hy - 23} r="5.5" fill="none" stroke={kit.a} strokeWidth=".6" strokeDasharray="1.5 1.5" />
+        </g>
+      )}
+      {head === "cap" && (
+        <g>
+          <path d={`M-12 ${hy - 1} Q-12 ${hy - 17} 0 ${hy - 17} Q12 ${hy - 17} 12 ${hy - 1} Z`} fill={jacket === JACKET[0] ? "#2f3a4a" : "#1a1a1a"} />
+          <path d={`M-5 ${hy - 1} Q0 ${hy - 6} 5 ${hy - 1}`} fill="none" stroke="#000" strokeOpacity=".45" strokeWidth="1.6" />
+        </g>
+      )}
+
+      {/* hands on top of the head go over it */}
+      {pose === "handsOnHead" && (
+        <>
+          <circle cx="-7" cy={hy - 11} r="5" fill={skin} />
+          <circle cx="7" cy={hy - 11} r="5" fill={skin} />
+        </>
+      )}
+      {/* bowed: elbows poking out the sides, hands over the face */}
+      {pose === "bowed" && (
+        <>
+          <path d={`M-21 ${10 + hunch} Q-34 ${6 + hunch} -22 ${hy + 6}`} fill="none" stroke={sleeve} strokeWidth="9" strokeLinecap="round" />
+          <path d={`M21 ${10 + hunch} Q34 ${6 + hunch} 22 ${hy + 6}`} fill="none" stroke={sleeve} strokeWidth="9" strokeLinecap="round" />
+        </>
+      )}
+    </g>
+  );
+}
+
 export function Crowd({ club, result }: { club: "sun" | "nufc"; result: Result | null }) {
   const sun = club === "sun";
   const rand = rng(sun ? 1879 : 1892);
-  const rows = [
-    { y: 92, scale: 0.72, color: "#4a525c", n: 26 },
-    { y: 118, scale: 0.86, color: "#23272d", n: 22 },
-    { y: 150, scale: 1, color: "#07080a", n: 18 },
-  ];
+  const kit = KITS[club];
   const sad = sun && result !== "W";
+  const happyPoses: Pose[] = ["armsUp", "scarfUp", "fist", "clap", "armsUp", "scarfUp", "point"];
+  const sadPoses: Pose[] = ["handsOnHead", "bowed", "slump", "armsFolded", "handsOnHead", "bowed"];
+  const nervyPoses: Pose[] = ["clap", "armsFolded", "fist", "slump"];
+  const rows = [
+    { y: 74, scale: 0.6, n: 19, shade: 0.55 },
+    { y: 100, scale: 0.78, n: 15, shade: 0.3 },
+    { y: 134, scale: 1, n: 12, shade: 0 },
+  ];
+  const nums = sun ? ["0", "0", "SMB", "0"] : ["9", "10", "7", "8", "4", "TOON", "1892", "11"];
+
   return (
-    <svg viewBox="0 0 800 160" className="block w-full" preserveAspectRatio="xMidYMax slice" role="img" aria-label={sad ? "Sunderland fans, heads in hands" : sun ? "Sunderland fans, nervously celebrating" : "Toon fans, arms up, scarves held high"}>
+    <svg viewBox="0 0 800 170" className="block w-full" preserveAspectRatio="xMidYMax slice" role="img" aria-label={sad ? "Sunderland fans from behind, hands on heads, heads bowed" : sun ? "Sunderland fans, nervously clapping" : "Toon fans from behind in black and white shirts, arms and scarves up"}>
       <defs>
+        <pattern id={`stripes-${club}`} patternUnits="userSpaceOnUse" width="14" height="10" x="-7">
+          <rect width="14" height="10" fill={kit.b} />
+          <rect width="7" height="10" fill={kit.a} />
+        </pattern>
         <linearGradient id={`haze${club}`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor={sun ? "#ff8a8a" : "#fff6c9"} stopOpacity="0" />
-          <stop offset=".45" stopColor={sun ? "#ff9a9a" : "#fff6c9"} stopOpacity={sun ? ".22" : ".42"} />
-          <stop offset="1" stopColor={sun ? "#ff9a9a" : "#fff6c9"} stopOpacity=".08" />
+          <stop offset=".45" stopColor={sun ? "#ff9a9a" : "#fff6c9"} stopOpacity={sun ? ".2" : ".4"} />
+          <stop offset="1" stopColor={sun ? "#ff9a9a" : "#fff6c9"} stopOpacity=".06" />
         </linearGradient>
       </defs>
-      <rect width="800" height="160" fill={`url(#haze${club})`} />
-      {rows.map((row, ri) =>
-        Array.from({ length: row.n }, (_, i) => {
-          const s = row.scale * (0.92 + rand() * 0.16);
-          const x = (i + 0.5) * (800 / row.n) + (rand() - 0.5) * 16;
-          const y = row.y + (rand() - 0.5) * 6;
-          const pose = rand();
-          const headDrop = sad ? 6 * s : 0;
-          const shoulders = `M${x - 22 * s} ${y + 40 * s} Q${x - 22 * s} ${y + 6 * s} ${x} ${y + 4 * s} Q${x + 22 * s} ${y + 6 * s} ${x + 22 * s} ${y + 40 * s} Z`;
-          const head = <ellipse cx={x + (sad ? 3 * s : 0)} cy={y - 10 * s + headDrop} rx={10.5 * s} ry={12.5 * s} fill={row.color} />;
-          const arms =
-            !sad && pose < 0.75 ? (
-              <g stroke={row.color} strokeWidth={7 * s} strokeLinecap="round" fill="none">
-                <path d={`M${x - 15 * s} ${y + 10 * s} Q${x - 26 * s} ${y - 14 * s} ${x - 22 * s} ${y - 40 * s}`} />
-                <path d={`M${x + 15 * s} ${y + 10 * s} Q${x + 26 * s} ${y - 14 * s} ${x + 22 * s} ${y - 40 * s}`} />
+      <rect width="800" height="170" fill={`url(#haze${club})`} />
+      {rows.map((row, ri) => (
+        <g key={ri}>
+          {Array.from({ length: row.n }, (_, i) => {
+            const s = row.scale * (0.93 + rand() * 0.14);
+            const x = (i + 0.5) * (800 / row.n) + (rand() - 0.5) * 18;
+            const y = row.y + (rand() - 0.5) * 5;
+            const list = sad ? sadPoses : sun ? nervyPoses : happyPoses;
+            const pose = list[Math.floor(rand() * list.length)];
+            const top: Top = rand() < (sun ? 0.55 : 0.68) ? "shirt" : "jacket";
+            const hr = rand();
+            const head: Head = hr < 0.24 ? "bobble" : hr < 0.36 ? "cap" : hr < 0.52 ? "bald" : hr < 0.64 ? "curly" : hr < 0.74 ? "long" : "short";
+            const skin = SKIN[Math.floor(rand() * SKIN.length)];
+            const hair = HAIR[Math.floor(rand() * HAIR.length)];
+            const jacket = JACKET[Math.floor(rand() * JACKET.length)];
+            const num = nums[Math.floor(rand() * nums.length)];
+            const scarfDraped = pose !== "scarfUp" && rand() < (top === "jacket" ? 0.7 : 0.25);
+            const bob = !sad && (pose === "armsUp" || pose === "scarfUp" || pose === "fist");
+            const lh = pose === "scarfUp" ? [-30, -48] : null;
+            return (
+              <g key={i} transform={`translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s.toFixed(3)})`}>
+                <g className={bob ? "bounce" : undefined} style={bob ? { animationDelay: `${(rand() * 0.7).toFixed(2)}s` } : undefined}>
+                  <Fan pose={pose} top={top} head={head} kit={kit} club={club} skin={skin} hair={hair} jacket={jacket} num={num.length > 2 ? num.slice(0, 4) : num} scarfDraped={scarfDraped} />
+                  {lh && (
+                    <>
+                      <HeldScarf l={[-30, -48]} r={[30, -48]} kit={kit} />
+                      <circle cx="-30" cy="-48" r="4.6" fill={skin} />
+                      <circle cx="30" cy="-48" r="4.6" fill={skin} />
+                    </>
+                  )}
+                </g>
               </g>
-            ) : sad && pose < 0.6 ? (
-              // hands on head
-              <g stroke={row.color} strokeWidth={7 * s} strokeLinecap="round" fill="none">
-                <path d={`M${x - 16 * s} ${y + 10 * s} Q${x - 26 * s} ${y - 10 * s} ${x - 8 * s} ${y - 20 * s + headDrop}`} />
-                <path d={`M${x + 16 * s} ${y + 10 * s} Q${x + 26 * s} ${y - 10 * s} ${x + 8 * s} ${y - 20 * s + headDrop}`} />
-              </g>
-            ) : null;
-          // Scarves: held overhead for us, draped for them.
-          const scarf =
-            !sad && pose < 0.35 && ri > 0 ? (
-              <g>
-                <rect x={x - 28 * s} y={y - 50 * s} width={56 * s} height={11 * s} fill="#f4f4f0" />
-                {Array.from({ length: 6 }, (_, k) => (
-                  <rect key={k} x={x - 28 * s + k * 9.4 * s} y={y - 50 * s} width={4.7 * s} height={11 * s} fill={sun ? "#e0161f" : "#111214"} />
-                ))}
-              </g>
-            ) : sun && ri === 2 && pose > 0.5 ? (
-              <g>
-                <rect x={x - 12 * s} y={y + 4 * s} width={24 * s} height={6 * s} fill="#e0161f" />
-                <rect x={x - 4 * s} y={y + 4 * s} width={5 * s} height={6 * s} fill="#f4f4f0" />
-              </g>
-            ) : null;
-          // Bobble hats on some of them
-          const hat =
-            rand() < 0.3 ? (
-              <g>
-                <path d={`M${x - 10 * s + (sad ? 3 * s : 0)} ${y - 14 * s + headDrop} Q${x + (sad ? 3 * s : 0)} ${y - 34 * s + headDrop} ${x + 10 * s + (sad ? 3 * s : 0)} ${y - 14 * s + headDrop} Z`} fill={sun ? "#c8101a" : "#f4f4f0"} opacity={ri === 2 ? 1 : 0.7} />
-                <circle cx={x + (sad ? 3 * s : 0)} cy={y - 32 * s + headDrop} r={4 * s} fill={sun ? "#f4f4f0" : "#111214"} opacity={ri === 2 ? 1 : 0.7} />
-              </g>
-            ) : null;
-          return (
-            <g key={`${ri}-${i}`} className={!sad && pose < 0.75 ? "bounce" : undefined} style={!sad ? { animationDelay: `${(rand() * 0.8).toFixed(2)}s` } : undefined}>
-              {arms}
-              <path d={shoulders} fill={row.color} />
-              {head}
-              {hat}
-              {scarf}
-            </g>
-          );
-        }),
-      )}
+            );
+          })}
+          {/* distance haze so the back rows sit back */}
+          {row.shade > 0 && <rect x="0" y="0" width="800" height={row.y + 80 * row.scale} fill={sun ? "#2a0b0b" : "#0e1116"} opacity={row.shade} />}
+        </g>
+      ))}
     </svg>
   );
 }
