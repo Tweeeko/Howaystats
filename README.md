@@ -77,7 +77,7 @@ Or sign in at `/admin` and press the buttons.
 2. In Vercel: **Add New → Project → import the repo**. Framework is detected as Next.js.
 3. Add every variable from `.env.example` under **Settings → Environment Variables** (Production + Preview).
 4. Deploy. Then run the first data load above against the production URL.
-5. Supabase → **Authentication → URL Configuration**: set Site URL to your Vercel URL and add `https://<your-domain>/admin/auth/callback` to redirect URLs. Add your admin user under **Authentication → Users** and put the same address in `ADMIN_EMAIL`.
+5. Supabase → **Authentication → URL Configuration**: set Site URL to your Vercel URL and add `https://<your-domain>/admin/auth/callback` to redirect URLs. Add your admin user under **Authentication → Users** and put the same address in `ADMIN_PASSWORD`.
 
 ### Cron schedule
 

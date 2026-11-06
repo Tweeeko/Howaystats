@@ -2,42 +2,35 @@ import Link from "next/link";
 import { getNews, getSnapshot } from "@/lib/database/queries";
 import { buildLivePayload } from "@/lib/live";
 import { NEWCASTLE_ID, SUNDERLAND_ID } from "@/lib/football/provider";
-import { backPageHeadline } from "@/lib/headline";
-import { clubName, clubView, meterView, ordinal, roastFacts, toonFacts } from "@/lib/view";
-import { Passport, toonCopy } from "@/components/toon";
+import { clubView, meterView, roastFacts, toonFacts } from "@/lib/view";
 import type { Fixture } from "@/lib/types";
-import { Form, NotConnected } from "@/components/football";
+import { NotConnected } from "@/components/football";
 import { LiveScoreboards } from "@/components/live";
+import { TheGap } from "@/components/gap";
 import { Roast } from "@/components/roast";
-import { TearJar } from "@/components/tear-jar";
-import { Advert, Banner, Page, PrintStory, Scoreboard, Ticket, programmeDay } from "@/components/programme";
+import { ToonHype } from "@/components/toon";
 
 export const revalidate = 60;
 
-const kickoff = (iso: string) =>
-  `${programmeDay(iso)}, ${new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/London" })}`;
+const when = (iso: string) =>
+  `${new Date(iso).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "Europe/London" })}, ${new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/London" })}`;
 
+/**
+ * The homepage has one job, in this order:
+ * 1. The gap: our points v their points.
+ * 2. Laugh at the Mackems (roast, crying stadium, jar of tears, crying fans).
+ * 3. Check the Toon are doing wonderful (they always are).
+ * 4. A handful of headlines pointing at the News page. That's it.
+ */
 export default async function Home() {
   const s = await getSnapshot();
   const [sunNews, toonNews, live] = await Promise.all([
-    getNews({ club: "sunderland", limit: 4 }),
+    getNews({ club: "sunderland", limit: 3 }),
     getNews({ club: "newcastle", limit: 3 }),
     buildLivePayload(false),
   ]);
-  const name = (id: number) => clubName(s, id);
   const nufc = clubView(s, NEWCASTLE_ID);
   const safc = clubView(s, SUNDERLAND_ID);
-  const meter = meterView(s);
-  const head = backPageHeadline({
-    fixtures: [...s.fixtures, ...s.cupFixtures],
-    nufc: s.newcastle,
-    safc: s.sunderland,
-    nufcId: NEWCASTLE_ID,
-    safcId: SUNDERLAND_ID,
-    name,
-    leagueSize: s.table.length,
-  });
-
   if (!nufc || !safc) {
     return (
       <div className="mx-auto max-w-5xl px-4 py-16">
@@ -45,230 +38,87 @@ export default async function Home() {
       </div>
     );
   }
-
-  const n = s.table.length;
-  const nNext = nufc.fixtures.upcoming[0];
-  const sLast = safc.fixtures.recent[0];
-  const nLast = nufc.fixtures.recent[0];
-  const isDerby = (f: Fixture) => (f.homeId === NEWCASTLE_ID && f.awayId === SUNDERLAND_ID) || (f.homeId === SUNDERLAND_ID && f.awayId === NEWCASTLE_ID);
-  const all = [...s.fixtures, ...s.cupFixtures];
-  const lastDerby = all.filter((f) => f.status === "finished" && isDerby(f)).sort((a, b) => b.kickoff.localeCompare(a.kickoff))[0];
-  const nextDerby = all.filter((f) => f.status === "scheduled" && isDerby(f)).sort((a, b) => a.kickoff.localeCompare(b.kickoff))[0];
-  const issue = nufc.row.played + 1;
-  const nextLabel = nNext ? `${nNext.homeId === NEWCASTLE_ID ? name(nNext.awayId) : name(nNext.homeId)} (${nNext.homeId === NEWCASTLE_ID ? "H" : "A"})` : null;
-
-  const res = (f: Fixture, id: number) => {
-    const home = f.homeId === id;
-    const gf = home ? f.homeGoals! : f.awayGoals!;
-    const ga = home ? f.awayGoals! : f.homeGoals!;
-    return gf > ga ? "W" : gf === ga ? "D" : "L";
-  };
-  const sRes = sLast ? res(sLast, SUNDERLAND_ID) : null;
-  const nRes = nLast ? res(nLast, NEWCASTLE_ID) : null;
-
-  // Terrace banner: one line, decided by the table.
-  const banner =
-    safc.row.position === n
-      ? { chant: "Rock bottom, rock bottom", note: `Sunderland, ${ordinal(n)} of ${n}` }
-      : safc.row.position > n - 3
-        ? { chant: "The Championship is calling", note: `Sunderland ${ordinal(safc.row.position)}. Answer the phone, lads.` }
-        : nufc.row.position < safc.row.position
-          ? { chant: "We're above you, we're above you", note: "(we checked)" }
-          : { chant: "We'll be back above you", note: "(any minute now)" };
-
-  const stubFor = sRes === "L" ? "Admit one Mackem · No refunds" : sRes === "W" ? "Souvenir edition · Rare" : "Admit one · Nobody won";
-
-  const advert =
-    safc.row.position > n - 3
-      ? { title: "Wearside Coaches", body: "Tuesday nights in the Championship. Seats available. Loads of them.", small: "Not a real advert. Not a real company. Very real league position." }
-      : { title: "Stadium of Light Tours", body: "See where the magic doesn't happen. Kids go free, understandably.", small: "Not a real advert. Please don't ring them." };
-
-  const [sunLead, ...sunRest] = sunNews;
-
+  const meter = meterView(s);
   const roast = roastFacts(s);
-  const tf = toonFacts(s);
-  const toon = tf ? toonCopy(tf) : null;
+  const toon = toonFacts(s);
+  const isDerby = (f: Fixture) => (f.homeId === NEWCASTLE_ID && f.awayId === SUNDERLAND_ID) || (f.homeId === SUNDERLAND_ID && f.awayId === NEWCASTLE_ID);
+  const nextDerby = [...s.fixtures, ...s.cupFixtures].filter((f) => f.status === "scheduled" && isDerby(f)).sort((a, b) => a.kickoff.localeCompare(b.kickoff))[0];
+  const jar = meter && meter.total
+    ? {
+        percent: (100 * meter.bad) / meter.total,
+        note: meter.bad === meter.total ? `Jar of tears: overflowing (${meter.bad}/${meter.total} bad signs)` : meter.bad === 0 ? "Jar of tears: empty. Annoying." : `Jar of tears: ${meter.bad} of ${meter.total} bad signs`,
+      }
+    : undefined;
 
   return (
     <div>
       {live.fixtures.length > 0 && (
-        <section className="mx-auto max-w-5xl px-4 pt-6">
+        <section className="mx-auto max-w-5xl px-4 py-6">
           <LiveScoreboards initial={live} />
         </section>
       )}
 
-      {roast && <Roast f={roast} />}
+      {/* 1. The only table that matters */}
+      <TheGap
+        nufc={{ points: nufc.row.points, position: nufc.row.position, played: nufc.row.played, goalDifference: nufc.row.goalDifference, form: nufc.row.form as ("W" | "D" | "L")[] }}
+        sun={{ points: safc.row.points, position: safc.row.position, played: safc.row.played, goalDifference: safc.row.goalDifference, form: safc.row.form as ("W" | "D" | "L")[] }}
+        leagueSize={s.table.length}
+        nextDerby={nextDerby ? `${nextDerby.homeId === NEWCASTLE_ID ? "St James' Park" : "Stadium of Light"}, ${when(nextDerby.kickoff)}` : null}
+      />
 
-      {/* COVER */}
-      <section className="relative">
-        <div className="mx-auto max-w-5xl px-4 pb-14 pt-8 sm:pt-12">
-          <div className="flex flex-wrap items-baseline justify-between gap-2 font-mono text-[11px] font-bold uppercase tracking-[.18em] text-mist">
-            <span>The official(ish) matchday programme</span>
-            <span>
-              Issue {issue}
-              {nextLabel ? ` · ${nextLabel}` : ""} · Price: nowt
-            </span>
-          </div>
-          {head && (
-            <>
-              <h2 className="tabloid mt-8 max-w-4xl text-[clamp(2.8rem,10vw,6rem)] drop-shadow-[0_3px_14px_rgba(0,0,0,.75)]">{head.main}</h2>
-              <p className="serif mt-4 max-w-2xl text-xl leading-snug text-chalk drop-shadow-[0_2px_8px_rgba(0,0,0,.9)] sm:text-2xl">{head.sub}</p>
-            </>
-          )}
-          <nav aria-label="Inside" className="mt-10 grid grid-cols-2 gap-px border border-white/25 bg-white/25 text-sm sm:grid-cols-4">
-            {[
-              { p: "2", t: "Result of the week", h: "#result" },
-              { p: "3", t: "Notes from the Wear", h: "#wear" },
-              { p: "4", t: "Meanwhile, wor lot", h: "#toon" },
-              { p: "5", t: "Head to head", h: "#h2h" },
-            ].map((c) => (
-              <a key={c.p} href={c.h} className="flex items-baseline gap-2 bg-ink/80 px-3 py-2.5 hover:bg-ink">
-                <span className="font-mono text-xs text-silver">p.{c.p}</span>
-                <span className="display text-base">{c.t}</span>
-              </a>
-            ))}
-          </nav>
-        </div>
-      </section>
+      <nav aria-label="On this page" className="grid grid-cols-3 border-b border-white/15 bg-ink/90 text-center">
+        <a href="#mackems" className="display py-3 text-sm text-mackem hover:text-chalk sm:text-lg">↓ Laugh at them</a>
+        <a href="#toon" className="display border-x border-white/15 py-3 text-sm hover:text-chalk sm:text-lg">↓ Check on us</a>
+        <Link href="/news" className="display py-3 text-sm text-silver hover:text-chalk sm:text-lg">News →</Link>
+      </nav>
 
-      <div className="mx-auto grid max-w-5xl gap-12 px-4">
-        {/* p.2 Result of the week, the jar, the scoreboard */}
-        <div id="result" className="grid items-start gap-8 md:grid-cols-2">
-          {sLast && (
-            <div>
-              <div className="kicker mb-3 !text-chalk">p.2 · Result of the week</div>
-              <Ticket
-                mackem
-                label={(sLast.leagueId ?? 39) === 39 ? "Premier League" : sLast.competition ?? "Cup"}
-                home={name(sLast.homeId)}
-                away={name(sLast.awayId)}
-                hg={sLast.homeGoals!}
-                ag={sLast.awayGoals!}
-                when={programmeDay(sLast.kickoff)}
-                where={sLast.homeId === SUNDERLAND_ID ? "Stadium of Light" : "Away end"}
-                stub={stubFor}
-              />
-            </div>
-          )}
-          <div className="md:pt-8">
-            <Banner chant={banner.chant} note={banner.note} />
-          </div>
-        </div>
-
-        {meter && (
-          <div className="grid items-center gap-8 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
-            <div className="flex flex-col items-center">
-              <div className="kicker mb-2 !text-chalk">The jar of Mackem tears</div>
-              <TearJar percent={meter.total ? (100 * meter.bad) / meter.total : 0} size={340} />
-              <p className="mt-2 max-w-xs text-center text-sm text-mist">
-                Fills up with every bad sign on the meter. Right now: {meter.bad} of {meter.total}
-                {meter.bad === meter.total && meter.total > 0 ? ". Overflowing. Lovely." : meter.bad === 0 ? ". Empty. Annoying." : "."}
-              </p>
-            </div>
-            <Scoreboard m={meter} />
-          </div>
-        )}
-
-        {/* p.3 Notes from the Wear */}
-        <div id="wear">
-          <Page no="3" title="Notes from the Wear" kicker="Sunderland" mackem>
-            {sunLead ? (
-              <div className="grid gap-6">
-                <div className="max-w-3xl"><PrintStory a={sunLead} lead /></div>
-                {sunRest.length > 0 && <div className="grid gap-5 md:grid-cols-3">{sunRest.slice(0, 3).map((a) => <PrintStory key={a.id} a={a} />)}</div>}
-                <Link href="/news?club=sunderland" className="display text-base underline underline-offset-4">More from the Wear →</Link>
-              </div>
-            ) : (
-              <p className="serif text-lg">Quiet on the Wear today. Suspiciously quiet. Stories land every afternoon.</p>
-            )}
-          </Page>
-        </div>
-
-        {/* p.4 Meanwhile, wor lot */}
-        <div id="toon" className="grid items-start gap-8 md:grid-cols-[1fr_1.3fr]">
-          <div className="grid gap-6">
-            {nLast && (
-              <div>
-                <div className="kicker mb-3 !text-chalk">p.4 · Meanwhile, wor lot</div>
-                <Ticket
-                  label={(nLast.leagueId ?? 39) === 39 ? "Premier League" : nLast.competition ?? "Cup"}
-                  home={name(nLast.homeId)}
-                  away={name(nLast.awayId)}
-                  hg={nLast.homeGoals!}
-                  ag={nLast.awayGoals!}
-                  when={programmeDay(nLast.kickoff)}
-                  where={nLast.homeId === NEWCASTLE_ID ? "St James' Park" : "Away end"}
-                  stub={nRes === "W" ? "Keep this one" : nRes === "D" ? "Admit one · Shrug" : "Bin it"}
-                />
-              </div>
-            )}
-            {toon && (
-              <div>
-                <p className="tabloid text-4xl text-chalk drop-shadow-[0_3px_0_rgba(0,0,0,.6)] sm:text-5xl">{toon.head}</p>
-                <p className="serif mt-2 text-xl leading-snug text-chalk drop-shadow-[0_2px_8px_rgba(0,0,0,.9)]">{toon.sub}</p>
-              </div>
-            )}
-            {toon && (
-              <div className="max-w-[220px]">
-                <Passport stamp={toon.stamp} pEurope={tf?.pEurope} />
-              </div>
-            )}
-            <p className="text-mist drop-shadow-[0_2px_8px_rgba(0,0,0,.9)]">
-              {ordinal(nufc.row.position)} on {nufc.row.points} points.{" "}
-              {nufc.row.position < safc.row.position
-                ? nufc.row.points > safc.row.points
-                  ? `${nufc.row.points - safc.row.points} clear of Sunderland, which is all that matters.`
-                  : "Above Sunderland on goal difference. Just."
-                : "Sunderland are above us. We're not discussing it."}
-              {nNext ? ` Next: ${nextLabel}, ${kickoff(nNext.kickoff)}.` : ""}
-            </p>
-          </div>
-          <Page no="4" title="Toon news" kicker="Newcastle">
-            {toonNews.length ? (
-              <div className="grid gap-4">
-                {toonNews.map((a, i) => <PrintStory key={a.id} a={a} lead={i === 0} />)}
-              </div>
-            ) : (
-              <p className="serif text-lg">Nowt new from St James&apos; today. Enjoy the peace.</p>
-            )}
-          </Page>
-        </div>
-
-        {/* p.5 Head to head */}
-        <div id="h2h" className="grid items-start gap-8 md:grid-cols-[1.5fr_1fr]">
-          <Page no="5" title="Head to head" kicker="Tyne v Wear">
-            <div className="grid grid-cols-2 gap-px bg-[#111214]">
-              {[
-                { label: "Newcastle", row: nufc.row, cls: "stripes" },
-                { label: "Sunderland", row: safc.row, cls: "stripes-red" },
-              ].map((t) => (
-                <div key={t.label} className="bg-[var(--paper)]">
-                  <div className={`${t.cls} h-3`} />
-                  <div className="p-3 sm:p-4">
-                    <div className="display text-xl sm:text-3xl">{t.label}</div>
-                    <dl className="mt-3 grid gap-1.5 text-sm">
-                      <div className="flex justify-between"><dt className="muted">Position</dt><dd className="scoreboard-num">{ordinal(t.row.position)}</dd></div>
-                      <div className="flex justify-between"><dt className="muted">Points</dt><dd className="scoreboard-num">{t.row.points}</dd></div>
-                      <div className="flex justify-between"><dt className="muted">Goal diff</dt><dd className="scoreboard-num">{t.row.goalDifference > 0 ? `+${t.row.goalDifference}` : t.row.goalDifference}</dd></div>
-                    </dl>
-                    {t.row.form.length > 0 && <div className="mt-3"><Form form={t.row.form} /></div>}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <p className="serif mt-4 text-lg">
-              {lastDerby
-                ? `Last derby: ${name(lastDerby.homeId)} ${lastDerby.homeGoals}-${lastDerby.awayGoals} ${name(lastDerby.awayId)}. ${res(lastDerby, NEWCASTLE_ID) === "W" ? "Frame it." : res(lastDerby, NEWCASTLE_ID) === "D" ? "Nobody's happy." : "We've torn that page out."}`
-                : s.season === 2026
-                  ? "No derby yet this season. Last season they did the double over us. We've torn that page out."
-                  : "No derby yet this season."}
-              {nextDerby ? ` Next one: ${nextDerby.homeId === NEWCASTLE_ID ? "St James' Park" : "the Stadium of Light"}, ${kickoff(nextDerby.kickoff)}. Book the day off.` : ""}
-            </p>
-            <Link href="/tyne" className="display mt-3 inline-block text-base underline underline-offset-4">Four hundred years of not getting on →</Link>
-          </Page>
-          <Advert {...advert} />
-        </div>
+      {/* 2. Laugh at them */}
+      <div id="mackems" className="scroll-mt-14">{roast && <Roast f={roast} jar={jar} compact />}</div>
+      <div className="bg-ink/90 px-4 py-3 text-center">
+        <Link href="/mackem-watch" className="display text-lg text-silver underline-offset-4 hover:text-chalk hover:underline">
+          The full state of them: misery meter, relegation odds, every result →
+        </Link>
       </div>
+
+      {/* 3. Check on us */}
+      <div id="toon" className="scroll-mt-14">{toon && <ToonHype f={toon} compact />}</div>
+      <div className="bg-ink/90 px-4 py-3 text-center">
+        <Link href="/newcastle" className="display text-lg text-silver underline-offset-4 hover:text-chalk hover:underline">
+          Everything Toon: results, fixtures, the road to Europe →
+        </Link>
+      </div>
+
+      {/* 4. Headlines only. The news lives on its own page. */}
+      {(sunNews.length > 0 || toonNews.length > 0) && (
+        <section className="mx-auto mt-12 max-w-5xl px-4" aria-label="Latest headlines">
+          <div className="flex items-baseline justify-between border-b-2 border-chalk pb-2">
+            <h2 className="display text-3xl sm:text-4xl">Read all about it</h2>
+            <Link href="/news" className="display text-base text-silver hover:text-chalk">All the news →</Link>
+          </div>
+          <div className="mt-5 grid gap-8 md:grid-cols-2">
+            {[
+              { title: "From the Wear", items: sunNews, red: true, href: "/news?club=sunderland" },
+              { title: "From the Toon", items: toonNews, red: false, href: "/news?club=newcastle" },
+            ].map((col) =>
+              col.items.length ? (
+                <div key={col.title}>
+                  <div className={`kicker ${col.red ? "!text-mackem" : "!text-chalk"}`}>{col.title}</div>
+                  <ul className="mt-2 divide-y divide-white/10">
+                    {col.items.map((a) => (
+                      <li key={a.id} className="py-3">
+                        <Link href={`/news/${a.slug}`} className="display block text-xl leading-tight hover:underline underline-offset-4 sm:text-2xl">
+                          {a.howayHeadline ?? a.originalHeadline}
+                        </Link>
+                        {a.punchline && <p className="mt-1 text-sm text-mist">{a.punchline}</p>}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null,
+            )}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

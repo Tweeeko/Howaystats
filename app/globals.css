@@ -203,3 +203,7 @@ body {
   background:
     repeating-linear-gradient(90deg, rgba(244,244,240,.07) 0 60px, rgba(0,0,0,0) 60px 120px),
     radial-gradient(120% 90% at 50% 0%, rgba(255,255,255,.18), rgba(5,6,7,.94) 62%); }
+
+/* The gap: each side in its own colours, dimmed so the numbers read */
+.stripes-bg-nufc { background: linear-gradient(rgba(5,6,7,.62), rgba(5,6,7,.62)), repeating-linear-gradient(90deg, #f4f4f0 0 34px, #050607 34px 68px); }
+.stripes-bg-sun { background: linear-gradient(rgba(70,6,10,.62), rgba(70,6,10,.62)), repeating-linear-gradient(90deg, #f4f4f0 0 34px, #e0161f 34px 68px); }

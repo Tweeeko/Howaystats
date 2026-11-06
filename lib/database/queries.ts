@@ -285,12 +285,17 @@ export async function getDailyMeme(): Promise<{ meme: Meme; fromArchive: boolean
   return best?.[0] ? { meme: toMeme(best[0]), fromArchive: true } : null;
 }
 
-export async function getMemes(opts: { sort?: "latest" | "popular"; source?: string; limit?: number } = {}) {
+export async function getMemes(opts: { sort?: "latest" | "popular" | "traction"; source?: string; limit?: number } = {}) {
   const db = publicDb();
   if (!db) return [];
   let q = db.from("memes").select("*").eq("status", "published");
   if (opts.source) q = q.eq("source", opts.source);
-  q = opts.sort === "popular" ? q.order("shares", { ascending: false }).order("score", { ascending: false }) : q.order("discovered_at", { ascending: false });
+  q =
+    opts.sort === "traction"
+      ? q.gte("discovered_at", new Date(Date.now() - 30 * 86_400_000).toISOString()).order("score", { ascending: false }).order("discovered_at", { ascending: false })
+      : opts.sort === "popular"
+        ? q.order("shares", { ascending: false }).order("score", { ascending: false })
+        : q.order("discovered_at", { ascending: false });
   const { data } = await q.limit(opts.limit ?? 24);
   return (data ?? []).map(toMeme);
 }

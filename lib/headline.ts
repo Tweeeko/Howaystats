@@ -49,7 +49,7 @@ export function backPageHeadline(opts: {
   // Derby
   if (s && s.oppId === nufcId) {
     return s.r === "L"
-      ? { main: "The Tyne is ours.", sub: `Newcastle ${s.ga}, Sunderland ${s.gf}${s.comp}. Frame it. Print it. Read it to the bairns.` }
+      ? { main: "Who put the ball in the Mackems' net?", sub: `Newcastle ${s.ga}, Sunderland ${s.gf}${s.comp}. Sad Mackem bastards. Frame it, print it, read it to the bairns.` }
       : s.r === "D"
         ? { main: "Derby ends level.", sub: `${s.gf}-${s.ga}. They'll be acting like they won it. They didn't.` }
         : { main: "We're not talking about it.", sub: `They won the derby ${s.gf}-${s.ga}${s.comp}. It's in the results so it's on here. That's all you're getting.` };
@@ -63,16 +63,16 @@ export function backPageHeadline(opts: {
     ], seed, "both");
   }
   if (sameWeek && nLost && s!.r === "L") {
-    return { main: "Both lost. Theirs was funnier.", sub: `We went down to ${n!.opp}${n!.comp}, which was shite. They lost ${s!.gf}-${s!.ga} to ${s!.opp}${s!.comp}, which helps.` };
+    return { main: "Both lost. Theirs was funnier.", sub: `We got beat by ${n!.opp}${n!.comp}, but fuck it, still better than them Mackems. They lost ${s!.gf}-${s!.ga} to ${s!.opp}${s!.comp}.` };
   }
   if (sameWeek && nLost && s!.r === "W") {
-    return { main: "Don't.", sub: `Wor lot lost to ${n!.opp}${n!.comp}. They beat ${s!.opp} ${s!.gf}-${s!.ga}. Worst weekend of the season and it's not close.` };
+    return { main: "One-off. Calm down.", sub: `They beat ${s!.opp} ${s!.gf}-${s!.ga}. We got beat by ${n!.opp}${n!.comp}, but fuck it, we're still the bigger club and they know it.` };
   }
 
   if (s?.r === "L") {
     const heavy = s.ga - s.gf >= 3;
     if (heavy) return pick([
-      { main: "Someone check on Sunderland.", sub: `Battered ${s.ga}-${s.gf} by ${s.opp}${s.comp}. Actually, divvent bother.` },
+      { main: "Someone check on Sunderland.", sub: `Battered ${s.ga}-${s.gf} by ${s.opp}${s.comp}. Actually, divvent bother. SMBs.` },
       { main: "Have a look at the state of that.", sub: `${s.opp} ${s.ga}, Sunderland ${s.gf}${s.comp}. Never mind the table.` },
     ], seed, "heavy");
     if (inZone) return pick([
@@ -105,6 +105,6 @@ export function backPageHeadline(opts: {
   }
 
   if (n?.r === "W") return { main: `Toon beat ${n.opp}.`, sub: `${n.gf}-${n.ga}${n.comp}. ${ord(nufc.position)} in the league. Howay the lads.` };
-  if (nLost) return { main: "Meanwhile, wor lot.", sub: `Lost ${n!.gf}-${n!.ga} to ${n!.opp}${n!.comp}. Making life difficult for wersels, as usual.${nufc.position < safc.position ? " Still above them, mind." : ""}` };
+  if (nLost) return { main: "We go again.", sub: `Got beat by ${n!.opp}${n!.comp}, but fuck it.${nufc.position < safc.position ? " Still better than them Mackems." : ""}` };
   return { main: `Newcastle ${ord(nufc.position)}. Sunderland ${pos}.`, sub: "As you were." };
 }

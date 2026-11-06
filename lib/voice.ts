@@ -39,3 +39,62 @@ export const EMPTY = {
   error: "Summat's broken. Rather than show you dodgy numbers, we've stopped it here.",
   notFound: "This page has gone down. Not unlike some clubs we could mention.",
 };
+
+/**
+ * THE PROPER WORDS. How Geordies actually talk about themselves and about Sunderland.
+ * Used across the site's copy and fed to the AI writer. Football banter only:
+ * the violent chants and anything about people's jobs or money are deliberately left out.
+ */
+export const GLOSSARY = {
+  // Them
+  sunderland: [
+    { term: "SMB / sad Mackem bastards", use: "the classic Newcastle jibe for Sunderland fans; use sparingly, it lands harder" },
+    { term: "Mackems", use: "Sunderland fans / people (from 'mak'em and tak'em', probably)" },
+    { term: "the Wear / Wearside", use: "Sunderland's river and patch, never the Tyne" },
+    { term: "Stadium of Light", use: "their ground; 'Stadium of Shite' in the pub" },
+    { term: "haway", use: "how Mackems spell howay; mock the spelling, not the people" },
+    { term: "Have you ever seen a Mackem in Milan?", use: "chant: they've never played in the San Siro, we have" },
+    { term: "Will you fly from Newcastle?", use: "chant: their nearest airport is ours" },
+    { term: "Who put the ball in the Mackems' net?", use: "chant: after we score against them" },
+  ],
+  // Us
+  newcastle: [
+    { term: "the Toon / the Toon Army", use: "Newcastle United and its fans" },
+    { term: "wor lads / wor lot", use: "our team (wor = our)" },
+    { term: "Howay the lads / HWTL", use: "the rallying cry" },
+    { term: "UTM", use: "Up The Magpies" },
+    { term: "Black and white army", use: "the chant" },
+    { term: "St James' / the cathedral on the hill", use: "our ground" },
+    { term: "the Gallowgate", use: "the end behind the goal; the loud bit" },
+  ],
+  // Talking
+  dialect: [
+    { term: "aye / nah", use: "yes / no" },
+    { term: "why aye (man)", use: "of course" },
+    { term: "howay (man)", use: "come on, at the start of a shout" },
+    { term: "divvent / dinnet", use: "don't" },
+    { term: "gan / gannin", use: "go / going" },
+    { term: "nee / nowt / owt", use: "no / nothing / anything" },
+    { term: "canny", use: "good, decent" },
+    { term: "champion", use: "excellent" },
+    { term: "proper", use: "really" },
+    { term: "geet / howfing", use: "great / huge" },
+    { term: "radgie", use: "furious, losing it" },
+    { term: "marra", use: "mate" },
+    { term: "gadgie", use: "bloke" },
+    { term: "bairn", use: "child" },
+    { term: "hyem", use: "home" },
+    { term: "mortal", use: "very drunk" },
+    { term: "scran / bait", use: "food / packed lunch" },
+    { term: "clarty / hacky", use: "dirty, mucky" },
+    { term: "on the hoy", use: "out drinking" },
+    { term: "alreet", use: "alright" },
+  ],
+} as const;
+
+/** One-line version for prompts. */
+export const GLOSSARY_PROMPT = [
+  "Them: " + GLOSSARY.sunderland.map((g) => `${g.term} (${g.use})`).join("; "),
+  "Us: " + GLOSSARY.newcastle.map((g) => `${g.term} (${g.use})`).join("; "),
+  "Words: " + GLOSSARY.dialect.map((g) => `${g.term} = ${g.use}`).join("; "),
+].join("\n");

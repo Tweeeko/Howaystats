@@ -110,7 +110,8 @@ test("toon: every result is glorious, every number is real", () => {
   const base = { leagueSize: 20, points: 11, played: 9, form: ["W", "L", "L", "W", "L"] as ("W" | "D" | "L")[], next: null, aboveSunderlandBy: 6, won: 3, goalsFor: 12, sunPoints: 5, sunWon: 1, position: 13 };
   const lostByOne = toonCopy({ ...base, lastResult: { r: "L", gf: 0, ga: 1, opp: "Everton", home: true } });
   assert.equal(lostByOne.head, "Only lost by one");
-  assert.match(lostByOne.sub, /0-1 to Everton/);
+  assert.match(lostByOne.sub, /Got beat 1-0 by Everton/);
+  assert.match(lostByOne.sub, /still better than them Mackems/);
   assert.equal(lostByOne.badge, "Top of the North East");
   assert.equal(toonCopy({ ...base, lastResult: { r: "L", gf: 0, ga: 4, opp: "Leeds", home: false } }).head, "Character building");
   assert.equal(toonCopy({ ...base, lastResult: { r: "D", gf: 2, ga: 2, opp: "Bournemouth", home: true } }).head, "Unbeaten. Again.");
@@ -122,4 +123,21 @@ test("toon: every result is glorious, every number is real", () => {
     const c = toonCopy({ ...base, lastResult: { r, gf: 1, ga: 2, opp: "X", home: true } });
     assert.ok(!/shite|rubbish|awful/i.test(c.head + c.sub), "never slags the Toon off");
   }
+});
+
+import { makeAdminToken, verifyAdminToken } from "../lib/admin-session";
+import { tractionScore } from "../lib/memes/rank";
+test("admin: signed cookie works, wrong secret or expiry fails", async () => {
+  const t = await makeAdminToken("correct horse");
+  assert.equal(await verifyAdminToken(t, "correct horse"), true);
+  assert.equal(await verifyAdminToken(t, "wrong"), false);
+  assert.equal(await verifyAdminToken(t.replace(/.$/, "0"), "correct horse"), t.endsWith("0") ? true : false);
+  assert.equal(await verifyAdminToken(t, "correct horse", Date.now() + 31 * 86_400_000), false);
+  assert.equal(await verifyAdminToken(undefined, "x"), false);
+});
+test("memes: trending and top-ranked beat old and buried", () => {
+  const hot = tractionScore({ club: true, rank: 0, trendedAt: Date.now() - 3 * 86_400_000, ageDays: 10 });
+  const buried = tractionScore({ club: true, rank: 45, trendedAt: NaN, ageDays: 2000 });
+  const generic = tractionScore({ club: false, rank: 0, trendedAt: Date.now() - 3 * 86_400_000, ageDays: 10 });
+  assert.ok(hot > buried && hot > generic);
 });

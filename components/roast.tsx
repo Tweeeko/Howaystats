@@ -11,6 +11,7 @@
  */
 import { CryingStadium } from "./crying-stadium";
 import { CryingFans } from "./crying-fans";
+import { TearJar } from "./tear-jar";
 
 const ord = (n: number) => {
   const s = ["th", "st", "nd", "rd"];
@@ -56,12 +57,12 @@ export function roastCopy(f: RoastFacts) {
           : heat === 1
             ? `Sunderland ${pos}. Behaving. For now.`
             : `Sunderland ${pos}. Above us. Don't.`;
-  const laugh = heat === 4 ? "HAHAHAHA" : heat === 3 ? "HAHAHA" : heat === 2 ? "HAHA" : null;
-  const stamp = heat === 4 ? "Rock bottom" : heat === 3 ? (f.position > f.leagueSize - 3 ? "Going down" : "Beaten") : null;
+  const laugh = heat === 4 ? "HAHAHAHA · SAD MACKEM BASTARDS ·" : heat === 3 ? "HAHAHA · SMB ·" : heat === 2 ? "HAHA" : null;
+  const stamp = heat === 4 ? "Rock bottom · SMB" : heat === 3 ? (f.position > f.leagueSize - 3 ? "Going down" : "Beaten") : null;
   return { heat, big, laugh, stamp };
 }
 
-export function Roast({ f }: { f: RoastFacts }) {
+export function Roast({ f, jar, compact = false }: { f: RoastFacts; jar?: { percent: number; note: string }; compact?: boolean }) {
   const c = roastCopy(f);
   const tears = Array.from({ length: [0, 0, 6, 14, 24][c.heat] }, (_, i) => ({
     left: (i * 37 + 11) % 100,
@@ -91,16 +92,16 @@ export function Roast({ f }: { f: RoastFacts }) {
           <div>
             {[0, 1].map((k) => (
               <span key={k} className={`haha text-chalk ${c.heat === 4 ? "text-4xl sm:text-6xl" : "text-3xl sm:text-5xl"}`}>
-                {Array.from({ length: 6 }, () => c.laugh).join(" ")}&nbsp;
+                {Array.from({ length: 4 }, () => c.laugh).join(" ")}&nbsp;
               </span>
             ))}
           </div>
         </div>
       )}
 
-      <div className={`relative z-[2] mx-auto grid max-w-6xl items-center gap-8 px-4 ${c.heat >= 2 ? "py-10 sm:py-14 lg:grid-cols-[1.1fr_1fr]" : "py-6"}`}>
+      <div className={`relative z-[2] mx-auto grid max-w-6xl items-center gap-8 px-4 ${c.heat >= 2 ? "py-8 sm:py-12 lg:grid-cols-[1fr_1fr]" : "py-6"}`}>
         <div className="min-w-0">
-          <p className="font-mono text-xs font-bold uppercase tracking-[.3em] text-chalk/80">{c.heat >= 3 ? "Breaking news from the Wear" : "Meanwhile, on the Wear"}</p>
+          <p className="font-mono text-xs font-bold uppercase tracking-[.3em] text-chalk/80">{c.heat >= 3 ? "Breaking news from Wearside" : "Meanwhile, on the Wear"}</p>
           <h1 className={`tabloid mt-3 text-chalk drop-shadow-[0_6px_0_rgba(0,0,0,.55)] ${c.heat === 4 ? "text-[clamp(3rem,12.5vw,6.2rem)]" : c.heat === 3 ? "text-[clamp(2.6rem,10vw,5.4rem)]" : c.heat === 2 ? "text-[clamp(2.4rem,8vw,5rem)]" : "text-[clamp(1.8rem,5vw,3rem)]"}`}>
             {c.big}
           </h1>
@@ -119,8 +120,8 @@ export function Roast({ f }: { f: RoastFacts }) {
           )}
 
           {c.heat >= 2 && (
-            <dl className="mt-8 grid grid-cols-2 gap-px border-4 border-chalk bg-chalk sm:grid-cols-4 lg:grid-cols-2">
-              {stats.map((x) => (
+            <dl className={`mt-8 grid grid-cols-2 gap-px border-4 border-chalk bg-chalk ${compact ? "" : "sm:grid-cols-4 lg:grid-cols-2"}`}>
+              {(compact ? stats.slice(2) : stats).map((x) => (
                 <div key={x.k} className="bg-blood/95 p-3 sm:p-4">
                   <dt className="font-mono text-[10px] font-bold uppercase tracking-wider text-chalk/80 sm:text-[11px]">{x.k}</dt>
                   <dd className="tabloid mt-1 text-5xl text-chalk sm:text-6xl">{x.v}</dd>
@@ -139,12 +140,22 @@ export function Roast({ f }: { f: RoastFacts }) {
                   : `Last game: beat ${L.opp} ${L.gf}-${L.ga}. ${c.heat >= 2 ? "Enjoy it, lads. It won't last." : "Fine. Well done. Whatever."}`}
             </p>
           )}
-          {f.belowUs && f.gapToUs > 0 && c.heat >= 2 && <p className="mt-2 font-serif text-lg text-chalk/90">And they&apos;re {f.gapToUs} points behind us. Even with the season we&apos;re having.</p>}
+          {f.belowUs && f.gapToUs > 0 && c.heat >= 2 && <p className="mt-2 font-serif text-lg text-chalk/90">And they&apos;re {f.gapToUs} points behind us. Natural order.</p>}
         </div>
 
-        {c.heat >= 2 && L && (
-          <div className="flex justify-center">
-            <CryingStadium mood={L.r} caption={`The Stadium of Light, after ${L.r === "W" ? "beating" : L.r === "D" ? "drawing with" : "losing to"} ${L.opp}`} />
+        {(c.heat >= 2 || jar) && (
+          <div className="grid items-end gap-4 sm:grid-cols-[1.3fr_1fr] lg:grid-cols-1 xl:grid-cols-[1.3fr_1fr]">
+            {L && c.heat >= 2 ? (
+              <CryingStadium mood={L.r} caption={L.r === "L" ? `The Stadium of Shite, after losing to ${L.opp}` : L.r === "D" ? `The Stadium of Light, after drawing with ${L.opp}. Haway, they said.` : `The Stadium of Light, after beating ${L.opp}. Enjoy it, it won't last.`} />
+            ) : (
+              <div />
+            )}
+            {jar && (
+              <div className="flex flex-col items-center">
+                <TearJar percent={jar.percent} size={270} />
+                <p className="mt-1 max-w-[220px] text-center font-mono text-[11px] font-bold uppercase tracking-wider text-chalk/85">{jar.note}</p>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -160,7 +171,7 @@ export function Roast({ f }: { f: RoastFacts }) {
           <div>
             {[0, 1].map((k) => (
               <span key={k} className="haha outline-text text-4xl sm:text-6xl">
-                Mackem tears · Mackem tears · Mackem tears · Mackem tears ·&nbsp;
+                Mackem tears · Haway the lads (they can't even spell it) · Mackem tears · SMB ·&nbsp;
               </span>
             ))}
           </div>

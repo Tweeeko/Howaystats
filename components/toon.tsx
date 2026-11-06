@@ -56,9 +56,9 @@ export function toonCopy(f: ToonFacts) {
       : L.r === "D"
         ? `${L.gf}-${L.ga} with ${L.opp}. Didn't lose, did we. Point in the bag.`
         : L.ga - L.gf <= 1
-          ? `${L.gf}-${L.ga} to ${L.opp}. Basically a draw. Moral victory, if you ask us.`
-          : `Lost to ${L.opp}. Bad day at the office. Still the biggest club in the North East by a mile.`;
-  const marquee = !L ? "Howay the lads" : L.r === "W" ? "Howay the lads" : L.r === "D" ? "Unbeaten" : "We go again";
+          ? `Got beat ${L.ga}-${L.gf} by ${L.opp}. Basically a draw. And fuck it, still better than them Mackems.`
+          : `Got beat by ${L.opp}. Fuck it. Still the biggest club in the North East by a mile, and still better than them Mackems.`;
+  const marquee = !L ? "Howay the lads · UTM" : L.r === "W" ? "Howay the lads · UTM" : L.r === "D" ? "Unbeaten · HWTL" : "We go again · Howay the lads";
   const stamp = f.pEurope === undefined ? "Pending" : f.pEurope >= 0.6 ? "Approved" : f.pEurope >= 0.25 ? "Pending" : "Next year";
   const badge = above ? "Top of the North East" : "Temporary blip";
   return { mood, head, sub, marquee, stamp, badge };
@@ -157,6 +157,7 @@ export function Passport({ stamp, pEurope }: { stamp: string; pEurope?: number }
       {pEurope !== undefined && (
         <p className="mt-2 text-center font-mono text-xs uppercase tracking-wider text-chalk/80">Chance of Europe: {Math.round(pEurope * 100)}%</p>
       )}
+      <p className="mt-1 text-center font-mono text-[11px] uppercase tracking-wider text-chalk/70">Ever seen a Mackem in Milan? Nah. Us? Aye.</p>
     </div>
   );
 }
@@ -192,7 +193,7 @@ export function ToonFans({ count = 9 }: { count?: number }) {
 }
 
 /** The Toon hero: same size and noise as the Sunderland roast, all glory. */
-export function ToonHype({ f }: { f: ToonFacts }) {
+export function ToonHype({ f, compact = false }: { f: ToonFacts; compact?: boolean }) {
   const c = toonCopy(f);
   const L = f.lastResult;
   const winsLine =
@@ -228,7 +229,7 @@ export function ToonHype({ f }: { f: ToonFacts }) {
         </div>
       </div>
 
-      <div className="relative z-[2] mx-auto grid max-w-6xl items-center gap-8 px-4 py-10 sm:py-14 lg:grid-cols-[1.1fr_1fr]">
+      <div className="relative z-[2] mx-auto grid max-w-6xl items-center gap-8 px-4 py-8 sm:py-12 lg:grid-cols-[1.1fr_1fr]">
         <div className="min-w-0">
           <p className="font-mono text-xs font-bold uppercase tracking-[.3em] text-chalk/80">Breaking news from the Tyne</p>
           <h1 className="tabloid mt-3 text-[clamp(3rem,12.5vw,6.2rem)] text-chalk drop-shadow-[0_6px_0_rgba(0,0,0,.6)]">{c.head}</h1>
@@ -239,8 +240,8 @@ export function ToonHype({ f }: { f: ToonFacts }) {
             <span className="text-[clamp(3rem,11vw,5.5rem)] leading-none" role="img" aria-label="black and white hearts">🖤🤍</span>
           </div>
 
-          <dl className="mt-8 grid grid-cols-2 gap-px border-4 border-chalk bg-chalk sm:grid-cols-4 lg:grid-cols-2">
-            {stats.map((x) => (
+          <dl className={`mt-8 grid grid-cols-2 gap-px border-4 border-chalk bg-chalk ${compact ? "" : "sm:grid-cols-4 lg:grid-cols-2"}`}>
+            {(compact ? stats.slice(2) : stats).map((x) => (
               <div key={x.k} className="bg-ink p-3 sm:p-4">
                 <dt className="font-mono text-[10px] font-bold uppercase tracking-wider text-chalk/80 sm:text-[11px]">{x.k}</dt>
                 <dd className="tabloid mt-1 text-5xl text-chalk sm:text-6xl">{x.v}</dd>
@@ -250,7 +251,7 @@ export function ToonHype({ f }: { f: ToonFacts }) {
           </dl>
 
           {f.next && (
-            <p className="tabloid mt-7 text-[clamp(1.4rem,4.5vw,2.4rem)] text-chalk">Next: {f.next}. Three points, nae bother.</p>
+            <p className="tabloid mt-7 text-[clamp(1.4rem,4.5vw,2.4rem)] text-chalk">Next: {f.next}. Three points, nee bother. Howay the lads.</p>
           )}
         </div>
 
@@ -268,7 +269,7 @@ export function ToonHype({ f }: { f: ToonFacts }) {
         <div>
           {[0, 1].map((k) => (
             <span key={k} className="haha outline-text text-4xl sm:text-6xl">
-              Black and white army · Black and white army · Black and white army ·&nbsp;
+              Black and white army · Toon Army · Wor lads · Black and white army ·&nbsp;
             </span>
           ))}
         </div>

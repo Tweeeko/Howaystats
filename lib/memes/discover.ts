@@ -3,21 +3,25 @@ import { adminDb } from "../database/client";
 import { env } from "../env";
 import { aiComplete, GEORDIE_VOICE } from "../ai";
 import { canonicalUrl, hashOf } from "../content/dedupe";
+import { tractionScore } from "./rank";
 
 /**
- * Daily meme discovery from sources that permit it:
- *  - Reddit, via the official OAuth API. We store the permalink and show Reddit's own
- *    media URL with attribution + link (no re-hosting).
- *  - GIPHY, via the official search API (embedding with "Powered by GIPHY" attribution is permitted).
- * Nothing is invented: if nothing relevant turns up, the page falls back to the best
- * previously approved meme, clearly labelled.
+ * Daily meme discovery, fully automatic. Nobody has to upload anything.
+ *
+ * Source: GIPHY's official search API (free key, embedding allowed with "Powered by GIPHY").
+ * Reddit is gone: it blocked keyless access in May 2026 and stopped issuing new API access
+ * on 31 October 2026.
+ *
+ * We search by keyword, keep the newest (by GIPHY's upload / trending date), and publish
+ * automatically. Rated G/PG only. Nothing invented: if GIPHY returns nothing new, the page
+ * shows the best of what we already have.
  */
 
 const RELEVANT = /\b(sunderland|mackems?|black cats|wearside|stadium of light|tyne[- ]wear|relegat\w*|championship)\b/i;
 const NSFW_OR_NASTY = /\b(nsfw|nude|porn|rape|suicide|kill yourself|racis\w*|slur)\b/i;
 
 export interface MemeCandidate {
-  source: "reddit" | "giphy";
+  source: "giphy";
   sourceId: string;
   sourceUrl: string;
   mediaUrl: string | null;
@@ -34,86 +38,79 @@ export function isRelevantMeme(title: string, nsfw = false): boolean {
   return !nsfw && RELEVANT.test(title) && !NSFW_OR_NASTY.test(title);
 }
 
-async function redditToken(): Promise<string | null> {
-  const id = env.redditClientId();
-  const secret = env.redditClientSecret();
-  if (!id || !secret) return null;
-  const res = await fetch("https://www.reddit.com/api/v1/access_token", {
-    method: "POST",
-    headers: {
-      authorization: `Basic ${Buffer.from(`${id}:${secret}`).toString("base64")}`,
-      "content-type": "application/x-www-form-urlencoded",
-      "user-agent": "web:howaystats:1.0 (meme discovery)",
-    },
-    body: "grant_type=client_credentials",
-    cache: "no-store",
-  });
-  if (!res.ok) throw new Error(`Reddit auth HTTP ${res.status}`);
-  return ((await res.json()) as { access_token: string }).access_token;
-}
+/** Keyword searches. Club terms first; reaction terms only count if the GIF is about football. */
+export const MEME_SEARCHES: { q: string; club: boolean }[] = [
+  { q: "sunderland afc", club: true },
+  { q: "sunderland", club: true },
+  { q: "mackem", club: true },
+  { q: "black cats football", club: true },
+  { q: "stadium of light", club: true },
+  { q: "sunderland til i die", club: true },
+  { q: "football fan crying", club: false },
+  { q: "sad football fan", club: false },
+  { q: "relegation", club: false },
+  { q: "football fail", club: false },
+];
 
-async function fromReddit(): Promise<MemeCandidate[]> {
-  const token = await redditToken();
-  if (!token) return [];
-  const subs = ["NUFC", "soccercirclejerk", "PremierLeague", "footballmemes"];
-  const out: MemeCandidate[] = [];
-  for (const sub of subs) {
-    const res = await fetch(`https://oauth.reddit.com/r/${sub}/search?q=sunderland&restrict_sr=1&sort=top&t=week&limit=25`, {
-      headers: { authorization: `Bearer ${token}`, "user-agent": "web:howaystats:1.0 (meme discovery)" },
-      cache: "no-store",
-    });
-    if (!res.ok) continue;
-    type Post = { data: { id: string; title: string; permalink: string; url: string; author: string; over_18: boolean; score: number; post_hint?: string; is_video?: boolean } };
-    const json = (await res.json()) as { data: { children: Post[] } };
-    for (const { data: p } of json.data.children) {
-      const isImage = p.post_hint === "image" || /\.(jpe?g|png|gif|webp)$/i.test(p.url);
-      if (!isImage || !isRelevantMeme(p.title, p.over_18)) continue;
-      out.push({
-        source: "reddit",
-        sourceId: p.id,
-        sourceUrl: `https://www.reddit.com${p.permalink}`,
-        mediaUrl: p.url,
-        mediaType: /\.gif$/i.test(p.url) ? "gif" : "image",
-        title: p.title,
-        author: `u/${p.author}`,
-        authorUrl: `https://www.reddit.com/user/${p.author}`,
-        licenceNote: `Posted to r/${sub} on Reddit. Shown via Reddit's media link with attribution; all rights remain with the creator.`,
-        score: p.score,
-      });
-    }
-  }
-  return out;
+type Gif = {
+  id: string;
+  title: string;
+  url: string;
+  username: string;
+  rating: string;
+  import_datetime?: string;
+  trending_datetime?: string;
+  user?: { profile_url?: string; display_name?: string };
+  images: { downsized_medium?: { url: string }; original?: { url: string } };
+};
+
+const parseGiphyDate = (d?: string) => (d && !d.startsWith("0000") ? Date.parse(d.replace(" ", "T") + "Z") : NaN);
+
+/** Newest first: the later of upload and trending date, so recently trending old GIFs count too. */
+export function giphyRecency(g: Pick<Gif, "import_datetime" | "trending_datetime">): number {
+  const t = Math.max(parseGiphyDate(g.import_datetime) || 0, parseGiphyDate(g.trending_datetime) || 0);
+  return t || 0;
 }
 
 async function fromGiphy(): Promise<MemeCandidate[]> {
   const key = env.giphyKey();
-  if (!key) return [];
-  const terms = ["sunderland", "mackem", "relegation football", "football fans crying"];
+  if (!key) throw new Error("No GIPHY key set. Add GIPHY_API_KEY in Vercel (free at developers.giphy.com) and memes will start pulling in automatically.");
   const out: MemeCandidate[] = [];
-  for (const q of terms) {
-    const res = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=${key}&q=${encodeURIComponent(q)}&limit=10&rating=pg-13&lang=en`, { cache: "no-store" });
-    if (!res.ok) continue;
-    type Gif = { id: string; title: string; url: string; username: string; user?: { profile_url?: string }; images: { downsized_medium?: { url: string } } };
-    const json = (await res.json()) as { data: Gif[] };
-    for (const g of json.data) {
-      const title = g.title || q;
-      // GIPHY search for "sunderland" is relevant by query; generic terms still need a football context.
-      if (q !== "sunderland" && q !== "mackem" && !/football|soccer|fan|relegat/i.test(title)) continue;
-      out.push({
-        source: "giphy",
-        sourceId: g.id,
-        sourceUrl: g.url,
-        mediaUrl: g.images.downsized_medium?.url ?? null,
-        mediaType: "gif",
-        title,
-        author: g.username || "GIPHY",
-        authorUrl: g.user?.profile_url ?? g.url,
-        licenceNote: "Powered by GIPHY. Embedded via the GIPHY API with attribution.",
-        score: q === "sunderland" ? 50 : 10,
+  for (const { q, club } of MEME_SEARCHES) {
+    // Two pages per term so there's something newer than the top-relevance hits to pick from.
+    for (const offset of [0, 25]) {
+      const res = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=${key}&q=${encodeURIComponent(q)}&limit=25&offset=${offset}&rating=pg&lang=en&bundle=messaging_non_clips`, { cache: "no-store" });
+      if (res.status === 429) throw new Error("GIPHY rate limit hit (beta keys allow 100 calls an hour). It'll catch up next run.");
+      if (!res.ok) continue;
+      const json = (await res.json()) as { data: Gif[] };
+      json.data.forEach((g, i) => {
+        const rank = offset + i; // GIPHY orders search by relevance, which leans on popularity
+        const title = (g.title || q).replace(/\s*GIF( by .*)?$/i, "").trim() || q;
+        if (!club && !/football|soccer|fan|relegat|premier|goal|stadium|supporter/i.test(g.title || "")) return;
+        if (!isRelevantMeme(club ? `${title} sunderland` : `${title} relegation`)) return;
+        const media = g.images.downsized_medium?.url ?? g.images.original?.url ?? null;
+        if (!media) return;
+        const when = giphyRecency(g);
+        const ageDays = when ? (Date.now() - when) / 86_400_000 : 3650;
+        out.push({
+          source: "giphy",
+          sourceId: g.id,
+          sourceUrl: g.url,
+          mediaUrl: media,
+          mediaType: "gif",
+          title,
+          author: g.user?.display_name || g.username || "GIPHY",
+          authorUrl: g.user?.profile_url ?? g.url,
+          licenceNote: "Powered by GIPHY. Embedded via the GIPHY API with attribution.",
+          score: tractionScore({ club, rank, trendedAt: parseGiphyDate(g.trending_datetime), ageDays }),
+        });
       });
     }
   }
-  return out;
+  // De-duplicate across searches, keep the best score.
+  const best = new Map<string, MemeCandidate>();
+  for (const m of out) if (!best.has(m.sourceId) || best.get(m.sourceId)!.score < m.score) best.set(m.sourceId, m);
+  return [...best.values()];
 }
 
 async function captionFor(title: string): Promise<string | null> {
@@ -129,11 +126,12 @@ async function captionFor(title: string): Promise<string | null> {
 
 export async function discoverMemes() {
   const db = adminDb();
-  const results = await Promise.allSettled([fromReddit(), fromGiphy()]);
+  const results = await Promise.allSettled([fromGiphy()]);
   const errors = results.filter((r) => r.status === "rejected").map((r) => String((r as PromiseRejectedResult).reason));
   const candidates = results.flatMap((r) => (r.status === "fulfilled" ? r.value : [])).sort((a, b) => b.score - a.score);
 
   let stored = 0;
+  if (errors.length && !candidates.length) throw new Error(errors.join(" | "));
   for (const m of candidates.slice(0, 30)) {
     const url = canonicalUrl(m.sourceUrl);
     const { data: dupe } = await db.from("memes").select("id").eq("url_hash", hashOf(url)).maybeSingle();
@@ -152,9 +150,9 @@ export async function discoverMemes() {
       licence_note: m.licenceNote,
       geordie_caption: caption,
       score: m.score,
-      // GIPHY content is licensed for embedding: auto-publish. Reddit posts wait for moderation.
-      status: m.source === "giphy" ? "published" : "pending",
-      published_at: m.source === "giphy" ? new Date().toISOString() : null,
+      // GIPHY content is licensed for embedding and rated PG: published automatically.
+      status: "published",
+      published_at: new Date().toISOString(),
     });
     if (!error) stored++;
   }
@@ -169,8 +167,8 @@ export async function discoverMemes() {
       .select("id")
       .eq("status", "published")
       .is("featured_on", null)
+      .gte("discovered_at", new Date(Date.now() - 14 * 86_400_000).toISOString())
       .order("score", { ascending: false })
-      .order("discovered_at", { ascending: false })
       .limit(1);
     if (next?.[0]) {
       await db.from("memes").update({ featured_on: today }).eq("id", next[0].id);
