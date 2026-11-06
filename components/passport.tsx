@@ -206,10 +206,10 @@ export function Passport({ stamp, pEurope }: { stamp: string; pEurope?: number }
           {pEurope !== undefined && <text y="26" textAnchor="middle" fontSize="7" fontWeight="700">{Math.round(pEurope * 100)}% CHANCE</text>}
         </g>
 
-        {/* the Mackem page: they're in the Europa League this season, so be accurate and still take the piss */}
+        {/* No Mackem stamps on a Geordie passport. Sunderland has no airport, so they fly from ours. */}
         <g transform="translate(100 382) rotate(-2)" fontFamily={SERIF} fontStyle="italic">
-          <text x="0" y="0" fontSize="10.5" fill="#3b3a36">Mackem stamps: Leiria, 2026.</text>
-          <text x="0" y="15" fontSize="10.5" fill="#a51d24" fontWeight="600">Portuguese 2nd division. HAHAHA</text>
+          <text x="0" y="0" fontSize="10.5" fill="#3b3a36">No Mackems on this passport.</text>
+          <text x="0" y="15" fontSize="10" fill="#a51d24" fontWeight="600">They fly from wor airport. HAHAHA</text>
           <path d="M2 20 C50 23 110 17 160 20" fill="none" stroke="#a51d24" strokeWidth="1.2" />
         </g>
 
