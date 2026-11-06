@@ -9,6 +9,7 @@
  *
  * Every number shown is live. The tears are decoration, never a statistic.
  */
+import { MackemPassport } from "./mackem-passport";
 import { Crowd, StadiumScene } from "./scenes";
 import { TearJar } from "./tear-jar";
 
@@ -158,6 +159,11 @@ export function Roast({ f, jar, compact = false }: { f: RoastFacts; jar?: { perc
             )}
           </div>
         )}
+      </div>
+
+      <div className="relative z-[2] mx-auto max-w-6xl px-4 pb-10">
+        <p className="mb-3 text-center font-mono text-xs font-bold uppercase tracking-[.3em] text-chalk/80">Their passport. Mind your hands.</p>
+        <MackemPassport />
       </div>
 
       {c.heat >= 2 && (

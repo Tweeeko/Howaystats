@@ -5,14 +5,14 @@
  * The holder is a silhouette, never a real person.
  */
 
-import { milanLine } from "@/lib/voice";
+import type React from "react";
 
-const MONO = "var(--font-jetbrains), ui-monospace, monospace";
-const DISPLAY = "var(--font-barlow), 'Arial Narrow', sans-serif";
-const SERIF = "var(--font-serif4), Georgia, serif";
+export const MONO = "var(--font-jetbrains), ui-monospace, monospace";
+export const DISPLAY = "var(--font-barlow), 'Arial Narrow', sans-serif";
+export const SERIF = "var(--font-serif4), Georgia, serif";
 
 /** Wavy security lines across a page. */
-function guilloche(x0: number, x1: number, y0: number, y1: number, lines: number, amp: number, seed: number) {
+export function guilloche(x0: number, x1: number, y0: number, y1: number, lines: number, amp: number, seed: number) {
   const out: string[] = [];
   for (let k = 0; k < lines; k++) {
     const base = y0 + ((y1 - y0) * (k + 0.5)) / lines;
@@ -27,7 +27,7 @@ function guilloche(x0: number, x1: number, y0: number, y1: number, lines: number
 }
 
 /** A spirograph rosette, the bit in the middle of every banknote and passport. */
-function rosette(cx: number, cy: number, r: number, petals: number, depth: number) {
+export function rosette(cx: number, cy: number, r: number, petals: number, depth: number) {
   let d = "";
   for (let i = 0; i <= 720; i++) {
     const t = (i / 720) * Math.PI * 2;
@@ -94,7 +94,7 @@ function Visa({ v }: { v: Stamp }) {
   );
 }
 
-function Field({ x, y, label, value, size = 10.5 }: { x: number; y: number; label: string; value: string; size?: number }) {
+export function Field({ x, y, label, value, size = 10.5 }: { x: number; y: number; label: string; value: string; size?: number }) {
   return (
     <g>
       <text x={x} y={y} fontSize="5.6" fill="#5b6b76" fontFamily={MONO}>{label}</text>
@@ -104,7 +104,7 @@ function Field({ x, y, label, value, size = 10.5 }: { x: number; y: number; labe
 }
 
 /** Silhouette head and shoulders in a black and white striped shirt. */
-function Holder({ x, y, w, h, id, faint = false }: { x: number; y: number; w: number; h: number; id: string; faint?: boolean }) {
+export function Holder({ x, y, w, h, id, faint = false, stripe = "#121417", base = "#f4f4f0", bg = ["#dfe6ea", "#c6d0d6"], children }: { x: number; y: number; w: number; h: number; id: string; faint?: boolean; stripe?: string; base?: string; bg?: [string, string]; children?: React.ReactNode }) {
   const sx = w / 100;
   const sy = h / 128;
   return (
@@ -114,8 +114,8 @@ function Holder({ x, y, w, h, id, faint = false }: { x: number; y: number; w: nu
           <path d="M8 128 C10 100 26 90 50 88 C74 90 90 100 92 128 Z" />
         </clipPath>
         <linearGradient id={`${id}-bg`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#dfe6ea" />
-          <stop offset="1" stopColor="#c6d0d6" />
+          <stop offset="0" stopColor={bg[0]} />
+          <stop offset="1" stopColor={bg[1]} />
         </linearGradient>
       </defs>
       <rect x="0" y="0" width="100" height="128" fill={faint ? "none" : `url(#${id}-bg)`} />
@@ -124,13 +124,14 @@ function Holder({ x, y, w, h, id, faint = false }: { x: number; y: number; w: nu
       <ellipse cx="50" cy="50" rx="19" ry="24" fill="#2a2f35" />
       {/* shirt with stripes */}
       <g clipPath={`url(#${id}-shirt)`}>
-        <rect x="0" y="86" width="100" height="42" fill="#f4f4f0" />
+        <rect x="0" y="86" width="100" height="42" fill={base} />
         {[0, 1, 2, 3, 4, 5, 6].map((i) => (
-          <rect key={i} x={i * 14 + 2} y="86" width="7" height="42" fill="#121417" />
+          <rect key={i} x={i * 14 + 2} y="86" width="7" height="42" fill={stripe} />
         ))}
       </g>
       <path d="M8 128 C10 100 26 90 50 88 C74 90 90 100 92 128" fill="none" stroke="#121417" strokeWidth="1.2" />
       <path d="M42 89 L50 98 L58 89" fill="none" stroke="#121417" strokeWidth="2" />
+      {children}
       {!faint && <rect x="0.5" y="0.5" width="99" height="127" fill="none" stroke="#8b979f" strokeWidth="1" />}
     </g>
   );
@@ -206,13 +207,6 @@ export function Passport({ stamp, pEurope }: { stamp: string; pEurope?: number }
           {pEurope !== undefined && <text y="26" textAnchor="middle" fontSize="7" fontWeight="700">{Math.round(pEurope * 100)}% CHANCE</text>}
         </g>
 
-        {/* No Mackem stamps on a Geordie passport. Sunderland has no airport, so they fly from ours. */}
-        <g transform="translate(100 382) rotate(-2)" fontFamily={SERIF} fontStyle="italic">
-          <text x="0" y="0" fontSize="10.5" fill="#3b3a36">No Mackems on this passport.</text>
-          <text x="0" y="15" fontSize="10" fill="#a51d24" fontWeight="600">They fly from wor airport. HAHAHA</text>
-          <path d="M2 20 C50 23 110 17 160 20" fill="none" stroke="#a51d24" strokeWidth="1.2" />
-        </g>
-
         {/* ===== RIGHT PAGE: DATA PAGE ===== */}
         <rect x="322" y="14" width="304" height="392" rx="6" fill="url(#pp-right)" />
         <g stroke="#7f9ea3" strokeOpacity=".22" strokeWidth=".55" fill="none">
@@ -262,7 +256,7 @@ export function Passport({ stamp, pEurope }: { stamp: string; pEurope?: number }
         <path d="M320 14 L320 406" stroke="#000" strokeOpacity=".35" strokeWidth="1" />
       </svg>
       <figcaption className="mt-2 text-center font-mono text-[11px] uppercase tracking-wider text-chalk/75">
-        {pEurope !== undefined ? `Chance of Europe: ${Math.round(pEurope * 100)}% · ` : ""}{milanLine()}
+        {pEurope !== undefined ? `Chance of Europe: ${Math.round(pEurope * 100)}% · ` : ""}Champions League nights only. Howay the lads.
       </figcaption>
     </figure>
   );
