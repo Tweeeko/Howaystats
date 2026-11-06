@@ -5,6 +5,8 @@
  * The holder is a silhouette, never a real person.
  */
 
+import { milanLine } from "@/lib/voice";
+
 const MONO = "var(--font-jetbrains), ui-monospace, monospace";
 const DISPLAY = "var(--font-barlow), 'Arial Narrow', sans-serif";
 const SERIF = "var(--font-serif4), Georgia, serif";
@@ -204,10 +206,11 @@ export function Passport({ stamp, pEurope }: { stamp: string; pEurope?: number }
           {pEurope !== undefined && <text y="26" textAnchor="middle" fontSize="7" fontWeight="700">{Math.round(pEurope * 100)}% CHANCE</text>}
         </g>
 
-        {/* the Mackem page */}
-        <g transform="translate(132 396) rotate(-3)" fontFamily={SERIF} fontStyle="italic">
-          <text x="0" y="0" fontSize="10.5" fill="#3b3a36">Mackem stamps: <tspan fill="#a51d24" fontWeight="600" fontSize="13">none. Ever.</tspan></text>
-          <path d="M74 5 C96 8 118 3 140 6" fill="none" stroke="#a51d24" strokeWidth="1.3" />
+        {/* the Mackem page: they're in the Europa League this season, so be accurate and still take the piss */}
+        <g transform="translate(100 382) rotate(-2)" fontFamily={SERIF} fontStyle="italic">
+          <text x="0" y="0" fontSize="10.5" fill="#3b3a36">Mackem stamps: Leiria, 2026.</text>
+          <text x="0" y="15" fontSize="10.5" fill="#a51d24" fontWeight="600">Portuguese 2nd division. HAHAHA</text>
+          <path d="M2 20 C50 23 110 17 160 20" fill="none" stroke="#a51d24" strokeWidth="1.2" />
         </g>
 
         {/* ===== RIGHT PAGE: DATA PAGE ===== */}
@@ -259,7 +262,7 @@ export function Passport({ stamp, pEurope }: { stamp: string; pEurope?: number }
         <path d="M320 14 L320 406" stroke="#000" strokeOpacity=".35" strokeWidth="1" />
       </svg>
       <figcaption className="mt-2 text-center font-mono text-[11px] uppercase tracking-wider text-chalk/75">
-        {pEurope !== undefined ? `Chance of Europe: ${Math.round(pEurope * 100)}% · ` : ""}Ever seen a Mackem in Milan? Nah. Us? Aye.
+        {pEurope !== undefined ? `Chance of Europe: ${Math.round(pEurope * 100)}% · ` : ""}{milanLine()}
       </figcaption>
     </figure>
   );

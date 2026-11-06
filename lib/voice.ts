@@ -31,6 +31,17 @@ export function tableQuip(sunPos: number, nufcPos: number, n: number, seed: stri
 
 
 
+/**
+ * Sunderland are in the 2026/27 Europa League (first time in Europe since 1973) and play
+ * Milan away on 10 December 2026. So the Milan line changes on that date instead of lying.
+ */
+export const MACKEMS_IN_MILAN = "2026-12-10";
+export function milanLine(now: Date = new Date()) {
+  return now.toISOString().slice(0, 10) < MACKEMS_IN_MILAN
+    ? "Mackems in Milan? 10 December, on a Thursday. We were there in 2023, in the Champions League."
+    : "Mackems finally saw Milan. Thursday night, Europa League. We did it in the Champions League in 2023.";
+}
+
 /** Empty states and loading lines — the site never goes off-voice, even when there's nothing to show. */
 export const EMPTY = {
   footballTitle: "Nowt loaded yet.",

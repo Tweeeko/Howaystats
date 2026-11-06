@@ -9,7 +9,7 @@ export const HANDOVER_LINES = {
     { kicker: "Now crossing the Tyne", line: "Standards rising. Mind your ears." },
     { kicker: "Right, enough of that shite", line: "Here's the greatest club in the world." },
     { kicker: "From the Stadium of Shite", line: "To the Cathedral on the Hill." },
-    { kicker: "Have you ever seen a Mackem in Milan?", line: "No. Now here's a club that's been." },
+    { kicker: "They get Thursday nights", line: "We get Champions League nights. Here's how it's done." },
   ],
   afterDefeat: [
     { kicker: "Right, enough about them", line: "Wor lads. Bad day at the office. Still miles better." },
