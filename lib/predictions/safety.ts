@@ -101,7 +101,7 @@ export function northEastScore(a: ComparisonInput, b: ComparisonInput, leagueSiz
 /** Geordie Glory Meter — banding is driven by model probabilities, never by hope. */
 export function gloryMeter(p: { pTop4: number; pTop6: number; pTop10: number; pRelegation: number }) {
   if (p.pTop4 >= 0.5) return { level: 5, line: "Champions League dreams very much alive. The lads are cooking." };
-  if (p.pTop6 >= 0.5) return { level: 4, line: "Europe is calling. Pack the passport, pet." };
+  if (p.pTop6 >= 0.5) return { level: 4, line: "Europe is calling. Dig the passport out." };
   if (p.pTop10 >= 0.5) return { level: 3, line: "Top half, solid enough. Could be worse. Could be Sunderland." };
   if (p.pRelegation < 0.15) return { level: 2, line: "Mid-table mush. Howay, let's get some points on the board." };
   return { level: 1, line: "Squeaky bum time on Tyneside. Nobody panic. Well, panic a bit." };

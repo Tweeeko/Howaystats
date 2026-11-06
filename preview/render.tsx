@@ -16,14 +16,12 @@ const css = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8")
 async function page(title: string, el: any) {
   const body = renderToStaticMarkup(
     <>
-      <div style={{ background: "#e0161f", color: "#f4f4f0", textAlign: "center", font: "800 13px/1.4 system-ui, sans-serif", padding: "6px 10px", position: "sticky", top: 0, zIndex: 60 }}>
-        FAKE SAMPLE NUMBERS — LAYOUT PREVIEW ONLY. The live site shows football-data.org data.
-      </div>
-      <div aria-hidden style={{ position: "fixed", inset: 0, zIndex: 55, pointerEvents: "none", display: "grid", placeItems: "center", overflow: "hidden" }}>
-        <div style={{ transform: "rotate(-30deg)", font: "900 13vw/1 system-ui, sans-serif", color: "rgba(224,22,31,.10)", whiteSpace: "nowrap" }}>SAMPLE DATA</div>
+      <div style={{ background: "#111214", color: "#f4f4f0", textAlign: "center", font: "800 13px/1.4 system-ui, sans-serif", padding: "6px 10px", position: "sticky", top: 0, zIndex: 60 }}>
+        PREVIEW · Real data from the live database, 6 Nov 2026. Links don't work in the preview.
       </div>
       <StadiumBackdrop />
       <SiteHeader />
+      <div className="stripes h-2" />
       <main>{el}</main>
       <footer className="mt-20 border-t border-[var(--line)] bg-ink/90"><div className="stripe-bar" /><div className="mx-auto max-w-6xl px-4 py-10"><p className="display text-2xl">{SITE.tagline}</p><p className="mt-4 max-w-3xl text-xs text-silver">{SITE.disclaimer}</p></div></footer>
     </>,

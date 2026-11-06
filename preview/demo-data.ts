@@ -52,3 +52,27 @@ export function demoData() {
   const prevSim = simulateSeason(prevTable, fixtures.filter((f) => !countsTowardsTable(f) || f.round?.endsWith(" 10")), fitRatings(ids, fixtures.filter((f) => !f.round?.endsWith(" 10")), []), { simulations: 20_000, seed: 8 });
   return { clubs, fixtures, table, sim, prevSim };
 }
+
+/** The live database as of 6 Nov 2026: real results and fixtures; remaining non-NE fixtures filled as the unplayed pairings. */
+import { CLUBS, PLAYED, UPCOMING } from "./real-data";
+export function realData() {
+  const list = CLUBS.split(";").map((r) => r.split("|")) as [string, string, string][];
+  const clubs = new Map<number, Club>(list.map(([id, n, code]) => [Number(id), { id: Number(id), name: n === "Newcastle" ? "Newcastle United" : n === "Sunderland" ? "Sunderland AFC" : n, shortName: n, code, slug: n.toLowerCase(), logoUrl: `https://crests.football-data.org/${id === "1044" ? "bournemouth" : id}.png` }]));
+  const ids = [...clubs.keys()];
+  const mk = (id: number, h: number, a: number, ko: string, hg: number | null, ag: number | null): Fixture => ({ id, season: 2026, round: null, kickoff: new Date(ko + ":00Z").toISOString(), status: hg === null ? "scheduled" : "finished", statusShort: hg === null ? "NS" : "FT", elapsed: null, homeId: h, awayId: a, homeGoals: hg, awayGoals: ag, htHome: null, htAway: null, leagueId: 39, competition: "Premier League" });
+  const played = PLAYED.split(";").map((r) => { const [id, h, a, hg, ag, ko] = r.split(","); return mk(+id, +h, +a, ko, +hg, +ag); });
+  const upcoming = UPCOMING.split(";").map((r) => { const [id, h, a, ko] = r.split(","); return mk(+id, +h, +a, ko, null, null); });
+  const seen = new Set([...played, ...upcoming].map((f) => `${f.homeId}-${f.awayId}`));
+  let fid = 900000;
+  const rest: Fixture[] = [];
+  for (const h of ids) for (const a of ids) if (h !== a && !seen.has(`${h}-${a}`)) rest.push(mk(fid++, h, a, "2027-03-01T15:00", null, null));
+  const fixtures = [...played, ...upcoming, ...rest];
+  const nameOf = (id: number) => clubs.get(id)?.shortName ?? String(id);
+  const table = computeStandings(ids, fixtures, nameOf);
+  const model = fitRatings(ids, fixtures, [], { now: new Date("2026-11-06T12:00:00Z") });
+  const remaining = fixtures.filter((f) => !countsTowardsTable(f));
+  const sim = simulateSeason(table, remaining, model, { simulations: 50_000, seed: 7 });
+  const prevFx = fixtures.filter((f) => !(f.kickoff >= "2026-10-31" && countsTowardsTable(f)));
+  const prevSim = simulateSeason(computeStandings(ids, prevFx, nameOf), prevFx.filter((f) => !countsTowardsTable(f)), fitRatings(ids, prevFx, []), { simulations: 20_000, seed: 8 });
+  return { clubs, fixtures, table, sim, prevSim };
+}

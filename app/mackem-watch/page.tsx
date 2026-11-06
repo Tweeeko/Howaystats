@@ -4,7 +4,7 @@ import { getSnapshot } from "@/lib/database/queries";
 import { SUNDERLAND_ID } from "@/lib/football/provider";
 import { clubName, clubView, meterView, ordinal, safetyLine } from "@/lib/view";
 import { NotConnected } from "@/components/football";
-import { MeterFull } from "@/components/meter";
+import { Scoreboard } from "@/components/programme";
 import { SectionTitle } from "@/components/stadium";
 import { ShareBar } from "@/components/share";
 
@@ -57,14 +57,14 @@ export default async function MackemWatch() {
       </p>
 
       <div className="mt-8">
-        <MeterFull m={m} />
+        <Scoreboard m={m} full />
       </div>
 
       {relPct !== null && (
         <section className="mt-12">
           <SectionTitle title="Chance of going down" mackem />
-          <div className="panel flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:gap-10 sm:p-8">
-            <p className="scoreboard-num text-[clamp(5rem,20vw,9rem)] leading-none text-mackem">{relPct}%</p>
+          <div className="board flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:gap-10 sm:p-8">
+            <p className="led text-[clamp(5rem,20vw,9rem)] leading-none !text-mackem" style={{ textShadow: "0 0 18px rgba(224,22,31,.55)" }}>{relPct}%</p>
             <div>
               <p className="display text-3xl">{relLine}</p>
               {change !== null && Math.abs(change) >= 0.01 && (

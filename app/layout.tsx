@@ -34,6 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </a>
         <StadiumBackdrop />
         <SiteHeader />
+        <div className="stripes h-2" aria-hidden="true" />
         <main id="main">{children}</main>
         <footer className="mt-20 border-t border-[var(--line)] bg-ink/90">
           <div className="stripe-bar" />
