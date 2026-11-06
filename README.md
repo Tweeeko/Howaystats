@@ -2,7 +2,7 @@
 
 **The numbers don't lie.** Premier League statistics. Geordie perspective. Mackem misery.
 
-An independent Newcastle United fan site: a live Premier League table, a proper Monte Carlo prediction engine, a Sunderland relegation watch, the Mackem Tears Index, the Misery Index, a Geordie-voiced newsroom, a daily meme feed and a matchday centre. Created by **Leeko**.
+A Geordie parody football site, 18+. Newcastle fans taking the piss out of Sunderland, built on real data: the Premier League table, a Monte Carlo prediction engine, the Mackem Misery Meter and a newsroom that rewrites real Sunderland and Newcastle stories in our own voice. Created by **Leeko**.
 
 > Independent fan entertainment. Not affiliated with Newcastle United FC, Sunderland AFC, the Premier League or any official organisation. Statistics are real; tears are fictional.
 
@@ -19,20 +19,18 @@ app/                 pages, API routes, OG images, sitemap, robots
   newcastle/         Newcastle dashboard + Geordie Glory Meter
   mackem-watch/      Sunderland relegation watch (/sunderland and /relegation-watch redirect here)
   tyne/              Newcastle v Sunderland comparison, "Who owns the North East?"
-  tear-jar/          the Mackem Tears Index: indicators, sources, points history, archive
   news/              The Mackem Newsroom (+ /news/[slug])
   memes/             The Mackem Crying Room + community submissions
-  match-centre/      live scoreboards, derby mode, Howay of the Match
   how-it-works/      the full method, printed from the code's own weights
   admin/             protected dashboard (Supabase Auth + email allowlist)
   api/cron/[job]     football | live | predictions | misery | news | memes | banter | cleanup | daily
   api/live           visitor-driven live refresh (max one provider poll a minute, match windows only)
   api/og             branded share graphics (?type=home|relegation|misery|jar|tyne|newcastle|news|meme)
-components/          design system: stadium backdrop, lower-thirds, tickets, table, tear jar, gauges…
+components/          stadium backdrop, meter, news cards, table, live scoreboard
 lib/football         provider adapter (API-Football), table + PL tie-breakers, sync
 lib/predictions      Poisson ratings, 50,000-season Monte Carlo, safety maths, comparison score
 lib/misery           Misery Index, points-dropped history, danger levels, happiness meter
-lib/tears            Tears Index (supporter misery from sourced indicators)
+lib/meter.ts         Mackem Misery Meter (count of plain-rule bad signs)
 lib/voice.ts         the Geordie voice: headlines, quips, empty/loading/error copy
 lib/content          dedupe + voiceCheck (editorial quality control)
 lib/news             RSS parsing, classification, discovery + fact-checked rewrites
@@ -92,7 +90,7 @@ Or sign in at `/admin` and press the buttons.
 | 17:47 | `football` | refresh after afternoon games (re-models automatically if results changed) |
 | 22:53 | `football` | refresh after evening games |
 
-Live scores don't depend on cron: `/api/live` polls the provider at most once a minute, only while a match is on, triggered by visitors on the Match Centre. On **Pro** you can add `{"path": "/api/cron/live", "schedule": "* * * * *"}` for unattended minute-by-minute polling (≈ 90 calls per matchday — check your API-Football plan).
+Live scores don't depend on cron: `/api/live` polls the provider at most once a minute, only while a match is on, triggered by visitors on the homepage (the scoreboard only appears while Newcastle or Sunderland are playing). On **Pro** you can add `{"path": "/api/cron/live", "schedule": "* * * * *"}` for unattended minute-by-minute polling (≈ 90 calls per matchday — check your football-data.org plan).
 
 ## Data supplier
 
@@ -124,7 +122,8 @@ The design preview uses **fake sample numbers** (and says so). The real site nev
 - **No fabricated data anywhere.** Empty tables show an "awaiting kick-off" state, not placeholders. Live means the live job succeeded in the last 3 minutes; everything shows "updated X ago", and data over 36 hours old is flagged stale.
 - **Table**: rebuilt from stored results (W3 D1 L0), ordered by points → GD → goals → head-to-head points → head-to-head away goals; still-level clubs are flagged. Our table is verified against the provider's after every sync; mismatches are logged.
 - **Predictions**: Poisson attack/defence ratings (time-decayed, last season at 35% weight, shrunk towards priors), then 50,000 full-league simulated seasons. Every run is stored with its seed and input hash, and only re-runs when results change.
-- **Tears Index**: how much Sunderland supporters have got to cry about, from measurable, sourced indicators — derby defeats, winless run, recent defeats, goals conceded, points thrown from half-time leads, league points dropped (of 76), and empty seats vs the 49,000 Stadium of Light capacity (when the provider supplies attendance). Away following and TV audience have no reliable public source, so they're shown as unavailable and left out. Each indicator scores 0–100%, the index is the weighted average of the available ones. "Fictional tears" = index × 1,000.
+- **Mackem Misery Meter**: a count of bad signs for Sunderland, each judged by a plain rule: in the bottom three; one win or fewer in the last five; conceding two a game over the last five; two defeats in a row (or four without a win); lost the last derby; last home crowd under 90% of the 49,000 capacity (only when football-data.org supplies an attendance). Anything not measurable is left out. No weights, no made-up units.
+- **Background photo**: St James' Park by Arne Müseler (Wikimedia Commons, CC BY-SA 3.0 DE), loaded by the browser at Wikimedia's standard thumbnail widths only (960/1280/1920). Other widths return HTTP 429. To self-host, put a licensed photo in /public and set NEXT_PUBLIC_HERO_IMAGE.
 - **Editorial quality control**: every Sunderland story (win, loss, draw, signing, sacking, good news) is rewritten from a Newcastle view as headline + take + facts + punchline + link. `lib/content/voice-check.ts` rejects AI clichés, Americanisms, emoji, more than one "!", dialect overload and headlines too close to the original; the fact guard rejects any number or name not in the source. Failures wait in /admin, where the headline, take and punchline can be edited.
 - **Misery Index**: relegation odds (0–40) + league position (0–20) + recent results (−20 to +40, fading over a fortnight). All three parts are shown wherever the index appears. Recomputed from scratch from real fixtures, so nothing is double-counted.
 - **News**: publisher RSS (BBC Sport, The Guardian, Sky Sports) + optional NewsAPI. AI rewrites are rejected automatically if they contain any number or quote not in the original headline/summary; rejected ones wait for an admin. Original headline, publisher, date and link are always shown.

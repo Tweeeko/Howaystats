@@ -15,8 +15,8 @@ const serif = Source_Serif_4({ subsets: ["latin"], weight: ["400", "600"], style
 
 export const metadata: Metadata = {
   metadataBase: new URL(env.siteUrl()),
-  title: { default: "HOWAYSTATS — The numbers don't lie", template: "%s · HOWAYSTATS" },
-  description: SITE.secondary + " Live Premier League table, Newcastle United analytics and the Sunderland relegation watch.",
+  title: { default: "HOWAYSTATS · Written on the Tyne. Taking the piss on the Wear.", template: "%s · HOWAYSTATS" },
+  description: "Newcastle United fan site. Real scores, real Sunderland news, Geordie commentary. 18+.",
   applicationName: "HOWAYSTATS",
   openGraph: { type: "website", siteName: "HOWAYSTATS", locale: "en_GB", images: ["/api/og?type=home"] },
   twitter: { card: "summary_large_image", images: ["/api/og?type=home"] },
@@ -35,39 +35,34 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <StadiumBackdrop />
         <SiteHeader />
         <main id="main">{children}</main>
-        <footer className="mt-24 border-t border-[var(--line)] bg-ink">
+        <footer className="mt-20 border-t border-[var(--line)] bg-ink/90">
           <div className="stripe-bar" />
-          <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 md:grid-cols-[1.3fr_1fr_1fr]">
-            <div>
-              <Logo />
-              <p className="display mt-3 text-2xl">{SITE.tagline}</p>
-              <p className="mt-1 text-sm text-silver">{SITE.secondary}</p>
-              <p className="mt-4 max-w-md text-xs leading-relaxed text-silver">{SITE.disclaimer}</p>
-              <p className="mt-2 text-xs text-silver">Built by {SITE.creator}.</p>
+          <div className="mx-auto max-w-6xl px-4 py-10">
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <Logo />
+                <p className="display mt-3 text-2xl">{SITE.tagline}</p>
+              </div>
+              <nav aria-label="Footer">
+                <ul className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-mist">
+                  {[...NAV.slice(1), { href: "/memes", label: "The Terrace" }, { href: "/how-it-works", label: "The small print" }].map((n) => (
+                    <li key={n.href}>
+                      <Link className="hover:text-chalk hover:underline" href={n.href}>
+                        {n.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
             </div>
-            <nav aria-label="Footer">
-              <div className="kicker mb-2">Sections</div>
-              <ul className="grid grid-cols-2 gap-1 text-sm">
-                {[...NAV, { href: "/tear-jar", label: "Tears Index" }, { href: "/how-it-works", label: "How the numbers work" }].map((n) => (
-                  <li key={n.href}>
-                    <Link className="text-mist hover:text-chalk" href={n.href}>
-                      {n.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-            <div className="text-xs leading-relaxed text-silver">
-              <div className="kicker mb-2">Credits</div>
-              <p>Match data: API-Football. News: links to the original publishers. Memes: credited to their creators and sources.</p>
-              <p className="mt-2">
-                Background photo:{" "}
-                <a className="underline" href={HERO_IMAGE.creditUrl} target="_blank" rel="noopener noreferrer">
-                  {HERO_IMAGE.credit}
-                </a>
-                , <a className="underline" href={HERO_IMAGE.licenceUrl} target="_blank" rel="noopener noreferrer">{HERO_IMAGE.licence}</a> (blurred and darkened).
-              </p>
-            </div>
+            <p className="mt-8 max-w-3xl text-xs leading-relaxed text-silver">{SITE.disclaimer}</p>
+            <p className="mt-2 max-w-3xl text-xs leading-relaxed text-silver">
+              Scores from football-data.org. News links back to whoever wrote it first. Background:{" "}
+              <a className="underline" href={HERO_IMAGE.creditUrl} target="_blank" rel="noopener noreferrer">
+                {HERO_IMAGE.credit}
+              </a>
+              , <a className="underline" href={HERO_IMAGE.licenceUrl} target="_blank" rel="noopener noreferrer">{HERO_IMAGE.licence}</a>, darkened. Built by {SITE.creator}.
+            </p>
           </div>
         </footer>
       </body>

@@ -14,6 +14,8 @@ const config: NextConfig = {
       { source: "/sunderland", destination: "/mackem-watch", permanent: false },
       { source: "/relegation-watch", destination: "/mackem-watch", permanent: false },
       { source: "/tyne-comparison", destination: "/tyne", permanent: true },
+      { source: "/tear-jar", destination: "/mackem-watch", permanent: true },
+      { source: "/match-centre", destination: "/", permanent: true },
     ];
   },
   async headers() {

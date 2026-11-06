@@ -78,18 +78,19 @@ export function templateBanter(f: BanterFacts): BanterLine[] {
 
     const gap = n.points - s.points;
     if (gap > 0) out.push({ kind: "headline", text: pick([`${gap} points between us and them. Not that we're counting. We are.`, `${gap} points clear of the Wear. Lovely.`], seed, "gap") });
-    else if (gap < 0) out.push({ kind: "headline", text: `Sunderland ${-gap} points above us. Aye. We know. The table doesn't lie and neither do we.` });
+    else if (gap < 0) out.push({ kind: "headline", text: `Sunderland ${-gap} points above us. Aye, we know. It won't last.` });
   }
 
   if (f.jarPercent !== undefined && s) {
+    // jar_percent now stores the Misery Meter: the share of bad signs.
     const j = Math.round(f.jarPercent);
     out.push({
       kind: "misery-report",
       text:
-        j >= 70 ? `Tears Index at ${j}%. Full-on Wearside weeping.`
-        : j >= 50 ? `Tears Index ${j}%. Lip's going on the Wear.`
-        : j >= 30 ? `Tears Index ${j}%. Bit of a sniffle on Wearside.`
-        : `Tears Index only ${j}%. Quiet spell. Give it a fortnight.`,
+        j >= 75 ? "Misery Meter's maxed out. Someone check on the Wear."
+        : j >= 50 ? "Misery Meter says kettle's on in Sunderland."
+        : j > 0 ? "A bit of grumbling on Wearside. Nowt serious. Yet."
+        : "Misery Meter's empty. Annoyingly, they're fine. Give it a fortnight.",
     });
   }
   if (f.miseryIndex !== undefined && s) {

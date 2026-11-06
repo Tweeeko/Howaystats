@@ -49,50 +49,62 @@ export function backPageHeadline(opts: {
   // Derby
   if (s && s.oppId === nufcId) {
     return s.r === "L"
-      ? { main: "The Tyne is ours.", sub: `Newcastle ${s.ga}, Sunderland ${s.gf}${s.comp}. Frame it.` }
+      ? { main: "The Tyne is ours.", sub: `Newcastle ${s.ga}, Sunderland ${s.gf}${s.comp}. Frame it. Print it. Read it to the bairns.` }
       : s.r === "D"
         ? { main: "Derby ends level.", sub: `${s.gf}-${s.ga}. They'll be acting like they won it. They didn't.` }
-        : { main: "We're not talking about it.", sub: `They won the derby ${s.gf}-${s.ga}${s.comp}. It's in the table, so it's on here. Moving on.` };
+        : { main: "We're not talking about it.", sub: `They won the derby ${s.gf}-${s.ga}${s.comp}. It's in the results so it's on here. That's all you're getting.` };
   }
 
+  const nLost = n?.r === "L";
   if (sameWeek && n!.r === "W" && s!.r === "L") {
     return pick([
-      { main: "Toon win. Mackems lose.", sub: `Newcastle beat ${n!.opp} ${n!.gf}-${n!.ga}${n!.comp}. Sunderland lost ${s!.gf}-${s!.ga} to ${s!.opp}${s!.comp}. Canny week, that.` },
-      { main: "Perfect week on the Tyne.", sub: `We beat ${n!.opp}${n!.comp}. They lost to ${s!.opp}${s!.comp}. Wey aye.` },
+      { main: "Toon win. Mackems lose.", sub: `We beat ${n!.opp} ${n!.gf}-${n!.ga}${n!.comp}. They lost ${s!.gf}-${s!.ga} to ${s!.opp}${s!.comp}. Lovely weekend, that.` },
+      { main: "Well, that's a lovely weekend.", sub: `Newcastle beat ${n!.opp}${n!.comp}. Sunderland lost to ${s!.opp}${s!.comp}. Pint, anyone?` },
     ], seed, "both");
+  }
+  if (sameWeek && nLost && s!.r === "L") {
+    return { main: "Both lost. Theirs was funnier.", sub: `We went down to ${n!.opp}${n!.comp}, which was shite. They lost ${s!.gf}-${s!.ga} to ${s!.opp}${s!.comp}, which helps.` };
+  }
+  if (sameWeek && nLost && s!.r === "W") {
+    return { main: "Don't.", sub: `Wor lot lost to ${n!.opp}${n!.comp}. They beat ${s!.opp} ${s!.gf}-${s!.ga}. Worst weekend of the season and it's not close.` };
   }
 
   if (s?.r === "L") {
     const heavy = s.ga - s.gf >= 3;
-    if (heavy) return { main: "Someone check on Sunderland.", sub: `Battered ${s.ga}-${s.gf} by ${s.opp}${s.comp}. Actually, divvent bother checking.` };
+    if (heavy) return pick([
+      { main: "Someone check on Sunderland.", sub: `Battered ${s.ga}-${s.gf} by ${s.opp}${s.comp}. Actually, divvent bother.` },
+      { main: "Have a look at the state of that.", sub: `${s.opp} ${s.ga}, Sunderland ${s.gf}${s.comp}. Never mind the table.` },
+    ], seed, "heavy");
     if (inZone) return pick([
-      { main: "Sunderland lose again.", sub: `${s.gf}-${s.ga} to ${s.opp}${s.comp}. Still ${pos}${winless >= 3 ? `, ${winless} games without a win` : ""}. Absolute shambles.` },
-      { main: "Wearside's gone quiet.", sub: `Beaten ${s.ga}-${s.gf} by ${s.opp}${s.comp}. ${pos} in the league. Gan on, have a look at the table.` },
+      { main: "Sunderland lose again.", sub: `${s.gf}-${s.ga} to ${s.opp}${s.comp}. Still ${pos}${winless >= 3 ? `, ${winless} without a win` : ""}. Absolute shambles.` },
+      { main: "Another day on Wearside.", sub: `Beaten ${s.ga}-${s.gf} by ${s.opp}${s.comp}. ${pos} in the league. Kettle's on.` },
     ], seed, "l1");
     return pick([
-      { main: `Sunderland beaten by ${s.opp}.`, sub: `${s.gf}-${s.ga}${s.comp}. Another excuse doing the rounds on the Wear by tonight.` },
+      { main: `Sunderland beaten by ${s.opp}.`, sub: `${s.gf}-${s.ga}${s.comp}. The excuses will be doing the rounds on the Wear by teatime.` },
       { main: "Get in.", sub: `Sunderland lost ${s.gf}-${s.ga} to ${s.opp}${s.comp}. That's it. That's the headline.` },
     ], seed, "l2");
   }
 
   if (s?.r === "D") {
     return pick([
-      { main: "Sunderland couldn't get it done.", sub: `${s.gf}-${s.ga} with ${s.opp}${s.comp}. Wearside celebrations reached dangerous levels anyway.` },
-      { main: "A draw. On the Wear that's a parade.", sub: `${s.gf}-${s.ga} against ${s.opp}${s.comp}. Still ${pos}.` },
+      { main: "Sunderland couldn't get it done.", sub: `${s.gf}-${s.ga} with ${s.opp}${s.comp}. Still ${pos}.` },
+      { main: "A draw. On the Wear that's a parade.", sub: `${s.gf}-${s.ga} against ${s.opp}${s.comp}. Get the bunting out, lads.` },
     ], seed, "d");
   }
 
   if (s?.r === "W") {
+    const where = inZone ? ` Still ${pos}, mind.` : "";
     if (s.margin === 1) return pick([
-      { main: "Mackems scrape one.", sub: `${s.gf}-${s.ga} against ${s.opp}${s.comp}. They're acting like they've won the Champions League. Calm down.` },
-      { main: "Three points? Calm down.", sub: `Edged ${s.opp} ${s.gf}-${s.ga}${s.comp}. Still ${pos} in the league, mind.` },
+      { main: "Mackems scrape one.", sub: `${s.gf}-${s.ga} against ${s.opp}${s.comp}. You'd think they'd won the fucking World Cup.${where}` },
+      { main: "Three points? Calm down.", sub: `Edged ${s.opp} ${s.gf}-${s.ga}${s.comp}. Somebody turn the music down on the Wear.${where}` },
     ], seed, "w1");
     return pick([
-      { main: "Sunderland won. We checked.", sub: `${s.gf}-${s.ga} against ${s.opp}${s.comp}. Still ${pos}. They'll be unbearable till Tuesday.` },
-      { main: "Mackems get carried away.", sub: `Beat ${s.opp} ${s.gf}-${s.ga}${s.comp}. Somebody tell them it's ${pos} in the league.` },
+      { main: "Sunderland won. We checked twice.", sub: `${s.gf}-${s.ga} against ${s.opp}${s.comp}. They'll be unbearable till Tuesday.${where}` },
+      { main: "Mackems get carried away.", sub: `Beat ${s.opp} ${s.gf}-${s.ga}${s.comp}. Open-top bus booked for Monday, probably.${where}` },
     ], seed, "w2");
   }
 
   if (n?.r === "W") return { main: `Toon beat ${n.opp}.`, sub: `${n.gf}-${n.ga}${n.comp}. ${ord(nufc.position)} in the league. Howay the lads.` };
-  return { main: `Newcastle ${ord(nufc.position)}. Sunderland ${pos}.`, sub: "Carry on." };
+  if (nLost) return { main: "Meanwhile, wor lot.", sub: `Lost ${n!.gf}-${n!.ga} to ${n!.opp}${n!.comp}. Making life difficult for wersels, as usual.${nufc.position < safc.position ? " Still above them, mind." : ""}` };
+  return { main: `Newcastle ${ord(nufc.position)}. Sunderland ${pos}.`, sub: "As you were." };
 }

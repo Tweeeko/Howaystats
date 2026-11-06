@@ -21,7 +21,7 @@ async function cleanup() {
     db.from("memes").delete().eq("status", "pending").lt("discovered_at", cutoff(30)),
     db.from("rate_limits").delete().lt("window_start", cutoff(1)),
   ]);
-  // Keep model history (needed for the Tear Jar) but thin intra-day snapshots older than 60 days.
+  // Keep model history (needed for the odds trend) but thin intra-day snapshots older than 60 days.
   const errors = [logs, rejectedNews, rejectedMemes, pendingMemes, oldRuns].map((r) => r.error?.message).filter(Boolean);
   if (errors.length) throw new Error(errors.join("; "));
   return { cleaned: true };

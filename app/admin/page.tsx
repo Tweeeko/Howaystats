@@ -4,7 +4,7 @@ import { currentAdmin } from "@/lib/admin-auth";
 import { adminDb } from "@/lib/database/client";
 import { env } from "@/lib/env";
 import { ago } from "@/components/football";
-import { SectionHead } from "@/components/stadium";
+import { SectionTitle } from "@/components/stadium";
 import { AdminButton, EditBanter, EditNews } from "./controls";
 
 export const dynamic = "force-dynamic";
@@ -45,12 +45,12 @@ export default async function Admin() {
 
       <section className="mt-8 grid gap-6 lg:grid-cols-2">
         <div className="panel p-5">
-          <SectionHead title="API Health" />
+          <SectionTitle title="API Health" />
           <table className="pl-table">
             <thead><tr><th className="l">Job</th><th>Last success</th><th>Last attempt</th><th className="l">Last error</th></tr></thead>
             <tbody>
               {(status.data ?? []).map((s) => (
-                <tr key={s.key}><td className="l display text-lg">{s.key}</td><td>{ago(s.last_success_at)}</td><td>{ago(s.last_attempt_at)}</td><td className="l max-w-[240px] truncate text-xs text-mackem" title={s.last_error ?? ""}>{s.last_error ?? "—"}</td></tr>
+                <tr key={s.key}><td className="l display text-lg">{s.key}</td><td>{ago(s.last_success_at)}</td><td>{ago(s.last_attempt_at)}</td><td className="l max-w-[240px] truncate text-xs text-mackem" title={s.last_error ?? ""}>{s.last_error ?? "none"}</td></tr>
               ))}
             </tbody>
           </table>
@@ -59,7 +59,7 @@ export default async function Admin() {
           </div>
         </div>
         <div className="panel p-5">
-          <SectionHead title="Configuration" />
+          <SectionTitle title="Configuration" />
           <ul className="grid gap-1 font-mono text-sm">
             {config.map(([k, ok]) => <li key={k} className="flex justify-between border-b border-[var(--line)] py-1"><span>{k}</span><span className={ok ? "text-pitch" : "text-mackem"}>{ok ? "set" : "missing"}</span></li>)}
           </ul>
@@ -68,7 +68,7 @@ export default async function Admin() {
       </section>
 
       <section className="mt-10">
-        <SectionHead title="News Review" sub="Pending first" mackem />
+        <SectionTitle title="News Review" sub="Pending first" mackem />
         <div className="grid gap-3">
           {[...(news.data ?? [])].sort((a, b) => (a.status === "pending" ? -1 : 1) - (b.status === "pending" ? -1 : 1)).map((n) => (
             <div key={n.id} className={`panel p-4 ${n.status === "pending" ? "panel-top mackem" : ""}`}>
@@ -87,7 +87,7 @@ export default async function Admin() {
       </section>
 
       <section className="mt-10">
-        <SectionHead title="Meme Review" mackem />
+        <SectionTitle title="Meme Review" mackem />
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {(memes.data ?? []).map((m) => (
             <div key={m.id} className="panel p-3">
@@ -107,11 +107,11 @@ export default async function Admin() {
 
       <section className="mt-10 grid gap-6 lg:grid-cols-2">
         <div>
-          <SectionHead title="Banter" />
+          <SectionTitle title="Banter" />
           <div className="grid gap-2">{(banter.data ?? []).map((b) => <EditBanter key={b.id} id={b.id} text={b.text} status={b.status} meta={`${b.for_date} · ${b.kind} · ${b.generated_by}`} />)}</div>
         </div>
         <div>
-          <SectionHead title="Automation Log" />
+          <SectionTitle title="Automation Log" />
           <ul className="panel max-h-[600px] divide-y divide-[var(--line)] overflow-y-auto font-mono text-xs">
             {(logs.data ?? []).map((l) => (
               <li key={l.id} className="flex gap-3 px-3 py-1.5"><span className="text-silver">{ago(l.started_at)}</span><span className="w-20">{l.job}</span><span className={l.status === "error" ? "text-mackem" : "text-pitch"}>{l.status}</span><span className="truncate text-mist" title={l.message ?? ""}>{l.message}</span></li>

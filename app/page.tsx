@@ -1,272 +1,208 @@
 import Link from "next/link";
-import { getBanter, getDailyMeme, getDerbies, getMemes, getNews, getSeasonHistory, getSnapshot } from "@/lib/database/queries";
+import { getNews, getSnapshot } from "@/lib/database/queries";
 import { buildLivePayload } from "@/lib/live";
 import { NEWCASTLE_ID, SUNDERLAND_ID } from "@/lib/football/provider";
 import { backPageHeadline } from "@/lib/headline";
-import { voice } from "@/lib/voice";
-import { clubName, clubView, freshness, headToHead, miseryView, opponentDifficulty, ordinal, safetyLine, tableMovement, tyneView } from "@/lib/view";
-import { countsTowardsTable } from "@/lib/football/standings";
+import { clubName, clubView, meterView, ordinal } from "@/lib/view";
 import type { Fixture } from "@/lib/types";
-import { StatusStrip } from "@/components/status-strip";
-import { LeagueTable } from "@/components/league-table";
-import { FixtureTicket, Freshness, NotConnected, ukDay } from "@/components/football";
-import { DangerGauge, MiseryIndex } from "@/components/misery";
-import { HeroPhoto } from "@/components/stadium";
+import { NotConnected } from "@/components/football";
 import { LiveScoreboards } from "@/components/live";
-import { DropZone, EuropeanNights, FightPoster, FrontPage, TapeBand, TearDepartment, Terrace, WearsideWoes, Wire } from "@/components/fanzine";
+import { MeterCompact } from "@/components/meter";
+import { LeadStory, StoryCard } from "@/components/news";
+import { SectionTitle } from "@/components/stadium";
 
 export const revalidate = 60;
-const DAY = 86_400_000;
+
+const when = (iso: string) =>
+  new Date(iso).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "Europe/London" }) +
+  ", " +
+  new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/London" });
 
 export default async function Home() {
   const s = await getSnapshot();
-  const [news, meme, memes, live, banter, derbies, seasons] = await Promise.all([
-    getNews({ limit: 8 }),
-    getDailyMeme(),
-    getMemes({ limit: 5 }),
+  const [sunNews, toonNews, live] = await Promise.all([
+    getNews({ club: "sunderland", limit: 4 }),
+    getNews({ club: "newcastle", limit: 2 }),
     buildLivePayload(false),
-    getBanter(10),
-    getDerbies(NEWCASTLE_ID, SUNDERLAND_ID),
-    getSeasonHistory([NEWCASTLE_ID, SUNDERLAND_ID]),
   ]);
-
+  const name = (id: number) => clubName(s, id);
   const nufc = clubView(s, NEWCASTLE_ID);
   const safc = clubView(s, SUNDERLAND_ID);
-  const misery = miseryView(s);
-  const tyne = tyneView(s);
-  const name = (id: number) => clubName(s, id);
-  const today = new Date();
-  const head = backPageHeadline({ fixtures: [...s.fixtures, ...s.cupFixtures], nufc: s.newcastle, safc: s.sunderland, nufcId: NEWCASTLE_ID, safcId: SUNDERLAND_ID, name, leagueSize: s.table.length });
-  const h2h = headToHead(derbies.length ? derbies : s.fixtures, NEWCASTLE_ID, SUNDERLAND_ID);
-  const res = (c: typeof nufc) => {
-    const f = c?.fixtures.recent[0];
+  const meter = meterView(s);
+  const head = backPageHeadline({
+    fixtures: [...s.fixtures, ...s.cupFixtures],
+    nufc: s.newcastle,
+    safc: s.sunderland,
+    nufcId: NEWCASTLE_ID,
+    safcId: SUNDERLAND_ID,
+    name,
+    leagueSize: s.table.length,
+  });
+
+  const result = (f: Fixture | undefined, id: number) => {
     if (!f) return null;
-    const home = f.homeId === c!.id;
-    const d = (home ? f.homeGoals! - f.awayGoals! : f.awayGoals! - f.homeGoals!);
-    return d > 0 ? "W" : d === 0 ? "D" : "L";
+    const home = f.homeId === id;
+    const gf = home ? f.homeGoals! : f.awayGoals!;
+    const ga = home ? f.awayGoals! : f.homeGoals!;
+    return { f, gf, ga, r: gf > ga ? "W" : gf === ga ? "D" : "L", opp: name(home ? f.awayId : f.homeId), home, comp: (f.leagueId ?? 39) === 39 ? null : f.competition };
   };
-  const v = nufc && safc
-    ? voice({
-        date: today.toISOString().slice(0, 10),
-        sunPos: safc.row.position,
-        nufcPos: nufc.row.position,
-        leagueSize: s.table.length,
-        pRel: safc.pred?.pRelegation,
-        pEurope: nufc.pred?.pTop7,
-        jarPercent: misery?.tears.percent,
-        sunLastResult: res(safc) as "W" | "D" | "L" | null,
-        nufcLastResult: res(nufc) as "W" | "D" | "L" | null,
-      })
-    : null;
-  const latestBanter = (kinds: string[]) => banter.find((b) => kinds.includes(b.kind))?.text;
-  const dateline = today.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "Europe/London" });
+  const nLast = nufc ? result(nufc.fixtures.recent[0], NEWCASTLE_ID) : null;
+  const nNext = nufc?.fixtures.upcoming[0];
+  const derbies = [...s.fixtures, ...s.cupFixtures]
+    .filter((f) => f.status === "finished" && ((f.homeId === NEWCASTLE_ID && f.awayId === SUNDERLAND_ID) || (f.homeId === SUNDERLAND_ID && f.awayId === NEWCASTLE_ID)))
+    .sort((a, b) => b.kickoff.localeCompare(a.kickoff));
+  const nextDerby = [...s.fixtures, ...s.cupFixtures]
+    .filter((f) => f.status === "scheduled" && ((f.homeId === NEWCASTLE_ID && f.awayId === SUNDERLAND_ID) || (f.homeId === SUNDERLAND_ID && f.awayId === NEWCASTLE_ID)))
+    .sort((a, b) => a.kickoff.localeCompare(b.kickoff))[0];
 
-  // League-only pips for the drop zone
-  const pips = safc
-    ? Array.from({ length: safc.totalGames }, (_, i) => {
-        const league = safc.fixtures.recent.filter((f) => (f.leagueId ?? 39) === 39).reverse();
-        const f = league[i];
-        if (!f) return null;
-        const d = f.homeId === SUNDERLAND_ID ? f.homeGoals! - f.awayGoals! : f.awayGoals! - f.homeGoals!;
-        return d > 0 ? "W" : d === 0 ? "D" : "L";
-      })
-    : [];
+  const toonLine = !nLast
+    ? null
+    : nLast.r === "W"
+      ? nLast.ga === 0
+        ? "Clean sheet and all. Lovely."
+        : "Three points. Nobody died. Howay."
+      : nLast.r === "D"
+        ? "A point. Could be worse. Could be a Mackem."
+        : "Meanwhile, wor lot are doing what wor lot do best. Making life difficult for ourselves.";
 
-  const nextFor = (c: NonNullable<typeof nufc>, n: number) =>
-    c.fixtures.upcoming.slice(0, n).map((f: Fixture) => ({ f, opp: name(f.homeId === c.id ? f.awayId : f.homeId), home: f.homeId === c.id, difficulty: (f.leagueId ?? 39) === 39 ? opponentDifficulty(s, f, c.id) : null }));
-
-  // The wire: real results (all competitions) and published stories, newest first.
-  const wire = [
-    ...[...(nufc?.fixtures.recent ?? []).slice(0, 3), ...(safc?.fixtures.recent ?? []).slice(0, 3)].map((f) => ({
-      id: `r${f.id}`,
-      at: f.kickoff,
-      tag: (f.leagueId ?? 39) === 39 ? "Result" : (f.competition ?? "Cup"),
-      text: `${name(f.homeId)} ${f.homeGoals}-${f.awayGoals} ${name(f.awayId)}`,
-      href: "/match-centre",
-      red: f.homeId === SUNDERLAND_ID || f.awayId === SUNDERLAND_ID,
-    })),
-    ...news.map((a) => ({ id: a.id, at: a.publishedAt, tag: a.source, text: a.howayHeadline ?? a.originalHeadline, href: `/news/${a.slug}`, red: a.club === "sunderland" })),
-  ]
-    .sort((a, b) => (b.at ?? "").localeCompare(a.at ?? ""))
-    .slice(0, 8);
-
-  const sunJustLost = safc?.fixtures.recent[0] && Date.now() - Date.parse(safc.fixtures.recent[0].kickoff) < 3 * DAY && res(safc) === "L";
+  const [sunLead, ...sunRest] = sunNews;
 
   return (
-    <>
-      <StatusStrip s={s} />
-
-      {/* FRONT PAGE */}
-      <HeroPhoto>
-        <FrontPage
-          dateline={dateline}
-          headline={head?.main ?? "Welcome to the Tyne. Hope you've brought a towel."}
-          sub={head?.sub ?? "Premier League statistics. Geordie perspective. Mackem misery."}
-          jar={misery ? { percent: misery.tears.percent } : undefined}
-          nufc={s.newcastle}
-          safc={s.sunderland}
-          nClub={s.clubs.get(NEWCASTLE_ID)}
-          sClub={s.clubs.get(SUNDERLAND_ID)}
-          updated={<Freshness {...freshness(s)} />}
-        />
-      </HeroPhoto>
-
+    <div className="mx-auto max-w-6xl px-4">
       {live.fixtures.length > 0 && (
-        <section className="mx-auto max-w-6xl px-4 py-8">
-          <div className="display mb-2 text-lg tracking-[.3em] text-mackem">Live</div>
+        <section className="pt-6">
           <LiveScoreboards initial={live} />
-          <Link href="/match-centre" className="mt-2 inline-block text-sm underline underline-offset-4">Match centre</Link>
         </section>
       )}
 
-      {!s.table.length && (
-        <div className="mx-auto max-w-6xl px-4 py-8"><NotConnected /></div>
-      )}
+      {/* 1. The headline */}
+      <section className="pb-10 pt-12 sm:pt-20">
+        {head ? (
+          <>
+            <h1 className="tabloid max-w-4xl text-[clamp(3.4rem,12vw,8rem)] drop-shadow-[0_2px_12px_rgba(0,0,0,.6)]">{head.main}</h1>
+            <p className="serif mt-4 max-w-2xl text-xl leading-snug text-mist drop-shadow-[0_1px_6px_rgba(0,0,0,.8)] sm:text-2xl">{head.sub}</p>
+          </>
+        ) : (
+          <>
+            <h1 className="tabloid max-w-4xl text-[clamp(3.4rem,12vw,8rem)]">Howay.</h1>
+            <p className="serif mt-4 max-w-2xl text-xl text-mist">Scores are on their way. Give it a minute.</p>
+          </>
+        )}
+      </section>
 
-      {v && <div className="overflow-x-clip py-6"><TapeBand lines={v.bandLines} /></div>}
-
-      {/* TYNE V WEAR */}
-      {tyne && v && (
-        <FightPoster
-          n={{ club: s.clubs.get(NEWCASTLE_ID), row: tyne.n, pred: tyne.pn }}
-          s={{ club: s.clubs.get(SUNDERLAND_ID), row: tyne.u, pred: tyne.pu }}
-          h2h={{ aWins: h2h.aWins, draws: h2h.draws, bWins: h2h.bWins, played: h2h.games.length }}
-          scoreA={tyne.score.scoreA}
-          headline={v.rivalryHead}
-        />
-      )}
-
-      {/* THE MACKEM TEAR DEPARTMENT */}
-      {misery && safc && v && (
-        <TearDepartment
-          title={v.tearsTitle}
-          caption={v.tearsCaption}
-          tears={misery.tears}
-          reasons={misery.jarReasons}
-          pRel={safc.pred?.pRelegation}
-          oddsMove={misery.oddsMove}
-        >
-          <div className="grid gap-6 md:grid-cols-[1.2fr_1fr]">
-            <MiseryIndex score={misery.score} label={misery.label} movement={misery.movement} biggest={misery.biggest} spark={misery.spark} parts={misery.parts} />
-            {safc.pred && (
-              <div className="flex flex-col items-center justify-center">
-                <DangerGauge p={safc.pred.pRelegation} level={misery.danger} />
-                {sunJustLost && <span className="stamp mt-3 text-chalk">Someone check on Sunderland</span>}
-              </div>
-            )}
-          </div>
-        </TearDepartment>
-      )}
-
-      {v && <div className="overflow-x-clip py-6"><TapeBand lines={[v.weather.toUpperCase(), "THE TABLE DOESN'T LIE", "ANOTHER WEEK. ANOTHER REASON TO CHECK IT"]} tone="white" reverse /></div>}
-
-      {/* THE TABLE */}
-      {s.table.length > 0 && (
-        <section className="mx-auto max-w-6xl px-4 py-8">
-          <div className="grid gap-2 sm:grid-cols-[auto_1fr] sm:items-end sm:gap-6">
-            <h2 className="masthead text-[3.6rem] sm:text-[6rem]">The table</h2>
-            <p className="serif pb-2 text-lg italic text-mist">{v?.tableQuip || `Premier League ${s.season}/${String(s.season + 1).slice(2)}. The table doesn't lie.`}</p>
-          </div>
-          <div className="mt-4 border-t-4 border-chalk bg-black/60">
-            <LeagueTable table={s.table} clubs={s.clubs} movement={tableMovement(s)} showMovement />
-          </div>
-          <div className="mt-2 flex gap-4 text-sm">
-            <Link href="/premier-league" className="underline underline-offset-4">Goals, home &amp; away</Link>
-            <Link href="/premier-league#projections" className="underline underline-offset-4">Projected final table</Link>
-          </div>
-        </section>
-      )}
-
-      {/* THE DROP ZONE */}
-      {safc && v && (
-        <DropZone
-          headline={v.dropZone}
-          table={s.table}
-          clubs={s.clubs}
-          focusId={SUNDERLAND_ID}
-          summary={latestBanter(["misery-report"])}
-          stats={[
-            { label: "Position", value: ordinal(safc.row.position), red: safc.row.position > s.table.length - 3 },
-            { label: "Behind 17th", value: safc.distances ? (safc.distances.toSeventeenth > 0 ? `${safc.distances.toSeventeenth} pt${safc.distances.toSeventeenth === 1 ? "" : "s"}` : "Clear") : "—", red: true },
-            { label: safc.distances?.teamAboveId ? `To catch ${name(safc.distances.teamAboveId)}` : "Club above", value: safc.distances ? `${safc.distances.toTeamAbove} pt${safc.distances.toTeamAbove === 1 ? "" : "s"}` : "—" },
-            { label: "Projected points", value: safc.pred ? `${Math.round(safc.pred.expectedPoints)}` : "—" },
-            { label: "Relegation chance", value: safc.pred ? `${Math.round(safc.pred.pRelegation * 100)}%` : "—", red: true },
-            { label: "Games left", value: `${safc.remaining}` },
-          ]}
-          pips={pips}
-          next={nextFor(safc, 5)}
-          safety={safetyLine(safc)}
-        />
-      )}
-
-      {/* EUROPEAN NIGHTS */}
-      {nufc && v && (
-        <EuropeanNights headline={v.europe} club={s.clubs.get(NEWCASTLE_ID)} row={nufc.row} pred={nufc.pred} next={nextFor(nufc, 4)} line={latestBanter(["celebration", "post-match"])} />
-      )}
-
-      {/* WEARSIDE WOES */}
-      <WearsideWoes title={v?.woes ?? "Wearside Woes"} stories={news.filter((n) => n.club === "sunderland")} />
-
-      {/* THE TERRACE */}
-      <Terrace
-        title={v?.terrace ?? "The Terrace"}
-        featured={meme?.meme}
-        fromArchive={meme?.fromArchive}
-        memes={memes.filter((m) => m.id !== meme?.meme.id)}
-        original={safc?.pred ? { src: "/api/og?type=relegation", alt: `Sunderland relegation chance ${Math.round(safc.pred.pRelegation * 100)}%`, share: "/mackem-watch" } : undefined}
-      />
-
-      {/* THE WIRE */}
-      <Wire items={wire} />
-
-      {/* FIXTURES */}
-      {(nufc || safc) && (
-        <section className="mx-auto max-w-6xl px-4 py-12">
-          <h2 className="masthead text-[3rem] sm:text-[5rem]">Coming up</h2>
-          <div className="mt-4 grid gap-6 lg:grid-cols-2 [&>*]:min-w-0">
-            {[nufc, safc].map((c) =>
-              c ? (
-                <div key={c.id} className="min-w-0">
-                  <div className={`display mb-2 text-lg ${c.id === SUNDERLAND_ID ? "text-mackem" : "text-chalk"}`}>{c.name}</div>
-                  <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2">
-                    {[...c.fixtures.recent.slice(0, 2).reverse(), ...c.fixtures.upcoming.slice(0, 3)].map((f) => (
-                      <div key={f.id} className="snap-start"><FixtureTicket f={f} clubs={s.clubs} highlight={c.id} difficulty={countsTowardsTable(f) || (f.leagueId ?? 39) !== 39 ? null : opponentDifficulty(s, f, c.id)} /></div>
-                    ))}
-                  </div>
+      {!nufc || !safc ? (
+        <NotConnected />
+      ) : (
+        <div className="grid gap-12">
+          {/* 2. Misery meter + 3. Wearside news */}
+          <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+            {meter && <MeterCompact m={meter} />}
+            <section className="min-w-0">
+              <SectionTitle title="Latest from the Wear" href="/news?club=sunderland" link="All of it" mackem />
+              {sunLead ? (
+                <div className="grid gap-5">
+                  <LeadStory a={sunLead} />
+                  {sunRest.length > 0 && <div className="grid gap-5 sm:grid-cols-2">{sunRest.slice(0, 2).map((a) => <StoryCard key={a.id} a={a} />)}</div>}
                 </div>
-              ) : null,
-            )}
+              ) : (
+                <p className="panel p-5 text-mist">Quiet on the Wear today. Suspiciously quiet. Stories land every afternoon.</p>
+              )}
+            </section>
           </div>
-          <Link href="/match-centre" className="mt-2 inline-block text-sm underline underline-offset-4">Match centre</Link>
-        </section>
-      )}
 
-      {/* RECORDS */}
-      {(seasons.length > 0 || h2h.games.length > 0) && (
-        <section className="mx-auto max-w-6xl border-t border-[var(--line)] px-4 py-10">
-          <h2 className="display text-3xl">The long view</h2>
-          <div className="mt-4 grid gap-8 lg:grid-cols-2">
-            {seasons.length > 0 && (
-              <table className="pl-table">
-                <thead><tr><th className="l">Season</th><th>Newcastle</th><th>Sunderland</th></tr></thead>
-                <tbody>
-                  {[...new Set(seasons.map((r) => r.season))].map((yr) => {
-                    const n = seasons.find((r) => r.season === yr && r.club_id === NEWCASTLE_ID);
-                    const u = seasons.find((r) => r.season === yr && r.club_id === SUNDERLAND_ID);
-                    return <tr key={yr}><td className="l">{yr}/{String(yr + 1).slice(2)}{yr === s.season ? " (now)" : ""}</td><td>{n ? `${ordinal(n.position)} · ${n.points}` : "—"}</td><td className="text-mackem">{u ? `${ordinal(u.position)} · ${u.points}` : "Not in the PL"}</td></tr>;
-                  })}
-                </tbody>
-              </table>
-            )}
-            {h2h.games.length > 0 && (
-              <ul className="divide-y divide-[var(--line)]">
-                {h2h.games.slice(0, 6).map((f) => <li key={f.id} className="flex justify-between py-2 text-sm"><span>{name(f.homeId)} {f.homeGoals}-{f.awayGoals} {name(f.awayId)}</span><span className="text-silver">{ukDay(f.kickoff)}</span></li>)}
-              </ul>
-            )}
-          </div>
-          <p className="mt-3 text-xs text-silver">Only seasons stored in our database appear here. No made-up history.</p>
-        </section>
+          {/* 4. The Toon */}
+          <section>
+            <SectionTitle title="The Toon" href="/newcastle" link="More" />
+            <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+              <div className="panel panel-top p-5 sm:p-6">
+                {nLast && (
+                  <>
+                    <div className="kicker">Last time out{nLast.comp ? ` · ${nLast.comp}` : ""}</div>
+                    <p className="display mt-2 text-4xl">
+                      {nLast.home ? `Newcastle ${nLast.gf}-${nLast.ga} ${nLast.opp}` : `${nLast.opp} ${nLast.ga}-${nLast.gf} Newcastle`}
+                    </p>
+                    <p className="serif mt-2 text-lg text-mist">{toonLine}</p>
+                  </>
+                )}
+                <p className="mt-4 text-mist">
+                  {ordinal(nufc.row.position)} in the league on {nufc.row.points} points
+                  {nufc.row.position > safc.row.position
+                    ? ". Sunderland are above us. We don't want to talk about it."
+                    : nufc.row.points > safc.row.points
+                      ? `, ${nufc.row.points - safc.row.points} clear of Sunderland. As it should be.`
+                      : ", above Sunderland on goal difference. Just."}
+                </p>
+                {nNext && (
+                  <p className="mt-4 border-t border-[var(--line)] pt-4 text-mist">
+                    <span className="kicker mr-2">Next</span>
+                    {nNext.homeId === NEWCASTLE_ID ? `${name(nNext.awayId)} at home` : `${name(nNext.homeId)} away`} · {when(nNext.kickoff)}
+                    {(nNext.leagueId ?? 39) !== 39 && nNext.competition ? ` · ${nNext.competition}` : ""}
+                  </p>
+                )}
+              </div>
+              {toonNews.length > 0 ? (
+                <div className="grid gap-5 sm:grid-cols-2">{toonNews.map((a) => <StoryCard key={a.id} a={a} />)}</div>
+              ) : (
+                <p className="panel p-5 text-mist">Nowt new from St James&apos; today. Enjoy the peace.</p>
+              )}
+            </div>
+          </section>
+
+          {/* 5. Tyne v Wear */}
+          <section>
+            <SectionTitle title="Tyne v Wear" href="/tyne" link="The derby" />
+            <div className="panel grid divide-y divide-[var(--line)] sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+              <div className="p-5">
+                <div className="kicker">The table</div>
+                <p className="display mt-2 text-3xl">
+                  Newcastle {ordinal(nufc.row.position)} <span className="text-silver">·</span> <span className="text-mackem">Sunderland {ordinal(safc.row.position)}</span>
+                </p>
+                <p className="mt-2 text-sm text-mist">
+                  {nufc.row.points === safc.row.points
+                    ? "Level on points. Unacceptable."
+                    : nufc.row.points > safc.row.points
+                      ? `${nufc.row.points - safc.row.points} point${nufc.row.points - safc.row.points === 1 ? "" : "s"} between us. Not enough, never enough.`
+                      : `They're ${safc.row.points - nufc.row.points} ahead. It won't last.`}
+                </p>
+              </div>
+              <div className="p-5">
+                <div className="kicker">Last derby</div>
+                {derbies[0] ? (
+                  <>
+                    <p className="display mt-2 text-3xl">
+                      {name(derbies[0].homeId)} {derbies[0].homeGoals}-{derbies[0].awayGoals} {name(derbies[0].awayId)}
+                    </p>
+                    <p className="mt-2 text-sm text-mist">
+                      {(derbies[0].homeId === NEWCASTLE_ID ? derbies[0].homeGoals! - derbies[0].awayGoals! : derbies[0].awayGoals! - derbies[0].homeGoals!) > 0
+                        ? "Frame it."
+                        : "We're not talking about it."}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="display mt-2 text-3xl">None yet this season</p>
+                    <p className="mt-2 text-sm text-mist">{s.season === 2026 ? "Last season they did the double over us. Next question." : "Plenty of time for them to get battered."}</p>
+                  </>
+                )}
+              </div>
+              <div className="p-5">
+                <div className="kicker">Next derby</div>
+                {nextDerby ? (
+                  <>
+                    <p className="display mt-2 text-3xl">{nextDerby.homeId === NEWCASTLE_ID ? "St James' Park" : "Stadium of Light"}</p>
+                    <p className="mt-2 text-sm text-mist">{when(nextDerby.kickoff)}. Book the day off.</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="display mt-2 text-3xl">Not in the fixtures yet</p>
+                    <p className="mt-2 text-sm text-mist">We&apos;ll tell you the minute it is.</p>
+                  </>
+                )}
+              </div>
+            </div>
+          </section>
+        </div>
       )}
-    </>
+    </div>
   );
 }

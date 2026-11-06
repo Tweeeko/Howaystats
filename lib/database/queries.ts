@@ -68,7 +68,7 @@ export interface Snapshot {
   season: number;
   clubs: Map<number, Club>;
   table: StandingRow[];
-  fixtures: Fixture[]; // Premier League only — the table, model and Tear Jar use these
+  fixtures: Fixture[]; // Premier League only. The table and model use these
   cupFixtures: Fixture[]; // Newcastle/Sunderland in Europe and the cups
   predictions: Map<number, Prediction>;
   previousPredictions: Map<number, Prediction>;
@@ -197,6 +197,7 @@ export interface NewsArticle {
   howayCommentary: string | null;
   punchline: string | null;
   storyType: string | null;
+  imageUrl: string | null;
   breaking: boolean;
   shares: number;
 }
@@ -216,15 +217,17 @@ const toNews = (r: any): NewsArticle => ({
   howayCommentary: r.howay_commentary,
   punchline: r.howay_punchline ?? null,
   storyType: r.story_type ?? null,
+  imageUrl: r.image_url ?? null,
   breaking: r.breaking,
   shares: r.shares,
 });
 
-export async function getNews(opts: { category?: string; limit?: number; sort?: "latest" | "shared" } = {}) {
+export async function getNews(opts: { category?: string; club?: "sunderland" | "newcastle"; limit?: number; sort?: "latest" | "shared" } = {}) {
   const db = publicDb();
   if (!db) return [];
   let q = db.from("news_articles").select("*").eq("status", "published");
   if (opts.category) q = q.eq("category", opts.category);
+  if (opts.club) q = q.eq("club", opts.club);
   q = opts.sort === "shared" ? q.order("shares", { ascending: false }) : q.order("published_at", { ascending: false, nullsFirst: false });
   const { data } = await q.limit(opts.limit ?? 30);
   return (data ?? []).map(toNews);

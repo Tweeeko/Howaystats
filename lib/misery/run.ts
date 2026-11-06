@@ -4,9 +4,9 @@ import { loadCupFixtures, loadSeason } from "../football/sync";
 import { computeStandings } from "../football/standings";
 import { NEWCASTLE_ID, SUNDERLAND_ID, currentSeason } from "../football/provider";
 import { happiness, miseryEvents, miseryIndexAt, tearJar } from "./index";
-import { tearsIndex } from "../tears/index";
+import { mackemMeter } from "../meter";
 
-/** Recompute the Misery Index, Tears Index and Happiness Meter from scratch and store a snapshot. */
+/** Recompute the Misery Meter (plus the older internal misery index) and store a snapshot. */
 export async function runMisery() {
   const season = currentSeason();
   const db = adminDb();
@@ -51,7 +51,8 @@ export async function runMisery() {
   const now = new Date();
   const idx = miseryIndexAt(events, { pRelegation: pRel, position: sun.position, leagueSize: ids.length }, now);
   const jar = tearJar(fixtures, SUNDERLAND_ID, nameOf, 2 * (ids.length - 1));
-  const tears = tearsIndex({ leagueFixtures: fixtures, cupFixtures, sunderlandId: SUNDERLAND_ID, newcastleId: NEWCASTLE_ID, nameOf, totalGames: 2 * (ids.length - 1) });
+  const meter = mackemMeter({ fixtures: [...fixtures, ...cupFixtures], sunderlandId: SUNDERLAND_ID, newcastleId: NEWCASTLE_ID, position: sun.position, leagueSize: ids.length });
+  const meterPercent = meter.total ? Math.round((100 * meter.bad) / meter.total) : 0;
   const happy = nufc
     ? happiness(nufc, nufcLatest ? Number(nufcLatest.p_top6) : 0, 0)
     : { score: 0, line: "" };
@@ -70,7 +71,7 @@ export async function runMisery() {
         season: season - 1,
         final_percent: p.jar_percent,
         final_units: p.jar_units,
-        tears_collected: Math.round(Number(p.jar_percent) * 1000), // Tears Index × 1,000 (made-up unit)
+        tears_collected: 0, // retired: the Tears Index has gone
         overflowed: Number(p.jar_percent) >= 100,
         history: p.payload?.jarHistory ?? [],
       });
@@ -82,12 +83,12 @@ export async function runMisery() {
     misery_index: idx.score,
     state_score: idx.stateScore,
     event_score: idx.eventScore,
-    jar_percent: tears.percent,
+    jar_percent: meterPercent, // Misery Meter: share of bad signs
     jar_units: jar.dropped,
     happiness: happy.score,
     biggest_event: biggest?.label ?? null,
-    payload: { tears: tears.indicators.map((i) => ({ key: i.key, value: i.value, available: i.available, score: i.score })), jarHistory: jar.history.slice(0, 38), recentEvents: recent.slice(0, 10), parts: idx.parts },
+    payload: { meter: { bad: meter.bad, total: meter.total, level: meter.levelName, signs: meter.signs }, jarHistory: jar.history.slice(0, 38), recentEvents: recent.slice(0, 10), parts: idx.parts },
   });
   if (error) throw new Error(error.message);
-  return { misery: idx.score, tears: tears.percent, happiness: happy.score, events: events.length };
+  return { misery: idx.score, meter: `${meter.bad}/${meter.total}`, happiness: happy.score, events: events.length };
 }

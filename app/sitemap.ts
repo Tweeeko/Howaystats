@@ -6,7 +6,7 @@ export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = env.siteUrl();
-  const pages = ["", "/premier-league", "/newcastle", "/mackem-watch", "/tyne", "/tear-jar", "/news", "/memes", "/match-centre", "/how-it-works"];
+  const pages = ["", "/premier-league", "/newcastle", "/mackem-watch", "/tyne", "/news", "/memes", "/how-it-works"];
   const news = await getNews({ limit: 200 }).catch(() => []);
   return [
     ...pages.map((p) => ({ url: `${base}${p}`, changeFrequency: "hourly" as const, priority: p === "" ? 1 : 0.8 })),

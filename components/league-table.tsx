@@ -87,7 +87,7 @@ export function LeagueTable({
                       {movement.get(r.clubId)! > 0 ? "▲" : "▼"}
                     </span>
                   ) : null}
-                  {r.unresolvedTie && view === "overall" && <span title="Level on every tie-breaker — play-off would decide">*</span>}
+                  {r.unresolvedTie && view === "overall" && <span title="Level on everything. A play-off would settle it.">*</span>}
                 </td>
                 <td className="l w-full max-w-0">
                   <span className="flex min-w-0 items-center gap-2">
@@ -112,7 +112,7 @@ export function LeagueTable({
                     <Form form={r.form} />
                   </td>
                 )}
-                {proj && !compact && <td className="hidden font-mono text-silver md:table-cell">{proj.get(r.clubId) ?? "—"}</td>}
+                {proj && !compact && <td className="hidden font-mono text-silver md:table-cell">{proj.get(r.clubId) ?? ""}</td>}
               </tr>
             );
           })}

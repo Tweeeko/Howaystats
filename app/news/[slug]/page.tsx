@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getArticle } from "@/lib/database/queries";
-import { NewsStory } from "@/components/editorial";
+import { Article as Story } from "@/components/news";
 
 export const revalidate = 600;
 
@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const og = `/api/og?type=news&slug=${slug}`;
   return {
     title: a.howayHeadline ?? a.originalHeadline,
-    description: `Original: ${a.originalHeadline} (${a.source})`,
+    description: a.howayCommentary ?? `${a.originalHeadline} (${a.source})`,
     openGraph: { type: "article", publishedTime: a.publishedAt ?? undefined, images: [og] },
     twitter: { card: "summary_large_image", images: [og] },
   };
@@ -34,9 +34,9 @@ export default async function Article({ params }: { params: Promise<{ slug: stri
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <Link href="/news" className="kicker hover:underline">← Mackem Newsroom</Link>
-      <div className="mt-4"><NewsStory a={a} lead /></div>
-      <p className="mt-4 text-xs text-silver">HOWAYSTATS commentary is original satire based only on the publisher&apos;s headline and summary. For the full facts, read the original at {a.source}.</p>
+      <Link href="/news" className="kicker hover:underline">← All the news</Link>
+      <div className="mt-4"><Story a={a} /></div>
+      <p className="mt-4 text-xs text-silver">The headline and the take are ours, written from {a.source}&apos;s story and nowt else. For the full facts, read theirs.</p>
     </div>
   );
 }

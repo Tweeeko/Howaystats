@@ -1,46 +1,43 @@
-import Image from "next/image";
 import { HERO_IMAGE } from "@/lib/site";
 
 /**
- * Fixed full-screen St James' Park backdrop: a real aerial photograph (CC BY-SA, credited in the footer),
- * heavily blurred and darkened, with two floodlight beams. Replace via NEXT_PUBLIC_HERO_IMAGE.
+ * The St James' Park photograph behind every page.
+ *
+ * Plain <img> on purpose: it's loaded by the visitor's browser straight from Wikimedia at
+ * standard thumbnail widths (960/1280/1920). Non-standard widths (like the old 2560px) are
+ * refused by Wikimedia with HTTP 429, and routing it through the Vercel image optimiser
+ * meant a server-side fetch that could be rate-limited too. If it still fails, the
+ * charcoal .stadium background shows instead.
  */
 export function StadiumBackdrop() {
-  // Site-wide: the same photo, much fainter, so every page sits "in" the stadium.
   return (
     <div className="stadium" aria-hidden="true">
-      <Image src={HERO_IMAGE.src} alt="" fill priority sizes="100vw" quality={55} />
-      <div className="floodlight l" />
-      <div className="floodlight r" />
+      <img
+        src={HERO_IMAGE.src}
+        srcSet={HERO_IMAGE.srcSet}
+        sizes="100vw"
+        alt=""
+        decoding="async"
+        fetchPriority="high"
+      />
     </div>
   );
 }
 
-export function PitchDivider() {
-  return <div className="pitch-divider" role="separator" />;
-}
-
-export function StripeBar({ mackem = false }: { mackem?: boolean }) {
-  return <div className={`stripe-bar ${mackem ? "mackem" : ""}`} />;
-}
-
-export function SectionHead({ title, sub, mackem = false, id }: { title: string; sub?: string; mackem?: boolean; id?: string }) {
+export function SectionTitle({ title, sub, href, link, mackem = false, id }: { title: string; sub?: string; href?: string; link?: string; mackem?: boolean; id?: string }) {
   return (
-    <div className={`lower-third ${mackem ? "mackem" : ""}`} id={id}>
-      <h2 className="tag">{title}</h2>
-      {sub && <span className="sub">{sub}</span>}
+    <div className={`section-title ${mackem ? "mackem" : ""}`} id={id}>
+      <h2 className={`display text-3xl sm:text-4xl ${mackem ? "text-chalk" : ""}`}>{title}</h2>
+      {sub && <span className="text-sm text-silver">{sub}</span>}
+      {href && link && (
+        <a href={href} className="display shrink-0 text-base text-silver underline-offset-4 hover:text-chalk hover:underline">
+          {link} →
+        </a>
+      )}
     </div>
   );
 }
 
-/** Hero with the St James' Park aerial, graded for a night match and faded into the page. */
-export function HeroPhoto({ children }: { children: React.ReactNode }) {
-  return (
-    <section className="hero hero-fallback">
-      <div className="hero-photo" aria-hidden="true">
-        <Image src={HERO_IMAGE.src} alt="" fill priority sizes="100vw" quality={70} />
-      </div>
-      {children}
-    </section>
-  );
+export function Divider() {
+  return <hr className="my-10 border-[var(--line)]" />;
 }

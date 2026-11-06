@@ -5,6 +5,31 @@ export interface FeedItem {
   summary: string;
   publishedAt: string | null;
   source: string;
+  /** Lead photo from the feed (media:content / media:thumbnail / enclosure), if the publisher supplied one. */
+  imageUrl: string | null;
+}
+
+/** Picks the biggest image the feed offers. BBC thumbnails are 240px; their CDN serves the same image at 976px. */
+export function feedImage(block: string): string | null {
+  const cands: { url: string; w: number }[] = [];
+  for (const m of block.matchAll(/<media:(?:content|thumbnail)\b([^>]*)>/gi)) {
+    const attrs = m[1];
+    const url = attrs.match(/\burl="([^"]+)"/i)?.[1];
+    if (!url) continue;
+    const medium = attrs.match(/\bmedium="([^"]+)"/i)?.[1];
+    const type = attrs.match(/\btype="([^"]+)"/i)?.[1];
+    if ((medium && medium !== "image") || (type && !type.startsWith("image"))) continue;
+    cands.push({ url, w: Number(attrs.match(/\bwidth="(\d+)"/i)?.[1] ?? 0) });
+  }
+  for (const m of block.matchAll(/<enclosure\b([^>]*)>/gi)) {
+    const url = m[1].match(/\burl="([^"]+)"/i)?.[1];
+    const type = m[1].match(/\btype="([^"]+)"/i)?.[1] ?? "";
+    if (url && type.startsWith("image")) cands.push({ url, w: 0 });
+  }
+  if (!cands.length) return null;
+  const best = cands.sort((a, b) => b.w - a.w)[0].url.replace(/&amp;/g, "&");
+  if (!/^https:\/\//.test(best)) return null;
+  return best.replace(/(ichef\.bbci\.co\.uk\/(?:ace\/standard|news))\/\d+\//, "$1/976/");
 }
 
 const decode = (s: string) =>
@@ -45,6 +70,7 @@ export function parseFeed(xml: string, source: string): FeedItem[] {
         summary: summary.slice(0, 600),
         publishedAt: d && !isNaN(d.getTime()) ? d.toISOString() : null,
         source,
+        imageUrl: feedImage(b),
       });
     }
   }

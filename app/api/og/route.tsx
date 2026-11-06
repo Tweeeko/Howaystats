@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 import type { NextRequest } from "next/server";
 import { getArticle, getSnapshot, getDailyMeme } from "@/lib/database/queries";
 import { NEWCASTLE_ID, SUNDERLAND_ID } from "@/lib/football/provider";
-import { clubView, miseryView, ordinal, tyneView } from "@/lib/view";
+import { clubView, meterView, ordinal, tyneView } from "@/lib/view";
 
 export const runtime = "nodejs";
 export const revalidate = 300;
@@ -28,7 +28,7 @@ function Frame({ mackem = false, kicker, children }: { mackem?: boolean; kicker:
       <div style={{ display: "flex", flexDirection: "column", flex: 1, padding: "10px 56px", justifyContent: "center" }}>{children}</div>
       <div style={{ display: "flex", justifyContent: "space-between", padding: "0 56px 30px", fontSize: 22, color: SILVER, textTransform: "uppercase", letterSpacing: 3 }}>
         <span>The numbers don&apos;t lie.</span>
-        <span>Real stats · fictional tears</span>
+        <span>Written on the Tyne</span>
       </div>
     </div>
   );
@@ -69,35 +69,25 @@ export async function GET(req: NextRequest) {
     );
   } else if (type === "relegation" && safc?.pred) {
     el = (
-      <Frame mackem kicker="Sunderland relegation watch">
-        <Line t="Relegation probability" size={46} color={SILVER} />
+      <Frame mackem kicker="Mackem Watch">
+        <Line t="Chance of going down" size={46} color={SILVER} />
         <Big v={`${(safc.pred.pRelegation * 100).toFixed(0)}%`} color={RED} size={260} />
         <Line t={`${ordinal(safc.row.position)} · ${safc.row.points} pts · projected ${ordinal(safc.pred.projectedPosition)}`} size={42} />
       </Frame>
     );
-  } else if ((type === "misery" || type === "jar") && miseryView(s)) {
-    const m = miseryView(s)!;
-    el =
-      type === "misery" ? (
-        <Frame mackem kicker="Mackem Misery Index">
-          <Big v={`${m.score}`} color={RED} size={280} />
-          <Line t={m.label} size={52} />
-          {m.biggest && <Line t={`Biggest mover: ${m.biggest}`} size={30} color={SILVER} />}
-        </Frame>
-      ) : (
-        <Frame mackem kicker="The Mackem Tears Index">
-          <div style={{ display: "flex", alignItems: "center", gap: 60 }}>
-            <div style={{ display: "flex", flexDirection: "column", justifyContent: "flex-end", width: 210, height: 330, border: `6px solid ${CHALK}`, borderTop: "none", background: "rgba(255,255,255,.04)" }}>
-              <div style={{ display: "flex", height: `${Math.max(2, m.tears.percent)}%`, background: RED }} />
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
-              <Big v={`${Math.round(m.tears.percent)}%`} size={210} />
-              <Line t="of a jar" size={50} color={SILVER} />
-              <div style={{ display: "flex", marginTop: 18, fontSize: 36, fontWeight: 800, textTransform: "uppercase", lineHeight: 1.05 }}>{m.tears.label}</div>
-            </div>
-          </div>
-        </Frame>
-      );
+  } else if ((type === "misery" || type === "jar" || type === "meter") && meterView(s)) {
+    const m = meterView(s)!;
+    el = (
+      <Frame mackem kicker="The Mackem Misery Meter">
+        <Big v={m.levelName} color={RED} size={150} />
+        <div style={{ display: "flex", gap: 8, marginTop: 20 }}>
+          {m.signs.map((x) => (
+            <div key={x.key} style={{ display: "flex", flex: 1, height: 30, background: x.bad ? RED : "rgba(255,255,255,.15)" }} />
+          ))}
+        </div>
+        <Line t={`${m.bad} of ${m.total} bad signs. ${m.verdict}`} size={36} color={SILVER} />
+      </Frame>
+    );
   } else if (type === "tyne" && tyneView(s)) {
     const t = tyneView(s)!;
     el = (
@@ -116,19 +106,19 @@ export async function GET(req: NextRequest) {
     el = (
       <Frame kicker="Newcastle United">
         <Big v={ordinal(nufc.row.position)} size={240} />
-        <Line t={`${nufc.row.points} points · form ${nufc.row.form.join("") || "—"}`} size={48} />
-        {nufc.pred && <Line t={`Top-six chance ${(nufc.pred.pTop6 * 100).toFixed(0)}% · Howay the lads`} size={36} color={SILVER} />}
+        <Line t={`${nufc.row.points} points · ${nufc.row.form.length ? `form ${nufc.row.form.join("")}` : "season just started"}`} size={48} />
+        {nufc.pred && <Line t={`Chance of Europe ${(nufc.pred.pTop7 * 100).toFixed(0)}% · Howay the lads`} size={36} color={SILVER} />}
       </Frame>
     );
   } else if (type === "news") {
     const a = await getArticle(req.nextUrl.searchParams.get("slug") ?? "");
     el = a ? (
-      <Frame mackem={a.club === "sunderland"} kicker="Mackem Newsroom">
+      <Frame mackem={a.club === "sunderland"} kicker="HOWAYSTATS">
         <div style={{ display: "flex", fontSize: 76, fontWeight: 900, textTransform: "uppercase", lineHeight: 0.95, letterSpacing: -2 }}>{a.howayHeadline ?? a.originalHeadline}</div>
-        <div style={{ display: "flex", marginTop: 26, fontSize: 26, color: SILVER }}>Original: {a.originalHeadline} — {a.source}</div>
+        <div style={{ display: "flex", marginTop: 26, fontSize: 26, color: SILVER }}>The actual story: {a.source}</div>
       </Frame>
     ) : (
-      <Frame kicker="Mackem Newsroom"><Line t="Story not found" /></Frame>
+      <Frame kicker="HOWAYSTATS"><Line t="Story not found" /></Frame>
     );
   } else if (type === "meme") {
     const d = await getDailyMeme();

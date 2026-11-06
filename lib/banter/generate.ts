@@ -77,9 +77,9 @@ export async function buildFacts(): Promise<BanterFacts> {
 
 async function aiBanter(facts: BanterFacts): Promise<BanterLine[]> {
   const system = `${GEORDIE_VOICE}
-You are the HOWAYSTATS Mackem Meltdown Generator. Using ONLY the JSON facts supplied, write fresh banter.
+Using ONLY the JSON facts supplied, write five fresh lines of banter for today.
 Return JSON: [{"kind": "headline"|"post-match"|"misery-report"|"celebration"|"social", "text": "..."}] with 5 items.
-Rules: every number you write must appear in the facts; never invent results, injuries, quotes or events; at most one line about the Tears Index;
+Rules: every number you write must appear in the facts; never invent results, injuries, quotes or events; jarPercent is the Misery Meter (share of bad signs for Sunderland, 0-100), mention it at most once and never as a percentage;
 if Sunderland are doing well, admit it with grudging, funny honesty; keep each line under 160 characters; vary sentence shapes — no two lines starting the same way.`;
   const text = await aiComplete(system, JSON.stringify(facts), 700);
   const lines = extractJson<BanterLine[]>(text) ?? [];

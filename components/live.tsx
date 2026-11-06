@@ -56,11 +56,11 @@ const icon = (e: LiveEvent) => (e.type === "Goal" ? (e.detail === "Own Goal" ? "
 
 export function Scoreboard({ f }: { f: LiveFixture }) {
   const live = f.status === "live" || f.status === "halftime";
-  const clock = f.status === "halftime" ? "HT" : f.status === "finished" ? "FT" : f.elapsed ? `${f.elapsed}'` : "—";
+  const clock = f.status === "halftime" ? "HT" : f.status === "finished" ? "FT" : f.elapsed ? `${f.elapsed}'` : "KO";
   const goals = f.events.filter((e) => e.type === "Goal" || (e.type === "Card" && e.detail.includes("Red")));
   return (
     <div className={`scoreboard ${f.derby ? "outline outline-2 outline-mackem" : ""}`}>
-      {f.derby && <div className="ribbon text-center text-lg">Tyne–Wear derby · The Tyne is ours</div>}
+      {f.derby && <div className="display bg-mackem py-1 text-center text-lg text-chalk">Derby day. Tyne v Wear.</div>}
       <div className="flex items-center justify-between border-b border-[var(--line)] px-4 py-1.5 font-mono text-[11px] uppercase tracking-wider">
         <span className="flex items-center gap-2">{live && <span className="live-dot" />}{live ? "Live" : f.status}</span>
         <span className="led text-base">{clock}</span>
@@ -78,9 +78,9 @@ export function Scoreboard({ f }: { f: LiveFixture }) {
           </div>
         ))}
         <div className="order-2 flex items-center gap-2">
-          <span className="led scoreboard-num text-5xl sm:text-6xl">{f.home.goals ?? "-"}</span>
+          <span className="led scoreboard-num text-5xl sm:text-6xl">{f.home.goals ?? 0}</span>
           <span className="led text-3xl opacity-60">:</span>
-          <span className="led scoreboard-num text-5xl sm:text-6xl">{f.away.goals ?? "-"}</span>
+          <span className="led scoreboard-num text-5xl sm:text-6xl">{f.away.goals ?? 0}</span>
         </div>
       </div>
       {goals.length > 0 && (

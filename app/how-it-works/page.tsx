@@ -1,76 +1,57 @@
 import type { Metadata } from "next";
 import { getSnapshot } from "@/lib/database/queries";
-import { WEIGHTS } from "@/lib/misery/index";
-import { ago } from "@/components/football";
-import { PitchDivider, SectionHead } from "@/components/stadium";
 
 export const revalidate = 600;
-export const metadata: Metadata = { title: "How the numbers work", description: "The HOWAYSTATS method: league table rules, the Poisson team-strength model, 50,000-season Monte Carlo simulation, the Misery Index and the Tears Index." };
+export const metadata: Metadata = { title: "The small print", description: "Where the numbers come from, how the Misery Meter and the odds work, and how we write the news." };
 
-export default async function HowItWorks() {
-  const s = await getSnapshot();
-  const P = ({ children }: { children: React.ReactNode }) => <p className="serif mt-3 max-w-3xl text-lg leading-relaxed text-mist">{children}</p>;
+function Q({ q, children, id }: { q: string; children: React.ReactNode; id?: string }) {
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10">
-      <h1 className="display-i text-6xl sm:text-8xl">How the numbers work</h1>
-      <p className="display mt-3 text-2xl">The comedy is biased. The maths isn&apos;t.</p>
-      {s.run && (
-        <p className="mt-3 font-mono text-xs uppercase tracking-wider text-silver">
-          Latest model run {ago(s.run.createdAt)} · {s.run.simulations.toLocaleString("en-GB")} simulated seasons · {s.run.fixturesRemaining} fixtures left · confidence {s.run.confidence} · fitted home advantage ×{Math.exp(s.run.homeAdvantage).toFixed(2)} goals
-        </p>
-      )}
+    <section id={id} className="border-t border-[var(--line)] py-6">
+      <h2 className="display text-2xl sm:text-3xl">{q}</h2>
+      <div className="serif mt-3 space-y-3 text-lg leading-relaxed text-mist">{children}</div>
+    </section>
+  );
+}
 
-      <PitchDivider />
-      <SectionHead title="1. The Table" />
-      <P>Every finished match from the data provider (API-Football) is stored and the table is rebuilt from scratch: 3 points for a win, 1 for a draw, none for a defeat. Clubs are ordered by points, then goal difference, then goals scored, then points in matches between the tied clubs, then away goals in those matches — Premier League rule C.17. Anyone still level is marked with an asterisk (a play-off would settle it if it mattered). Postponed, abandoned and unfinished games don&apos;t count. After each rebuild we check our table against the provider&apos;s own; any mismatch is logged for an admin.</P>
+export default async function SmallPrint() {
+  const s = await getSnapshot();
+  const sims = (s.run?.simulations ?? 50_000).toLocaleString("en-GB");
+  return (
+    <div className="mx-auto max-w-3xl px-4 py-12">
+      <h1 className="tabloid text-[clamp(3.2rem,10vw,6rem)]">The small print</h1>
+      <p className="serif mt-2 text-xl text-mist">The jokes are biased. The numbers aren&apos;t. Here&apos;s how it all works.</p>
 
-      <SectionHead title="2. Team Strength" />
-      <P>Each club gets an attack and a defence rating from a Poisson goals model: expected home goals = exp(base + home advantage + home attack + away defence), and the same without the home term for the away side. Ratings are fitted by penalised maximum likelihood. Recent matches count more (weight halves every 120 days), last season&apos;s matches count at 35% weight, and every rating is pulled gently towards last season&apos;s final rating — or slightly below average for promoted clubs — so a lucky opening fortnight can&apos;t produce nonsense.</P>
+      <div className="mt-8">
+        <Q q="Where do the scores come from?">
+          <p>football-data.org. Every result, fixture and table on here comes from them, refreshed a few times a day and live while Newcastle or Sunderland are playing. We rebuild the table ourselves using the Premier League&apos;s tie-break rules and check it against theirs.</p>
+        </Q>
 
-      <SectionHead title="3. The 50,000 Seasons" />
-      <P>We then play the rest of the season 50,000 times. Every remaining fixture gets random scorelines drawn from the model, starting from the real current points, goal difference and goals. All twenty clubs are simulated together, so each simulated season has exactly one champion and exactly three relegated clubs — the probabilities always add up. A club&apos;s relegation chance is the share of seasons it finished 18th–20th; &ldquo;projected finish&rdquo; is the most common finishing position; the points range covers the middle 80% of outcomes. Ties in simulation are broken by points, goal difference and goals, then at random. With 50,000 runs the simulation error is under ±0.5 percentage points; the bigger uncertainty is the model itself, which is why we show a confidence level that rises as the season goes on.</P>
-      <P>Fixture difficulty is the share of available points a club is expected not to win in its remaining games under the same model. Mathematical safety is computed separately and conservatively: the points total no more than sixteen other clubs can still reach.</P>
+        <Q q="What's the Mackem Misery Meter?" id="misery">
+          <p>A count of bad signs. Each one is either bad for Sunderland or it isn&apos;t, with no weighting and no made-up units:</p>
+          <ul className="list-disc space-y-1 pl-6">
+            <li>they&apos;re in the bottom three</li>
+            <li>one win or fewer in their last five</li>
+            <li>they&apos;ve conceded two a game or more over the last five</li>
+            <li>two or more defeats in a row, or four games without a win</li>
+            <li>they lost the last derby</li>
+            <li>their last home crowd was under 90% of the Stadium of Light&apos;s 49,000 (only when there&apos;s an official figure)</li>
+          </ul>
+          <p>If we can&apos;t measure something, it isn&apos;t counted. More red blocks, more misery. That&apos;s it.</p>
+        </Q>
 
-      <SectionHead id="misery" title="4. The Tears Index & Misery Index" mackem />
-      <P>The Tears Index measures how much Sunderland&apos;s supporters have got to cry about — not the club, the people in the seats. It&apos;s built only from things we can actually count and source. Each indicator is scored from 0 to 100%, then we take a weighted average of the ones that are available. Anything nobody publishes is marked unavailable and left out entirely, never estimated.</P>
-      <div className="panel mt-4 grid gap-1 p-5 font-mono text-sm">
-        {[
-          ["Derby defeats this season (share of derbies lost)", "×1.5"],
-          ["League games without a win (8+ = full marks)", "×1.2"],
-          ["Defeats in the last five, all competitions", "×1.2"],
-          ["Points thrown away from half-time leads (10+ = full)", "×1.0"],
-          ["League points dropped out of 76", "×1.0"],
-          ["Goals conceded in the last five (12+ = full)", "×0.8"],
-          [`Empty seats at the last home game vs ${(49000).toLocaleString("en-GB")} capacity (25% empty = full)`, "×0.8"],
-          ["Average home gate vs capacity", "×0.5"],
-          ["Away following · TV audience", "unavailable"],
-        ].map(([k, v]) => (
-          <p key={k} className="flex justify-between gap-4 border-b border-[var(--line)] py-0.5 text-mist"><span>{k}</span><span>{v}</span></p>
-        ))}
-        <p className="mt-2 text-silver">Results and goals come from the football data provider; attendances are the official figure where the provider supplies one (no figure, no indicator); capacity is from the Stadium of Light&apos;s public record. The &ldquo;tears&rdquo; count is the index × 1,000. We made that bit up, and we say so on the jar.</p>
+        <Q q="And the relegation odds?">
+          <p>We rate every team&apos;s attack and defence from this season&apos;s results (and a bit of last season&apos;s), then play the rest of the season {sims} times. Sunderland&apos;s chance of going down is how often they finished in the bottom three. Same idea for Newcastle&apos;s chance of Europe. It&apos;s a decent guess, not a promise. Football&apos;s daft.</p>
+        </Q>
+
+        <Q q="How do you write the news?" id="editorial">
+          <p>We pull real stories from the BBC, the Guardian and Sky Sports. Each one gets our headline and our take, written only from what the original says, with a link to it. The take is opinion. The facts are theirs.</p>
+          <p>Before anything goes up it&apos;s checked: no numbers or names that aren&apos;t in the original, no invented quotes, no copying their headline, no American spellings, no stock robot phrases and no swearing for the sake of it. If it fails, a human looks at it first.</p>
+        </Q>
+
+        <Q q="Is this official?">
+          <p>Nah. Nowt to do with Newcastle United, Sunderland or the Premier League. It&apos;s a fan site for a laugh. It&apos;s 18+, because there&apos;s swearing. We take the piss out of clubs and results, never ordinary supporters, and never anyone&apos;s injuries or private life.</p>
+        </Q>
       </div>
-      <P>The Misery Index (0–100) is the mood ring. It&apos;s three numbers added together, and we show all three wherever the index appears:</P>
-      <div className="panel mt-4 grid gap-1 p-5 font-mono text-sm">
-        <p>Relegation odds: 40 × the model&apos;s relegation chance (0–40)</p>
-        <p>League position: 20 × (position − 1) ÷ 19 (0–20)</p>
-        <p>Recent results: these points, each fading by half every {WEIGHTS.eventHalfLifeDays} days (−20 to +40)</p>
-        {[
-          ["Defeat", WEIGHTS.loss], ["Extra for losing by 3+", WEIGHTS.heavyLossExtra], ["Draw", WEIGHTS.draw], ["Win", WEIGHTS.win],
-          ["Each defeat in a row after the first", WEIGHTS.streakLoss], ["Losing to a bottom-six side", WEIGHTS.sixPointerLoss],
-          ["Per place dropped", WEIGHTS.positionDrop], ["Into the bottom three", WEIGHTS.enterZone], ["Out of the bottom three", WEIGHTS.leaveZone],
-          ["Newcastle win", WEIGHTS.rivalWin], [`Verified bad-news story (max ${WEIGHTS.newsWeeklyCap} a week)`, WEIGHTS.news],
-        ].map(([k, v]) => (
-          <p key={k as string} className="flex justify-between border-b border-[var(--line)] py-0.5 text-mist"><span>{k as string}</span><span>{Number(v) > 0 ? "+" : ""}{v as number}</span></p>
-        ))}
-        <p className="mt-2 text-silver">Each event belongs to one match, and the index is rebuilt from scratch every time, so nothing counts twice. It&apos;s a joke with a spreadsheet behind it, not a claim about how anyone actually feels.</p>
-      </div>
-
-      <SectionHead title="5. News, Memes & Banter" />
-      <P>News comes from publisher RSS feeds (BBC Sport, The Guardian, Sky Sports) and, if configured, NewsAPI. A story is only used if it is clearly about Sunderland AFC (or Newcastle), and our rewrite is checked automatically: it may not contain any number, name-quote or claim that isn&apos;t in the publisher&apos;s own headline and summary. Stories that fail the check wait for a human. We always show the original headline, the publisher, the date and a link.</P>
-      <P>Memes come from GIPHY&apos;s API and Reddit&apos;s official API, shown from their source with credit. Reddit posts and community submissions are moderated before they appear. The banter engine is fed only today&apos;s real table, results, model output and Tears Index, and any line containing a number we didn&apos;t supply is thrown away.</P>
-      <SectionHead id="editorial" title="6. How we write" />
-      <P>Every Sunderland story — win, loss, draw, signing, sacking, even good news — gets the Newcastle treatment: our headline, a short take, the actual facts, a punchline and a link to the original. The facts and the take are shown separately and labelled, so you always know which bit is the publisher and which bit is us having a laugh.</P>
-      <P>Before anything goes live it&apos;s checked automatically: no numbers or names that aren&apos;t in the source, no invented quotes, no copying the original headline, no American spellings, no stock AI phrases, no more than one exclamation mark, and not so much dialect it reads like a parody. Fail any of those and it waits for a human in the admin queue. Geography is fixed too: Newcastle on the Tyne at St James&apos; Park, Sunderland on the Wear at the Stadium of Light.</P>
     </div>
   );
 }

@@ -31,8 +31,8 @@ async function fetchNewsApi(): Promise<FeedItem[]> {
     cache: "no-store",
   });
   if (!res.ok) throw new Error(`NewsAPI HTTP ${res.status}`);
-  const json = (await res.json()) as { articles: { title: string; url: string; description: string | null; publishedAt: string; source: { name: string } }[] };
-  return json.articles.map((a) => ({ title: a.title, link: a.url, summary: a.description ?? "", publishedAt: a.publishedAt, source: a.source.name }));
+  const json = (await res.json()) as { articles: { title: string; url: string; description: string | null; publishedAt: string; source: { name: string }; urlToImage?: string | null }[] };
+  return json.articles.map((a) => ({ title: a.title, link: a.url, summary: a.description ?? "", publishedAt: a.publishedAt, source: a.source.name, imageUrl: a.urlToImage && a.urlToImage.startsWith("https://") ? a.urlToImage : null }));
 }
 
 interface Rewrite {
@@ -64,8 +64,11 @@ export function rewritePasses(r: Rewrite, item: { title: string; summary: string
   return { ok: true };
 }
 
+export const NEWCASTLE_ANGLE =
+  "A Newcastle story, written for our own fans. Good news: enjoy it, a bit smug. Bad news: moan about it honestly and take the piss out of our own club, the way fans do. Either way we're still above Sunderland in our heads. A dig at the Mackems only if it fits naturally.";
+
 export async function rewriteStory(item: FeedItem, club: "sunderland" | "newcastle", type: StoryType): Promise<(Rewrite & { model: string }) | null> {
-  const angle = club === "sunderland" ? ANGLES[type] : "A Newcastle story. Proud, dry, a bit smug. Find a way to work in a dig at Sunderland only if it's natural.";
+  const angle = club === "sunderland" ? ANGLES[type] : NEWCASTLE_ANGLE;
   const system = `${GEORDIE_VOICE}
 
 You are given ONE real news item: the publisher's headline and summary. Work in this order:
@@ -75,13 +78,13 @@ You are given ONE real news item: the publisher's headline and summary. Work in 
 
 Return JSON only:
 {"headline": "...", "summary": "...", "facts": ["...", "..."], "punchline": "..."}
-- headline: an ORIGINAL headline, max 12 words, sentence case. Must not reuse the publisher's wording.
-- summary: 2–3 short sentences of Geordie commentary on what happened.
-- facts: 1–3 plain, neutral bullet points of what the source actually reports, in your own words.
-- punchline: one short closing line. Dry. No exclamation mark.
-- If the source says something is a rumour or "reportedly", keep that wording. No quotation marks anywhere.
+- headline: our own headline, max 12 words, sentence case. Must not reuse the publisher's wording.
+- summary: two or three short sentences saying what happened and what we think of it. The reader must be able to tell what actually happened from this alone.
+- facts: 1–3 plain, neutral points of what the source reports, in your own words. (Used for checking, not shown as the joke.)
+- punchline: one short closing line. Dry.
+- If the source says "reportedly" or it's a rumour, say so. No quotation marks anywhere.
 
-Tone examples (style only, never copy): "Mackems get carried away after beating a team nobody's heard of" · "Three points? Calm down, they're acting like they've won the Champions League" · "Wearside celebrations reach dangerous levels after a scrappy draw" · "Another weekend, another excuse doing the rounds on Wearside".`;
+The voice, for feel only (never copy these): "Well, that's another lovely weekend for the Mackems." · "They've won a football match, not the fucking World Cup." · "Meanwhile wor lot are doing what wor lot do best. Making life difficult for ourselves." · "Another day on Wearside. Another reason to keep the kettle on."`;
   for (let attempt = 0; attempt < 2; attempt++) {
     const text = await aiComplete(system, `Publisher: ${item.source}\nHeadline: ${item.title}\nSummary: ${item.summary}${attempt ? "\n(Previous attempt failed our checks. Stick strictly to the source and the voice rules.)" : ""}`);
     const r = extractJson<Rewrite>(text);
@@ -142,6 +145,7 @@ export async function discoverNews() {
       howay_commentary: rw?.summary ?? null,
       howay_punchline: rw?.punchline ?? null,
       story_type: c.storyType,
+      image_url: item.imageUrl,
       rewrite_model: rw?.model ?? null,
       status,
     });
