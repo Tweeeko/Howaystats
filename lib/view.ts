@@ -182,6 +182,14 @@ export function roastFacts(s: Snapshot) {
     belowUs: nufc.row.position < sun.row.position,
     gapToUs: nufc.row.points - sun.row.points,
     lastScore: last ? scoreLine(s, last) : null,
+    sunLast: (() => {
+      const g = sun?.fixtures.recent[0];
+      if (!g) return null;
+      const h = g.homeId === SUNDERLAND_ID;
+      const gf = h ? g.homeGoals! : g.awayGoals!;
+      const ga = h ? g.awayGoals! : g.homeGoals!;
+      return (gf > ga ? "W" : gf === ga ? "D" : "L") as "W" | "D" | "L";
+    })(),
   };
 }
 

@@ -142,7 +142,8 @@ export function StadiumScene({ club, result, score, caption }: { club: "sun" | "
 }
 
 /** A terrace of backlit fans. Silhouettes, three rows deep. */
-type Pose = "armsUp" | "scarfUp" | "fist" | "clap" | "point" | "handsOnHead" | "bowed" | "slump" | "armsFolded";
+type Pose = "armsUp" | "scarfUp" | "fist" | "clap" | "point" | "handsOnHead" | "bowed" | "slump" | "armsFolded" | "laugh" | "shrug";
+export type CrowdMood = "cry" | "disbelief" | "laugh" | "fluke" | "cheer";
 type Top = "shirt" | "jacket";
 type Head = "short" | "bald" | "long" | "bobble" | "cap" | "curly";
 
@@ -186,7 +187,7 @@ function HeldScarf({ l, r, kit }: { l: number[]; r: number[]; kit: Kit }) {
 }
 
 /** One fan, seen from behind, facing the pitch. Shoulder centre at (0,0). */
-function Fan({ pose, top, head, kit, club, skin, hair, jacket, name, num, scarfDraped }: { pose: Pose; top: Top; head: Head; kit: Kit; club: "sun" | "nufc"; skin: string; hair: string; jacket: string; name: string; num: string; scarfDraped: boolean }) {
+function Fan({ pose, top, head, kit, club, skin, hair, jacket, name, num, scarfDraped, crying = false, seed = 0 }: { pose: Pose; top: Top; head: Head; kit: Kit; club: "sun" | "nufc"; skin: string; hair: string; jacket: string; name: string; num: string; scarfDraped: boolean; crying?: boolean; seed?: number }) {
   const shirt = top === "shirt";
   const sleeve = shirt ? kit.a : jacket;
   const forearm = shirt ? skin : jacket;
@@ -204,10 +205,12 @@ function Fan({ pose, top, head, kit, club, skin, hair, jacket, name, num, scarfD
     bowed: null,
     slump: [[-26, 30], [-24, 54]],
     armsFolded: null,
+    laugh: [[-34, 12], [-22, 26]],
+    shrug: [[-32, 14], [-44, -2]],
   };
   const left = A[pose];
   const right: [number[], number[]] | null =
-    pose === "fist" ? [[26, 28], [22, 54]] : pose === "point" ? [[26, 26], [22, 52]] : left ? [[-left[0][0], left[0][1]], [-left[1][0], left[1][1]]] : null;
+    pose === "fist" ? [[26, 28], [22, 54]] : pose === "point" ? [[26, 26], [22, 52]] : pose === "laugh" ? [[30, -14], [44, -40]] : left ? [[-left[0][0], left[0][1]], [-left[1][0], left[1][1]]] : null;
 
   const arm = (sh: number[], el: number[], ha: number[], k: string) => (
     <g key={k} strokeLinecap="round" fill="none">
@@ -219,7 +222,7 @@ function Fan({ pose, top, head, kit, club, skin, hair, jacket, name, num, scarfD
   );
 
   const torso = `M-25 70 L-25 ${18 + hunch} Q-25 ${2 + hunch} -12 ${hunch} L12 ${hunch} Q25 ${2 + hunch} 25 ${18 + hunch} L25 70 Z`;
-  const hy = -19 + bow;
+  const hy = -19 + bow - (pose === "laugh" ? 4 : 0);
 
   return (
     <g>
@@ -288,6 +291,14 @@ function Fan({ pose, top, head, kit, club, skin, hair, jacket, name, num, scarfD
         </g>
       )}
 
+      {/* cartoon tears spraying out both sides of the head */}
+      {crying &&
+        [0, 1, 2].map((k) => (
+          <g key={k}>
+            <path className="tear-l" style={{ animationDelay: `${(seed + k * 0.37).toFixed(2)}s` }} d={`M-12 ${hy} q-4 6 0 9 q4 -3 0 -9 Z`} fill="#8fd0ff" stroke="#2b6f9e" strokeWidth=".6" />
+            <path className="tear-r" style={{ animationDelay: `${(seed + 0.18 + k * 0.37).toFixed(2)}s` }} d={`M12 ${hy} q-4 6 0 9 q4 -3 0 -9 Z`} fill="#8fd0ff" stroke="#2b6f9e" strokeWidth=".6" />
+          </g>
+        ))}
       {/* hands on top of the head go over it */}
       {pose === "handsOnHead" && (
         <>
@@ -306,14 +317,43 @@ function Fan({ pose, top, head, kit, club, skin, hair, jacket, name, num, scarfD
   );
 }
 
-export function Crowd({ club, result }: { club: "sun" | "nufc"; result: Result | null }) {
+const BUBBLES: Record<CrowdMood, string[]> = {
+  laugh: ["HAHAHA", "HAHAHAHA", "SMB", "HAHA", "SAD MACKEMS", "HAHAHA"],
+  fluke: ["FLUKE", "JAMMY", "FLUKE", "WON'T LAST", "JAMMY GITS", "FLUKE"],
+  disbelief: ["WHAT?!", "HOW?!", "EH?!", "PINCH US"],
+  cry: ["WAAAH", "WHY US", "SOB", "WAAAH"],
+  cheer: ["HOWAY", "UTM", "HWTL"],
+};
+
+/** Who's doing what. Mackems cry when they lose and can't believe it when they don't.
+ *  Geordies laugh when the Mackems lose, and call it a fluke when they don't. */
+const POSES: Record<CrowdMood, Pose[]> = {
+  cry: ["bowed", "slump", "handsOnHead", "bowed", "slump"],
+  disbelief: ["handsOnHead", "handsOnHead", "shrug", "handsOnHead", "armsUp"],
+  laugh: ["laugh", "laugh", "point", "laugh", "armsUp", "scarfUp"],
+  fluke: ["point", "armsFolded", "shrug", "point", "scarfUp"],
+  cheer: ["armsUp", "scarfUp", "fist", "clap", "armsUp", "scarfUp", "point"],
+};
+
+function Bubble({ x, y, text, sun }: { x: number; y: number; text: string; sun: boolean }) {
+  const w = text.length * 8.8 + 16;
+  const bx = Math.min(Math.max(x - w / 2, 3), 797 - w);
+  const by = Math.max(y - 22, 2);
+  return (
+    <g className="pop">
+      <path d={`M${x - 5} ${by + 19} L${x + 2} ${by + 27} L${x + 5} ${by + 19} Z`} fill="#fff" stroke="#111" strokeWidth="1.4" />
+      <rect x={bx} y={by} width={w} height="20" rx="9" fill="#fff" stroke="#111" strokeWidth="1.6" />
+      <rect x={x - 4} y={by + 17} width="8" height="3" fill="#fff" />
+      <text x={bx + w / 2} y={by + 14.5} textAnchor="middle" fontSize="13" fontWeight="900" fontFamily="var(--font-barlow), 'Arial Narrow', sans-serif" fill={sun ? "#b3121a" : "#111"} textLength={w - 14} lengthAdjust="spacingAndGlyphs">{text}</text>
+    </g>
+  );
+}
+
+export function Crowd({ club, result, mood: moodIn }: { club: "sun" | "nufc"; result: Result | null; mood?: CrowdMood }) {
   const sun = club === "sun";
   const rand = rng(sun ? 1879 : 1892);
   const kit = KITS[club];
-  const sad = sun && result !== "W";
-  const happyPoses: Pose[] = ["armsUp", "scarfUp", "fist", "clap", "armsUp", "scarfUp", "point"];
-  const sadPoses: Pose[] = ["handsOnHead", "bowed", "slump", "armsFolded", "handsOnHead", "bowed"];
-  const nervyPoses: Pose[] = ["clap", "armsFolded", "fist", "slump"];
+  const mood: CrowdMood = moodIn ?? (sun ? (result === "W" || result === "D" ? "disbelief" : "cry") : "cheer");
   const rows = [
     { y: 74, scale: 0.6, n: 19, shade: 0.55 },
     { y: 100, scale: 0.78, n: 15, shade: 0.3 },
@@ -321,9 +361,18 @@ export function Crowd({ club, result }: { club: "sun" | "nufc"; result: Result |
   ];
   const names = sun ? ["SMB", "SAD", "MACKEM", "BOTTLER", "SMB", "WEAR"] : ["TOON", "HOWAY", "GEORDIE", "UTM", "HWTL", "TOON"];
   const nums = sun ? ["0"] : ["9", "10", "7", "8", "4", "11", "5", "1"];
+  const bubbles: { x: number; y: number; text: string }[] = [];
+  const crying = mood === "cry";
+  const label = {
+    cry: "Sunderland fans from behind, every one of them crying",
+    disbelief: "Sunderland fans from behind, hands on heads, can't believe it",
+    laugh: "Toon fans from behind, laughing their heads off at the Mackems",
+    fluke: "Toon fans from behind, pointing and shouting fluke",
+    cheer: "Toon fans from behind in black and white shirts, arms and scarves up",
+  }[mood];
 
   return (
-    <svg viewBox="0 0 800 170" className="block w-full" preserveAspectRatio="xMidYMax slice" role="img" aria-label={sad ? "Sunderland fans from behind, hands on heads, heads bowed" : sun ? "Sunderland fans, nervously clapping" : "Toon fans from behind in black and white shirts, arms and scarves up"}>
+    <svg viewBox="0 0 800 170" className="block w-full" preserveAspectRatio="xMidYMax slice" role="img" aria-label={label}>
       <defs>
         <pattern id={`stripes-${club}`} patternUnits="userSpaceOnUse" width="14" height="10" x="-7">
           <rect width="14" height="10" fill={kit.b} />
@@ -342,7 +391,7 @@ export function Crowd({ club, result }: { club: "sun" | "nufc"; result: Result |
             const s = row.scale * (0.93 + rand() * 0.14);
             const x = (i + 0.5) * (800 / row.n) + (rand() - 0.5) * 18;
             const y = row.y + (rand() - 0.5) * 5;
-            const list = sad ? sadPoses : sun ? nervyPoses : happyPoses;
+            const list = POSES[mood];
             const pose = list[Math.floor(rand() * list.length)];
             const top: Top = rand() < (sun ? 0.55 : 0.68) ? "shirt" : "jacket";
             const hr = rand();
@@ -353,18 +402,24 @@ export function Crowd({ club, result }: { club: "sun" | "nufc"; result: Result |
             const num = nums[Math.floor(rand() * nums.length)];
             const name = names[Math.floor(rand() * names.length)];
             const scarfDraped = pose !== "scarfUp" && rand() < (top === "jacket" ? 0.7 : 0.25);
-            const bob = !sad && (pose === "armsUp" || pose === "scarfUp" || pose === "fist");
-            const lh = pose === "scarfUp" ? [-30, -48] : null;
+            const delay = (rand() * 0.8).toFixed(2);
+            const anim =
+              mood === "cry" ? "sob" : mood === "laugh" && pose === "laugh" ? "guffaw" : (mood === "cheer" || mood === "laugh") && (pose === "armsUp" || pose === "scarfUp" || pose === "fist") ? "bounce" : undefined;
+            const talk = ri > 0 && rand() < 0.34;
+            if (talk) bubbles.push({ x, y: y - (pose === "scarfUp" || pose === "armsUp" ? 66 : 50) * s, text: BUBBLES[mood][Math.floor(rand() * BUBBLES[mood].length)] });
             return (
               <g key={i} transform={`translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s.toFixed(3)})`}>
-                <g className={bob ? "bounce" : undefined} style={bob ? { animationDelay: `${(rand() * 0.7).toFixed(2)}s` } : undefined}>
-                  <Fan pose={pose} top={top} head={head} kit={kit} club={club} skin={skin} hair={hair} jacket={jacket} name={name} num={num} scarfDraped={scarfDraped} />
-                  {lh && (
+                <g className={anim} style={anim ? { animationDelay: `${delay}s` } : undefined}>
+                  <Fan pose={pose} top={top} head={head} kit={kit} club={club} skin={skin} hair={hair} jacket={jacket} name={name} num={num} scarfDraped={scarfDraped} crying={crying} seed={Number(delay)} />
+                  {pose === "scarfUp" && (
                     <>
                       <HeldScarf l={[-30, -48]} r={[30, -48]} kit={kit} />
                       <circle cx="-30" cy="-48" r="4.6" fill={skin} />
                       <circle cx="30" cy="-48" r="4.6" fill={skin} />
                     </>
+                  )}
+                  {mood === "disbelief" && rand() < 0.35 && (
+                    <text x="0" y="-46" textAnchor="middle" fontSize="18" fontWeight="900" fill="#fff" stroke="#111" strokeWidth="2" paintOrder="stroke" fontFamily="var(--font-barlow), 'Arial Narrow', sans-serif">?!</text>
                   )}
                 </g>
               </g>
@@ -374,6 +429,10 @@ export function Crowd({ club, result }: { club: "sun" | "nufc"; result: Result |
           {row.shade > 0 && <rect x="0" y="0" width="800" height={row.y + 80 * row.scale} fill={sun ? "#2a0b0b" : "#0e1116"} opacity={row.shade} />}
         </g>
       ))}
+      {/* speech bubbles go over everyone; keep them from piling on top of each other */}
+      {bubbles
+        .filter((b, i, all) => all.findIndex((o) => Math.abs(o.x - b.x) < 70 && Math.abs(o.y - b.y) < 24) === i)
+        .map((b, i) => <Bubble key={i} {...b} sun={sun} />)}
     </svg>
   );
 }

@@ -28,6 +28,7 @@ export interface ToonFacts {
   sunPoints: number | null;
   sunWon: number | null;
   lastScore?: string | null;
+  sunLast?: "W" | "D" | "L" | null; // Sunderland's last result, for how the Toon crowd reacts
 }
 
 /** How loud the celebration is (it's always a celebration). */
@@ -138,7 +139,7 @@ export function ToonHype({ f, compact = false }: { f: ToonFacts; compact?: boole
       </div>
 
       <div className="relative z-[2]">
-        <Crowd club="nufc" result={L?.r ?? null} />
+        <Crowd club="nufc" result={L?.r ?? null} mood={f.sunLast === "L" ? "laugh" : f.sunLast ? "fluke" : "cheer"} />
       </div>
 
       <div className="marquee rev border-y-4 border-chalk bg-ink py-2" aria-hidden="true">
