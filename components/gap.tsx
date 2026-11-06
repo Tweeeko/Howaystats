@@ -22,27 +22,27 @@ export function gapLines(n: GapSide, s: GapSide, leagueSize: number) {
   const gdGap = n.goalDifference - s.goalDifference;
   const headline =
     pts > 9
-      ? `${pts} points clear. Natural order.`
+      ? `${pts} points clear. Get it up yez. HAHAHA.`
       : pts > 0
-        ? `${pts} point${pts === 1 ? "" : "s"} clear of them. As it should be.`
+        ? `${pts} point${pts === 1 ? "" : "s"} clear of the sad Mackem bastards.`
         : pts === 0
           ? gdGap > 0
             ? "Level on points. Ahead on goal difference. Still counts."
-            : "Level on points. Unacceptable."
-          : `They're ${-pts} ahead. Temporary. Has to be.`;
+            : "Level on points. Fucking unacceptable."
+          : `They're ${-pts} ahead. Fluke. Enjoy it while it lasts, Mackems.`;
   const toon = [
     n.position < s.position ? "Top of the North East. UTM." : "Biding wor time.",
     gdGap > 0 ? `Goal difference ${gdGap} better than theirs.` : "Goal difference is just a number.",
   ];
   const sunWins = s.form.filter((r) => r === "W").length;
   const mackems = [
-    s.position === leagueSize ? "Bottom of the league. Sad Mackem bastards." : s.position > leagueSize - 3 ? "Bottom three. Pack your bags." : s.position > n.position ? "Below us. Where they belong." : "Above us. Clerical error.",
+    s.position === leagueSize ? "Bottom of the league. Sad Mackem bastards." : s.position > leagueSize - 3 ? "Bottom three. Pack your bags, ya daft sods." : s.position > n.position ? "Below us. Where they fucking belong." : "Above us. Clerical error. Ring the league.",
     s.goalDifference <= -8
       ? `Goal difference ${gd(s.goalDifference)}. Shipping them like they're on offer.`
       : s.goalDifference < 0
-        ? `Goal difference ${gd(s.goalDifference)}. Leaky.`
+        ? `Goal difference ${gd(s.goalDifference)}. Leakier than a Wearside roof.`
         : `Goal difference ${gd(s.goalDifference)}. Fluke.`,
-    s.form.length ? (sunWins === 0 ? `No wins in their last ${s.form.length}.` : `${sunWins} win${sunWins === 1 ? "" : "s"} in their last ${s.form.length}.`) : "",
+    s.form.length ? (sunWins === 0 ? `No wins in their last ${s.form.length}. HAHAHA.` : `${sunWins} win${sunWins === 1 ? "" : "s"} in their last ${s.form.length}.`) : "",
   ].filter(Boolean);
   return { headline, toon, mackems };
 }

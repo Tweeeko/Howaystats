@@ -47,7 +47,14 @@ export default async function Home() {
   const jar = meter && meter.total
     ? {
         percent: (100 * meter.bad) / meter.total,
-        note: meter.bad === meter.total ? `Jar of tears: overflowing (${meter.bad}/${meter.total} bad signs)` : meter.bad === 0 ? "Jar of tears: empty. Annoying." : `Jar of tears: ${meter.bad} of ${meter.total} bad signs`,
+        note:
+          meter.bad === meter.total
+            ? "Jar of tears: flowing over. AKA fucked. HAHAHA"
+            : meter.bad / meter.total >= 0.5
+              ? `Jar of tears: ${meter.bad} of ${meter.total} and rising. Bricking it.`
+              : meter.bad === 0
+                ? "Jar of tears: bone dry. Give it a fortnight."
+                : `Jar of tears: ${meter.bad} of ${meter.total}. Filling nicely.`,
       }
     : undefined;
 

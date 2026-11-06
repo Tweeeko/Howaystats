@@ -2,13 +2,14 @@
 import { useEffect, useId, useRef, useState } from "react";
 
 const QUIPS = [
-  "Careful. That's vintage Wearside.",
-  "Still warm.",
-  "Do not drink. Seriously.",
-  "Shake it all you like. The table won't change.",
-  "Hand-collected on Wearside.",
-  "Hear that? That's the Stadium of Light.",
-];
+  "Careful. That's vintage Wearside misery.",
+  "Still warm. Fresh from the Stadium of Shite.",
+  "Do not drink. You'll start supporting them.",
+  "Shake it all you like. They're still shite.",
+  "Hand-collected from sad Mackem bastards.",
+  "Hear that? That's 49,000 Mackems sobbing.",
+  "Leaking again. Like their defence.",
+]
 
 /**
  * THE TEARS INDEX JAR — the house icon.
@@ -195,7 +196,7 @@ export function TearJar({
               <path d="M-74 -30 Q0 -36 74 -30" fill="none" stroke="#0b0b0c" strokeWidth="1" />
               <text y="-12" textAnchor="middle" fontSize="9" fontWeight="700" fill="#e0161f" fontFamily="ui-monospace, monospace" letterSpacing="1.5">HOWAYSTATS</text>
               <text y="8" textAnchor="middle" fontSize="19" fontWeight="900" fontStyle="italic" fill="#0b0b0c" fontFamily="var(--font-barlow), 'Arial Narrow', sans-serif">WEARSIDE TEARS</text>
-              <text y="22" textAnchor="middle" fontSize="7.5" fill="#0b0b0c" fontFamily="ui-monospace, monospace" letterSpacing="1">100% MACKEM · DO NOT DRINK</text>
+              <text y="22" textAnchor="middle" fontSize="7.5" fill="#0b0b0c" fontFamily="ui-monospace, monospace" letterSpacing="1">100% SAD MACKEM · DO NOT DRINK</text>
             </g>
           )}
 

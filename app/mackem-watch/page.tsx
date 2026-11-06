@@ -40,12 +40,12 @@ export default async function MackemWatch() {
     relPct === null
       ? null
       : relPct >= 60
-        ? "Start learning the Championship grounds, lads."
+        ? "Start learning the Championship grounds, lads. HAHAHA."
         : relPct >= 30
-          ? "Proper danger. We're watching with a brew."
+          ? "Proper danger. We're watching with a brew and a big grin."
           : relPct >= 10
             ? "Not likely. Not impossible either. We can dream."
-            : "Hardly any chance. Gutted.";
+            : "Hardly any chance. Fucking gutted.";
 
   const results = c.fixtures.recent.slice(0, 8);
   const roast = roastFacts(s);
@@ -73,7 +73,7 @@ export default async function MackemWatch() {
               <p className="display text-3xl">{relLine}</p>
               {change !== null && Math.abs(change) >= 0.01 && (
                 <p className="mt-2 text-mist">
-                  {change > 0 ? "Up" : "Down"} {Math.abs(Math.round(change * 100))} points since the last run{change > 0 ? ". Lovely." : ". Boo."}
+                  {change > 0 ? "Up" : "Down"} {Math.abs(Math.round(change * 100))} points since the last run{change > 0 ? ". Lovely. HAHAHA." : ". Boo. Fluke."}
                 </p>
               )}
               <p className="mt-2 text-mist">{safetyLine(c)}</p>

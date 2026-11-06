@@ -85,14 +85,14 @@ export function mackemMeter(opts: {
       value: `${ord(position)} of ${n}`,
       bad: inZone,
       line: inZone
-        ? "In the bottom three. The Championship's on the phone."
+        ? "Bottom three. The Championship's on the phone and they should answer it."
         : position >= n - 5
-          ? "Just above the trapdoor. Nervous times on the Wear."
+          ? "Just above the trapdoor. Bricking it on the Wear."
           : top
-            ? "Up near the top. Divvent panic, it's a long season."
+            ? "Up near the top. Long season. They'll bottle it."
             : position <= 10
-              ? "Top half. They'll be unbearable about it."
-              : "Mid-table. Nowt to see here.",
+              ? "Top half. They'll be insufferable. Enjoy it while it lasts, lads."
+              : "Mid-table. Nowt to see. Nowt to celebrate either.",
     });
   }
 
@@ -106,12 +106,12 @@ export function mackemMeter(opts: {
       bad: last5.length >= 3 && wins <= 1,
       line:
         wins === 0
-          ? `${say(last5.length)[0].toUpperCase() + say(last5.length).slice(1)} games, no wins. It's been a long month on Wearside.`
+          ? `${say(last5.length)[0].toUpperCase() + say(last5.length).slice(1)} games, no wins. Absolutely fucking dire. HAHAHA.`
           : wins === 1
-            ? `${say(last5.length)[0].toUpperCase() + say(last5.length).slice(1)} games, one win. Kettle's on.`
+            ? `${say(last5.length)[0].toUpperCase() + say(last5.length).slice(1)} games, one win. One. Shite.`
             : wins >= 4
-              ? "Winning everything. Hate to see it."
-              : `${say(wins)[0].toUpperCase() + say(wins).slice(1)} wins in ${say(last5.length)}. Annoyingly decent.`,
+              ? "Winning everything. Disgusting. It won't last."
+              : `${say(wins)[0].toUpperCase() + say(wins).slice(1)} wins in ${say(last5.length)}. Annoyingly decent. Give it a week.`,
     });
   }
 
@@ -125,7 +125,7 @@ export function mackemMeter(opts: {
       bad: ga >= 2 * last5.length,
       line:
         ga >= 2 * last5.length
-          ? "Their keeper's got a stiff neck from picking it out the net."
+          ? "Their keeper's spent more time picking it out the net than catching it. HAHAHA."
           : ga === 0
             ? "Not conceded. Must be a typo."
             : "Back line holding up. For now.",
@@ -138,9 +138,9 @@ export function mackemMeter(opts: {
   let winless = 0;
   for (let i = games.length - 1; i >= 0 && games[i].r !== "W"; i--) winless++;
   if (losing >= 2) {
-    signs.push({ key: "run", label: "Defeats in a row", value: String(losing), bad: true, line: losing >= 4 ? `${losing} defeats on the bounce. Someone check on the Wear.` : `${say(losing)[0].toUpperCase() + say(losing).slice(1)} defeats on the bounce. Getting to be a habit.` });
+    signs.push({ key: "run", label: "Defeats in a row", value: String(losing), bad: true, line: losing >= 4 ? `${losing} defeats on the bounce. Someone check on the sad Mackem bastards.` : `${say(losing)[0].toUpperCase() + say(losing).slice(1)} defeats on the bounce. Getting to be a habit, that.` });
   } else if (winless >= 4) {
-    signs.push({ key: "run", label: "Games without a win", value: String(winless), bad: true, line: `${winless} without a win. Phone-ins on Wearside are rammed.` });
+    signs.push({ key: "run", label: "Games without a win", value: String(winless), bad: true, line: `${winless} without a win. Phone-ins on Wearside are in bits. HAHAHA.` });
   }
 
   // Derbies this season
@@ -153,7 +153,7 @@ export function mackemMeter(opts: {
       label: "Derbies this season",
       value: derbies.map((g) => `${g.home ? `SUN ${g.gf}-${g.ga} NEW` : `NEW ${g.ga}-${g.gf} SUN`}`).join(" · "),
       bad: last.r === "L",
-      line: last.r === "L" ? (lost === derbies.length ? "Beaten by us every time. Lovely stuff." : "Lost the last one to us. They'll hear about it for years.") : last.r === "D" ? "Drew the last one. Nobody's happy." : "They won the last one. We're not talking about it.",
+      line: last.r === "L" ? (lost === derbies.length ? "Battered by us every time. Who put the ball in the Mackems' net?" : "Lost the last one to us. They'll never hear the end of it.") : last.r === "D" ? "Drew the last one. Nobody's happy." : "They won the last one. We're not talking about it.",
     });
   }
 
@@ -167,7 +167,7 @@ export function mackemMeter(opts: {
       label: "Last home crowd",
       value: `${gate.f.attendance!.toLocaleString("en-GB")} (${Math.round(full * 100)}%)`,
       bad: full < 0.9,
-      line: full < 0.9 ? "Plenty of empty seats. Can't say we blame them." : "Near enough full. Gluttons for punishment, that lot.",
+      line: full < 0.9 ? "Empty seats everywhere. Even their own can't watch." : "Near enough full. Gluttons for punishment, that lot.",
     });
   }
 
@@ -175,21 +175,21 @@ export function mackemMeter(opts: {
   const total = signs.length;
   const ratio = total ? bad / total : 0;
   const level = (total === 0 ? 0 : bad === 0 ? 0 : ratio < 0.34 ? 1 : ratio < 0.5 ? 2 : ratio < 0.75 ? 3 : 4) as Meter["level"];
-  const levelName = ["Annoyingly fine", "Bit of grumbling", "Kettle's on", "Proper misery", "Full meltdown"][level];
+  const levelName = ["Annoyingly fine", "Starting to wobble", "Bricking it", "Proper fucked", "Fucked. HAHAHA"][level];
   const worst = signs.find((s) => s.bad && (s.key === "run" || s.key === "form")) ?? signs.find((s) => s.bad);
   const verdict = !total
     ? "No games yet. The misery can wait."
     : level === 0
-      ? "Nowt to laugh at right now. Give it a fortnight."
-      : worst?.line ?? "Another day on Wearside. Another reason to keep the kettle on.";
+      ? "Nowt to laugh at right now. Give it a fortnight, they always bottle it."
+      : worst?.line ?? "Another day on Wearside, another kick in the knackers. HAHAHA.";
   const summary = !total
     ? "No games yet. The misery can wait."
     : [
-        "Nowt to laugh at right now. Give it a fortnight.",
-        "A bit of grumbling on the Wear. Nowt serious. Yet.",
-        "Another day on Wearside. Another reason to keep the kettle on.",
-        "Well, that's another lovely week for the Mackems.",
-        "Never mind the league table. Have a look at the state of that.",
+        "Nowt to laugh at right now. Give it a fortnight, they always bottle it.",
+        "Starting to wobble on the Wear. Here we go.",
+        "Another day on Wearside, another kick in the knackers. HAHAHA.",
+        "Well, that's another lovely week for the sad Mackem bastards.",
+        "Never mind the league table. Have a look at the fucking state of that. HAHAHA.",
       ][level];
   return { bad, total, level, levelName, verdict, summary, signs, form };
 }

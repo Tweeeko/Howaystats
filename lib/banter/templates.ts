@@ -87,10 +87,10 @@ export function templateBanter(f: BanterFacts): BanterLine[] {
     out.push({
       kind: "misery-report",
       text:
-        j >= 75 ? "Misery Meter's maxed out. Someone check on the Wear."
-        : j >= 50 ? "Misery Meter says kettle's on in Sunderland."
-        : j > 0 ? "A bit of grumbling on Wearside. Nowt serious. Yet."
-        : "Misery Meter's empty. Annoyingly, they're fine. Give it a fortnight.",
+        j >= 75 ? "Misery Meter's maxed out. Flowing over. AKA fucked. HAHAHA."
+        : j >= 50 ? "Misery Meter says they're bricking it on the Wear. Lovely."
+        : j > 0 ? "A bit of whingeing on Wearside. Give it time. They'll fuck it up."
+        : "Misery Meter's empty. Fucking annoying. Give it a fortnight.",
     });
   }
   if (f.miseryIndex !== undefined && s) {

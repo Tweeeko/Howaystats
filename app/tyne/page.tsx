@@ -71,7 +71,7 @@ export default async function Derby() {
             <p className="px-4 py-3 text-mist">
               {n.position < u.position
                 ? `Newcastle ${u.position - n.position} place${u.position - n.position === 1 ? "" : "s"} above them. Natural order restored.`
-                : "They're above us. Temporary. Has to be."}
+                : "They're above us. Fluke. Normal service soon, Mackems."}
             </p>
           </div>
         )}

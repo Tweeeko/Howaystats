@@ -22,11 +22,11 @@ export const ord = (n: number) => {
 /** One line above the league table, about where Sunderland are. */
 export function tableQuip(sunPos: number, nufcPos: number, n: number, seed: string) {
   const gap = sunPos - nufcPos;
-  if (sunPos === n) return pick(["Sunderland are bottom. We've checked twice. Still lovely.", "Rock bottom on the Wear. Gan on, scroll down, have a look."], seed, "tq");
-  if (sunPos > n - 3) return pick([`Sunderland ${ord(sunPos)}. That red line's there for a reason.`, `Sunderland in the bottom three. Scroll down, it's worth it.`], seed, "tq");
+  if (sunPos === n) return pick(["Sunderland are bottom. Checked twice. Still fucking lovely. HAHAHA.", "Rock bottom on the Wear. Gan on, scroll down, have a look."], seed, "tq");
+  if (sunPos > n - 3) return pick([`Sunderland ${ord(sunPos)}. That red line's there for a reason.`, `Sunderland in the bottom three. Scroll down and have a laugh.`], seed, "tq");
   if (gap > 6) return `Sunderland ${ord(sunPos)}. ${gap} places below us. Not that we're counting. We are.`;
-  if (gap > 0) return `Sunderland ${ord(sunPos)}, ${gap} place${gap > 1 ? "s" : ""} below us. Closer than we'd like, mind.`;
-  return `Sunderland ${ord(sunPos)}. Above us. Aye, we know. It won't last.`;
+  if (gap > 0) return `Sunderland ${ord(sunPos)}, ${gap} place${gap > 1 ? "s" : ""} below us. Closer than we'd like, mind. Still shite.`;
+  return `Sunderland ${ord(sunPos)}. Above us. Fluke. It won't last.`;
 }
 
 

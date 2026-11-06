@@ -47,18 +47,18 @@ export function roastCopy(f: RoastFacts) {
   const pos = ord(f.position);
   const big =
     heat === 4
-      ? "Sunderland are bottom"
+      ? "Sunderland are bottom. HAHAHA"
       : heat === 3
         ? f.position > f.leagueSize - 3
-          ? `Sunderland ${pos}. Bottom three.`
-          : "Sunderland lost again"
+          ? `Sunderland ${pos}. Bottom three. Fucked.`
+          : "Sunderland lost again. HAHAHA"
         : heat === 2
-          ? `Sunderland ${pos}. Nowt special.`
+          ? `Sunderland ${pos}. Shite, as usual.`
           : heat === 1
-            ? `Sunderland ${pos}. Behaving. For now.`
-            : `Sunderland ${pos}. Above us. Don't.`;
+            ? `Sunderland ${pos}. Behaving. For now. They'll bottle it.`
+            : `Sunderland ${pos}. Above us. Fluke. Don't.`;
   const laugh = heat === 4 ? "HAHAHAHA · SAD MACKEM BASTARDS ·" : heat === 3 ? "HAHAHA · SMB ·" : heat === 2 ? "HAHA" : null;
-  const stamp = heat === 4 ? "Rock bottom · SMB" : heat === 3 ? (f.position > f.leagueSize - 3 ? "Going down" : "Beaten") : null;
+  const stamp = heat === 4 ? "Rock bottom · SMB" : heat === 3 ? (f.position > f.leagueSize - 3 ? "Going down. Ta-ra" : "Battered") : null;
   return { heat, big, laugh, stamp };
 }
 
@@ -73,12 +73,12 @@ export function Roast({ f, jar, compact = false }: { f: RoastFacts; jar?: { perc
   const loud = c.heat >= 3;
   const L = f.lastResult;
   const stats = [
-    { k: "Position", v: ord(f.position), s: loud ? `of ${f.leagueSize}. Hahaha.` : `of ${f.leagueSize}.` },
-    { k: "Points", v: `${f.points}`, s: `from ${f.played} games.${loud ? " Pathetic." : ""}` },
-    { k: "League wins", v: `${f.won}`, s: f.won === 0 ? "None. Zero. Nowt." : f.won === 1 ? "One. Uno. Un." : loud ? "Count 'em. Quick job." : "Fair enough." },
+    { k: "Position", v: ord(f.position), s: loud ? `of ${f.leagueSize}. HAHAHAHA.` : `of ${f.leagueSize}. Shite.` },
+    { k: "Points", v: `${f.points}`, s: `from ${f.played} games.${loud ? " Fucking pathetic." : " Meh."}` },
+    { k: "League wins", v: `${f.won}`, s: f.won === 0 ? "None. Zero. Nowt. HAHAHA." : f.won === 1 ? "One. Uno. Un. Frame it, lads." : loud ? "Count 'em. Quick job." : "Fluke, most of them." },
     f.daysSinceWin !== null && f.daysSinceWin >= 14
-      ? { k: "Days since a league win", v: `${f.daysSinceWin}`, s: f.lastWinAgainst ? `Last one: ${f.lastWinAgainst}. Remember it?` : "And counting." }
-      : { k: f.belowUs ? "Points behind us" : "Points ahead of us", v: `${Math.abs(f.gapToUs)}`, s: f.belowUs ? "Lovely." : "Temporary." },
+      ? { k: "Days since a league win", v: `${f.daysSinceWin}`, s: f.lastWinAgainst ? `Last one: ${f.lastWinAgainst}. Remember it? Neither do they.` : "And counting. HAHAHA." }
+      : { k: f.belowUs ? "Points behind us" : "Points ahead of us", v: `${Math.abs(f.gapToUs)}`, s: f.belowUs ? "Where they belong." : "Temporary. Fluke." },
   ];
 
   return (
@@ -134,13 +134,13 @@ export function Roast({ f, jar, compact = false }: { f: RoastFacts; jar?: { perc
           {L && (
             <p className={`tabloid text-chalk ${c.heat >= 3 ? "mt-7 text-[clamp(1.6rem,5vw,2.8rem)]" : "mt-3 text-[clamp(1.2rem,3.5vw,1.8rem)]"}`}>
               {L.r === "L"
-                ? `Last game: lost ${L.gf}-${L.ga} to ${L.opp}.${c.heat >= 3 ? " Get in." : ""}`
+                ? `Last game: lost ${L.gf}-${L.ga} to ${L.opp}.${c.heat >= 3 ? " Get in. HAHAHA." : " Lovely."}`
                 : L.r === "D"
-                  ? `Last game: ${L.gf}-${L.ga} with ${L.opp}. Couldn't even lose properly.`
-                  : `Last game: beat ${L.opp} ${L.gf}-${L.ga}. ${c.heat >= 2 ? "Enjoy it, lads. It won't last." : "Fine. Well done. Whatever."}`}
+                  ? `Last game: ${L.gf}-${L.ga} with ${L.opp}. Couldn't even lose properly, useless sods.`
+                  : `Last game: beat ${L.opp} ${L.gf}-${L.ga}. ${c.heat >= 2 ? "Enjoy it, lads. It won't last." : "Fluke. Whatever."}`}
             </p>
           )}
-          {f.belowUs && f.gapToUs > 0 && c.heat >= 2 && <p className="mt-2 font-serif text-lg text-chalk/90">And they&apos;re {f.gapToUs} points behind us. Natural order.</p>}
+          {f.belowUs && f.gapToUs > 0 && c.heat >= 2 && <p className="mt-2 font-serif text-lg text-chalk/90">And they&apos;re {f.gapToUs} points behind us. Sad Mackem bastards.</p>}
         </div>
 
         {(c.heat >= 2 || jar) && (

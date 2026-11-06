@@ -72,22 +72,22 @@ export function backPageHeadline(opts: {
   if (s?.r === "L") {
     const heavy = s.ga - s.gf >= 3;
     if (heavy) return pick([
-      { main: "Someone check on Sunderland.", sub: `Battered ${s.ga}-${s.gf} by ${s.opp}${s.comp}. Actually, divvent bother. SMBs.` },
-      { main: "Have a look at the state of that.", sub: `${s.opp} ${s.ga}, Sunderland ${s.gf}${s.comp}. Never mind the table.` },
+      { main: "Someone check on Sunderland. HAHAHA.", sub: `Battered ${s.ga}-${s.gf} by ${s.opp}${s.comp}. Actually, divvent bother. SMBs.` },
+      { main: "Have a look at the fucking state of that.", sub: `${s.opp} ${s.ga}, Sunderland ${s.gf}${s.comp}. Never mind the table.` },
     ], seed, "heavy");
     if (inZone) return pick([
-      { main: "Sunderland lose again.", sub: `${s.gf}-${s.ga} to ${s.opp}${s.comp}. Still ${pos}${winless >= 3 ? `, ${winless} without a win` : ""}. Absolute shambles.` },
-      { main: "Another day on Wearside.", sub: `Beaten ${s.ga}-${s.gf} by ${s.opp}${s.comp}. ${pos} in the league. Kettle's on.` },
+      { main: "Sunderland lose again.", sub: `${s.gf}-${s.ga} to ${s.opp}${s.comp}. Still ${pos}${winless >= 3 ? `, ${winless} without a win` : ""}. Absolute shambles. HAHAHA.` },
+      { main: "Another day on Wearside.", sub: `Beaten ${s.ga}-${s.gf} by ${s.opp}${s.comp}. ${pos} in the league. Sad Mackem bastards.` },
     ], seed, "l1");
     return pick([
       { main: `Sunderland beaten by ${s.opp}.`, sub: `${s.gf}-${s.ga}${s.comp}. The excuses will be doing the rounds on the Wear by teatime.` },
-      { main: "Get in.", sub: `Sunderland lost ${s.gf}-${s.ga} to ${s.opp}${s.comp}. That's it. That's the headline.` },
+      { main: "Get in. HAHAHA.", sub: `Sunderland lost ${s.gf}-${s.ga} to ${s.opp}${s.comp}. That's it. That's the headline.` },
     ], seed, "l2");
   }
 
   if (s?.r === "D") {
     return pick([
-      { main: "Sunderland couldn't get it done.", sub: `${s.gf}-${s.ga} with ${s.opp}${s.comp}. Still ${pos}.` },
+      { main: "Sunderland couldn't get it done.", sub: `${s.gf}-${s.ga} with ${s.opp}${s.comp}. Still ${pos}. Still shite.` },
       { main: "A draw. On the Wear that's a parade.", sub: `${s.gf}-${s.ga} against ${s.opp}${s.comp}. Get the bunting out, lads.` },
     ], seed, "d");
   }

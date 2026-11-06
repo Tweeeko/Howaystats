@@ -148,12 +148,12 @@ export function headToHead(fixtures: Fixture[], a: number, b: number) {
 /** Plain-English survival maths. Early on, the guaranteed figure is meaninglessly high, so use the 38-point mark. */
 export function safetyLine(c: { row: { points: number }; remaining: number; safety: { relegated: boolean; safe: boolean; target: number; maxPossible: number } | null }) {
   if (!c.safety) return "";
-  if (c.safety.relegated) return "Mathematically relegated. Ta-ra.";
-  if (c.safety.safe) return "Mathematically safe. We checked twice. Gutted.";
+  if (c.safety.relegated) return "Mathematically relegated. Ta-ra, ya sad Mackem bastards. HAHAHA.";
+  if (c.safety.safe) return "Mathematically safe. We checked twice. Fucking gutted.";
   if (c.safety.target <= c.safety.maxPossible && c.remaining <= 10) return `${c.safety.target - c.row.points} more points guarantees safety.`;
   const need = Math.max(0, 38 - c.row.points);
-  if (need === 0) return "Already past 38 points. Annoying.";
-  return `They need ${need} more points to reach 38, the usual survival mark. That's ${(need / Math.max(1, c.remaining)).toFixed(1)} a game. Good luck with that.`;
+  if (need === 0) return "Already past 38 points. Fucking annoying.";
+  return `They need ${need} more points to reach 38, the usual survival mark. That's ${(need / Math.max(1, c.remaining)).toFixed(1)} a game. Good luck with that, lads. HAHAHA.`;
 }
 
 /** Real numbers for the Sunderland roast banner (league games only for wins). */
