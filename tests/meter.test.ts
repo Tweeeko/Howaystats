@@ -141,3 +141,12 @@ test("memes: trending and top-ranked beat old and buried", () => {
   const generic = tractionScore({ club: false, rank: 0, trendedAt: Date.now() - 3 * 86_400_000, ageDays: 10 });
   assert.ok(hot > buried && hot > generic);
 });
+
+import { HANDOVER_LINES, handoverLine } from "../components/handover";
+test("handover: every line passes the voice check, defeats still big us up", () => {
+  for (const h of [...HANDOVER_LINES.any, ...HANDOVER_LINES.afterDefeat, ...HANDOVER_LINES.afterWin]) {
+    for (const t of [h.kicker, h.line]) assert.equal(voiceCheck(t).ok, true, `${t}: ${voiceCheck(t).reason}`);
+  }
+  const days = Array.from({ length: 10 }, (_, i) => `2026-11-${String(i + 1).padStart(2, "0")}`);
+  assert.ok(new Set(days.map((d) => handoverLine(d, null).line)).size > 3, "rotates day to day");
+});

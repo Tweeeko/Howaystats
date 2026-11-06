@@ -9,6 +9,7 @@ import { LiveScoreboards } from "@/components/live";
 import { TheGap } from "@/components/gap";
 import { Roast } from "@/components/roast";
 import { ToonHype } from "@/components/toon";
+import { Handover } from "@/components/handover";
 
 export const revalidate = 60;
 
@@ -74,18 +75,23 @@ export default async function Home() {
 
       {/* 2. Laugh at them */}
       <div id="mackems" className="scroll-mt-14">{roast && <Roast f={roast} jar={jar} compact />}</div>
-      <div className="bg-ink/90 px-4 py-3 text-center">
-        <Link href="/mackem-watch" className="display text-lg text-silver underline-offset-4 hover:text-chalk hover:underline">
-          The full state of them: misery meter, relegation odds, every result →
+      <div className="bg-[#3a0a0d] px-4 py-5 text-center">
+        <Link href="/mackem-watch" className="display inline-block border-2 border-chalk bg-mackem px-5 py-2.5 text-lg text-chalk hover:bg-chalk hover:text-mackem sm:text-xl">
+          The full state of them →
         </Link>
+        <p className="mt-2 font-mono text-[11px] uppercase tracking-wider text-chalk/60">Misery meter · relegation odds · every result</p>
       </div>
+
+      {/* The handover: from them to us */}
+      <Handover seed={new Date().toISOString().slice(0, 10)} nufcLast={toon?.lastResult?.r ?? null} />
 
       {/* 3. Check on us */}
       <div id="toon" className="scroll-mt-14">{toon && <ToonHype f={toon} compact />}</div>
-      <div className="bg-ink/90 px-4 py-3 text-center">
-        <Link href="/newcastle" className="display text-lg text-silver underline-offset-4 hover:text-chalk hover:underline">
-          Everything Toon: results, fixtures, the road to Europe →
+      <div className="bg-ink px-4 py-5 text-center">
+        <Link href="/newcastle" className="display inline-block border-2 border-chalk bg-chalk px-5 py-2.5 text-lg text-ink hover:bg-ink hover:text-chalk sm:text-xl">
+          Everything Toon →
         </Link>
+        <p className="mt-2 font-mono text-[11px] uppercase tracking-wider text-chalk/60">Results · fixtures · the road to Europe</p>
       </div>
 
       {/* 4. Headlines only. The news lives on its own page. */}
