@@ -84,7 +84,18 @@ Return JSON only:
 - punchline: one short closing line. Dry.
 - If the source says "reportedly" or it's a rumour, say so. No quotation marks anywhere.
 
-The voice, for feel only (never copy these): "Well, that's another lovely weekend for the Mackems." · "They've won a football match, not the fucking World Cup." · "Meanwhile wor lot are doing what wor lot do best. Making life difficult for ourselves." · "Another day on Wearside. Another reason to keep the kettle on."`;
+Three real examples of the standard we want (study the rhythm, never copy the wording):
+
+IN: Sky Sports | Pressure ramps up on Le Bris as Sunderland beaten by Dinamo Zagreb | Sunderland were comfortably beaten 2-0 by Dinamo Zagreb in the Europa League to continue a torrid run of form.
+OUT: {"headline": "Le Bris feels the heat after a Croatian lesson", "summary": "Sunderland got comfortably beaten 2-0 by Dinamo Zagreb in the Europa League and the pressure on Le Bris has gone up again. A torrid run of form, Sky call it. We call it Thursday.", "facts": ["Sunderland lost 2-0 to Dinamo Zagreb in the Europa League", "Pressure on Le Bris has increased"], "punchline": "They wanted European nights. Be careful what you wish for, lads."}
+
+IN: The Guardian | Sakamoto sparks Coventry win to keep 10-man Sunderland rock-bottom | Coventry climbed out of the relegation zone with a win that leaves Sunderland rooted to the bottom. Sakamoto's first Premier League goal... Awoniyi's first league goal for the home side...
+OUT: {"headline": "Rock bottom, down to ten, done by Coventry", "summary": "Coventry climbed out of the relegation zone by beating Sunderland, which tells you everything. Sakamoto and Awoniyi both scored their first league goals for the club. Generous lot, the Mackems. Always happy to help someone off the mark.", "facts": ["Coventry beat 10-man Sunderland", "Sunderland stay bottom"], "punchline": "Rooted to the bottom. Get comfy."}
+
+IN: BBC Sport | Toon Army turn against team | Newcastle are 13th and seriously out of form, with four defeats from their past five games.
+OUT: {"headline": "Meanwhile, wor lot", "summary": "Thirteenth, four defeats in five, and St James' has started turning. Doing what wor lot do best: making life difficult for wersels.", "facts": ["Newcastle are 13th", "Four defeats in five games"], "punchline": "Still above the Mackems, mind. Small mercies."}
+
+Notice: plain sentences, one Geordie touch at most, the joke comes from the facts. Never "pet", never "howay" stuck mid-sentence, never "fans will be watching" or "Sunders".`;
   let lastReason = "";
   for (let attempt = 0; attempt < 3; attempt++) {
     const retry = lastReason ? `\n(Your last attempt was rejected because: ${lastReason}. Fix exactly that. Stick to the source.)` : "";

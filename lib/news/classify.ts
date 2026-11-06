@@ -80,13 +80,16 @@ export interface Classification {
 export const SENSITIVE =
   /\b(bradley lowery|lowery|child(ren)?|boy|girl|teen(ager)?s?|aged \d+|\d+-year-old|died|dies|death|dead|funeral|tribute|tragedy|cancer|illness|hospital|charity|arrest\w*|police|charged|court|jail\w*|prison|assault\w*|stab\w*|abuse\w*|racis\w*|homophob\w*|weapon|bow and arrow|knife)\b/i;
 
+/** Formats we don't rewrite: vox pops about ordinary fans, live blogs, ratings, newsletters, podcasts. */
+export const NOT_A_STORY = /\b(your views|fan (says|wants|thinks|believes|explains|reacts)|fans? (verdict|react)|player ratings|rated|as it happened|live:|live updates|football daily|newsletter|podcast|quiz)\b/i;
+
 export function isSensitive(title: string, summary = "") {
   return SENSITIVE.test(`${title} ${summary}`);
 }
 
 export function classifyStory(title: string, summary = ""): Classification {
   const text = `${title}. ${summary}`;
-  if (isSensitive(title, summary)) {
+  if (isSensitive(title, summary) || NOT_A_STORY.test(title)) {
     return { aboutSunderland: SUNDERLAND.test(text), aboutNewcastle: NEWCASTLE.test(text), storyType: "other", negativity: 0, category: null };
   }
   const aboutSunderland = SUNDERLAND.test(text) && !NOT_THE_CLUB.test(text);

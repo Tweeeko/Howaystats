@@ -77,3 +77,16 @@ test("news: tragedies, children and crime are never turned into banter", () => {
   assert.equal(classifyStory("Europa League: Sunderland lose at home to Zagreb").storyType, "loss");
   assert.notEqual(classifyStory("Sakamoto sparks Coventry win to keep 10-man Sunderland rock-bottom").category, null);
 });
+
+test("voice check: catches the slop that actually got published", () => {
+  for (const t of [
+    "Looks like Sunderland have taken a howay into another embarrassing defeat.",
+    "Fans are left wondering if they ever know what winning feels like, a real pet mystery.",
+    "BOTTOM CLUB SUNDERS STICK WITH LE BRIS",
+    "Fans will be watching to see if anything actually changes.",
+  ]) assert.equal(voiceCheck(t).ok, false, t);
+  for (const t of ["Howay the lads.", "Rooted to the bottom. Get comfy.", "Meanwhile, wor lot", "They wanted European nights. Be careful what you wish for, lads."])
+    assert.equal(voiceCheck(t).ok, true, `${t}: ${voiceCheck(t).reason}`);
+  assert.equal(classifyStory("Sunderland fan thinks Regis Le Bris deserves more time").category, null);
+  assert.equal(classifyStory("Newcastle United 0-1 Everton: Premier League – as it happened").category, null);
+});
