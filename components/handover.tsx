@@ -3,17 +3,17 @@ import { pick } from "@/lib/voice";
 /** The line between the Mackem bit and the Toon bit. Rotates daily; minds how wor lads got on. */
 export const HANDOVER_LINES = {
   any: [
-    { kicker: "That's enough of that", line: "And now, the lads who actually play football." },
-    { kicker: "Leaving Wearside", line: "Please mind the tears on your way out." },
+    { kicker: "That's enough of them sad Mackem bastards", line: "And now, the lads who actually play football." },
+    { kicker: "Leaving Wearside", line: "Mind the tears on your way out. Fuck the Mackems." },
     { kicker: "Twelve miles up the road", line: "Meanwhile, a proper football club." },
     { kicker: "Now crossing the Tyne", line: "Standards rising. Mind your ears." },
-    { kicker: "Right, enough misery", line: "Here's the greatest club in the world." },
+    { kicker: "Right, enough of that shite", line: "Here's the greatest club in the world." },
     { kicker: "From the Stadium of Shite", line: "To the Cathedral on the Hill." },
     { kicker: "Have you ever seen a Mackem in Milan?", line: "No. Now here's a club that's been." },
   ],
   afterDefeat: [
     { kicker: "Right, enough about them", line: "Wor lads. Bad day at the office. Still miles better." },
-    { kicker: "Now crossing the Tyne", line: "We got beat. We're still not them." },
+    { kicker: "Now crossing the Tyne", line: "We got beat. Fuck it. At least we're not Mackems." },
   ],
   afterWin: [
     { kicker: "That's enough of that", line: "And now, some winners. Howay the lads." },

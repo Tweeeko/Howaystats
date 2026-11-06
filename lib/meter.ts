@@ -85,14 +85,14 @@ export function mackemMeter(opts: {
       value: `${ord(position)} of ${n}`,
       bad: inZone,
       line: inZone
-        ? "Bottom three. The Championship's on the phone and they should answer it."
+        ? "Bottom three. The Championship's ringing. Pick up, ya sad Mackem bastards. HAHAHA."
         : position >= n - 5
-          ? "Just above the trapdoor. Bricking it on the Wear."
+          ? "One wobble off the trapdoor. Shitting it on the Wear."
           : top
-            ? "Up near the top. Long season. They'll bottle it."
+            ? "Up near the top. Fluke. They always bottle it, the daft bastards."
             : position <= 10
-              ? "Top half. They'll be insufferable. Enjoy it while it lasts, lads."
-              : "Mid-table. Nowt to see. Nowt to celebrate either.",
+              ? "Top half. Insufferable. Fuck the Mackems, it won't last."
+              : "Mid-table. Shite and forgettable. Peak Sunderland.",
     });
   }
 
@@ -108,10 +108,10 @@ export function mackemMeter(opts: {
         wins === 0
           ? `${say(last5.length)[0].toUpperCase() + say(last5.length).slice(1)} games, no wins. Absolutely fucking dire. HAHAHA.`
           : wins === 1
-            ? `${say(last5.length)[0].toUpperCase() + say(last5.length).slice(1)} games, one win. One. Shite.`
+            ? `${say(last5.length)[0].toUpperCase() + say(last5.length).slice(1)} games, one win. One. Fucking shite.`
             : wins >= 4
-              ? "Winning everything. Disgusting. It won't last."
-              : `${say(wins)[0].toUpperCase() + say(wins).slice(1)} wins in ${say(last5.length)}. Annoyingly decent. Give it a week.`,
+              ? "Winning everything. Disgusting. Fuck the Mackems, it won't last."
+              : `${say(wins)[0].toUpperCase() + say(wins).slice(1)} wins in ${say(last5.length)}. Fucking annoying. Give it a week, they'll bottle it.`,
     });
   }
 
@@ -127,8 +127,8 @@ export function mackemMeter(opts: {
         ga >= 2 * last5.length
           ? "Their keeper's spent more time picking it out the net than catching it. HAHAHA."
           : ga === 0
-            ? "Not conceded. Must be a typo."
-            : "Back line holding up. For now.",
+            ? "Not conceded. Must be a fucking typo."
+            : "Back line holding up. For now. Give it a minute.",
     });
   }
 
@@ -138,9 +138,9 @@ export function mackemMeter(opts: {
   let winless = 0;
   for (let i = games.length - 1; i >= 0 && games[i].r !== "W"; i--) winless++;
   if (losing >= 2) {
-    signs.push({ key: "run", label: "Defeats in a row", value: String(losing), bad: true, line: losing >= 4 ? `${losing} defeats on the bounce. Someone check on the sad Mackem bastards.` : `${say(losing)[0].toUpperCase() + say(losing).slice(1)} defeats on the bounce. Getting to be a habit, that.` });
+    signs.push({ key: "run", label: "Defeats in a row", value: String(losing), bad: true, line: losing >= 4 ? `${losing} defeats on the bounce. Someone check on the sad Mackem bastards.` : `${say(losing)[0].toUpperCase() + say(losing).slice(1)} defeats on the bounce. Proper habit now. HAHAHA.` });
   } else if (winless >= 4) {
-    signs.push({ key: "run", label: "Games without a win", value: String(winless), bad: true, line: `${winless} without a win. Phone-ins on Wearside are in bits. HAHAHA.` });
+    signs.push({ key: "run", label: "Games without a win", value: String(winless), bad: true, line: `${winless} without a win. Mackems ringing talkSPORT in tears. HAHAHA.` });
   }
 
   // Derbies this season
@@ -153,7 +153,7 @@ export function mackemMeter(opts: {
       label: "Derbies this season",
       value: derbies.map((g) => `${g.home ? `SUN ${g.gf}-${g.ga} NEW` : `NEW ${g.ga}-${g.gf} SUN`}`).join(" · "),
       bad: last.r === "L",
-      line: last.r === "L" ? (lost === derbies.length ? "Battered by us every time. Who put the ball in the Mackems' net?" : "Lost the last one to us. They'll never hear the end of it.") : last.r === "D" ? "Drew the last one. Nobody's happy." : "They won the last one. We're not talking about it.",
+      line: last.r === "L" ? (lost === derbies.length ? "Battered by us every time. Who put the ball in the Mackems' net?" : "Lost the last one to us. Fuck the Mackems. SMB.") : last.r === "D" ? "Drew the last one. Still shite." : "They won the last one. We're not talking about it.",
     });
   }
 
@@ -167,7 +167,7 @@ export function mackemMeter(opts: {
       label: "Last home crowd",
       value: `${gate.f.attendance!.toLocaleString("en-GB")} (${Math.round(full * 100)}%)`,
       bad: full < 0.9,
-      line: full < 0.9 ? "Empty seats everywhere. Even their own can't watch." : "Near enough full. Gluttons for punishment, that lot.",
+      line: full < 0.9 ? "Empty seats everywhere. Even the Mackems can't watch that shite." : "Near enough full. Paying to watch that. Mugs.",
     });
   }
 
@@ -178,12 +178,12 @@ export function mackemMeter(opts: {
   const levelName = ["Annoyingly fine", "Starting to wobble", "Bricking it", "Proper fucked", "Fucked. HAHAHA"][level];
   const worst = signs.find((s) => s.bad && (s.key === "run" || s.key === "form")) ?? signs.find((s) => s.bad);
   const verdict = !total
-    ? "No games yet. The misery can wait."
+    ? "No games yet. The misery's coming. HAHAHA."
     : level === 0
       ? "Nowt to laugh at right now. Give it a fortnight, they always bottle it."
       : worst?.line ?? "Another day on Wearside, another kick in the knackers. HAHAHA.";
   const summary = !total
-    ? "No games yet. The misery can wait."
+    ? "No games yet. The misery's coming. HAHAHA."
     : [
         "Nowt to laugh at right now. Give it a fortnight, they always bottle it.",
         "Starting to wobble on the Wear. Here we go.",

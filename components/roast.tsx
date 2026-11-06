@@ -171,7 +171,7 @@ export function Roast({ f, jar, compact = false }: { f: RoastFacts; jar?: { perc
           <div>
             {[0, 1].map((k) => (
               <span key={k} className="haha outline-text text-4xl sm:text-6xl">
-                Mackem tears · Haway the lads (they can't even spell it) · Mackem tears · SMB ·&nbsp;
+                Mackem tears · Haway the lads (they can't even spell it) · Fuck the Mackems · SMB ·&nbsp;
               </span>
             ))}
           </div>
