@@ -1,4 +1,6 @@
 import { Crowd, StadiumScene } from "./scenes";
+import { Passport } from "./passport";
+export { Passport };
 /**
  * THE TOON. The mirror image of the Sunderland roast: same size, same noise, pointed the other way.
  * Whatever Newcastle do, it's glorious. A win is obvious, a draw is "unbeaten", a defeat by one
@@ -66,37 +68,6 @@ export function toonCopy(f: ToonFacts) {
   return { mood, head, sub, marquee, stamp, badge };
 }
 
-/** The European away-days passport. Stamped from the real odds. */
-export function Passport({ stamp, pEurope }: { stamp: string; pEurope?: number }) {
-  const ink = stamp === "Approved" ? "#2e8b4f" : "#b8860b";
-  return (
-    <div className="relative mx-auto w-full max-w-[300px]">
-      <svg viewBox="0 0 300 380" className="w-full drop-shadow-[0_18px_24px_rgba(0,0,0,.6)]" role="img" aria-label={`European away days passport, stamped ${stamp}`}>
-        <rect x="10" y="10" width="280" height="360" rx="14" fill="#111214" stroke="#3a4048" strokeWidth="3" />
-        <rect x="26" y="26" width="248" height="328" rx="8" fill="none" stroke="#f4f4f0" strokeOpacity=".35" strokeWidth="1.5" />
-        <text x="150" y="84" textAnchor="middle" fontSize="15" letterSpacing="4" fill="#f4f4f0" fontFamily="ui-monospace, monospace">HOWAYSTATS</text>
-        <text x="150" y="122" textAnchor="middle" fontSize="40" fontWeight="900" fill="#f4f4f0" fontFamily="var(--font-barlow), 'Arial Narrow', sans-serif">PASSPORT</text>
-        <text x="150" y="146" textAnchor="middle" fontSize="12" letterSpacing="3" fill="#a7aeb7" fontFamily="ui-monospace, monospace">EUROPEAN AWAY DAYS</text>
-        {/* black and white stripes emblem */}
-        {[0, 1, 2, 3, 4, 5].map((i) => (
-          <rect key={i} x={105 + i * 15} y="170" width="15" height="70" fill={i % 2 ? "#111214" : "#f4f4f0"} />
-        ))}
-        <rect x="105" y="170" width="90" height="70" fill="none" stroke="#f4f4f0" strokeWidth="2" />
-        <text x="150" y="292" textAnchor="middle" fontSize="13" fill="#a7aeb7" fontFamily="ui-monospace, monospace">HOLDER: THE TOON ARMY</text>
-        {/* the stamp */}
-        <g transform="rotate(-14 150 250)" opacity=".92">
-          <rect x="52" y="214" width="196" height="70" rx="8" fill="none" stroke={ink} strokeWidth="6" />
-          <text x="150" y="262" textAnchor="middle" fontSize="40" fontWeight="900" fill={ink} fontFamily="var(--font-barlow), 'Arial Narrow', sans-serif">{stamp.toUpperCase()}</text>
-        </g>
-      </svg>
-      {pEurope !== undefined && (
-        <p className="mt-2 text-center font-mono text-xs uppercase tracking-wider text-chalk/80">Chance of Europe: {Math.round(pEurope * 100)}%</p>
-      )}
-      <p className="mt-1 text-center font-mono text-[11px] uppercase tracking-wider text-chalk/70">Ever seen a Mackem in Milan? Nah. Us? Aye.</p>
-    </div>
-  );
-}
-
 /** The Toon hero: same size and noise as the Sunderland roast, all glory. */
 export function ToonHype({ f, compact = false }: { f: ToonFacts; compact?: boolean }) {
   const c = toonCopy(f);
@@ -160,9 +131,9 @@ export function ToonHype({ f, compact = false }: { f: ToonFacts; compact?: boole
           )}
         </div>
 
-        <div className="grid items-center gap-6 sm:grid-cols-[1.6fr_1fr] lg:grid-cols-1">
+        <div className="grid items-center gap-8">
           <StadiumScene club="nufc" result={L?.r ?? null} score={f.lastScore ?? undefined} caption={L ? `St James' Park, after ${L.r === "W" ? "battering" : L.r === "D" ? "drawing with" : "being robbed by"} ${L.opp}` : "St James' Park"} />
-          <div className="mx-auto w-full max-w-[240px]"><Passport stamp={c.stamp} pEurope={f.pEurope} /></div>
+          <Passport stamp={c.stamp} pEurope={f.pEurope} />
         </div>
       </div>
 
