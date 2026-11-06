@@ -27,16 +27,16 @@ export async function getSnapshot(): Promise<Snapshot> {
 const now = new Date().toISOString();
 export async function getNews() {
   return [
-    { id: "00000000-0000-0000-0000-000000000001", slug: "preview-1", url: "#", source: "Sample Publisher", originalHeadline: "SAMPLE ONLY: Sunderland beaten at home after defensive errors", originalSummary: "", publishedAt: now, club: "sunderland", category: "sunderland-slump", keyFacts: ["Preview placeholder — the live site only shows real, linked stories."], howayHeadline: "WEARSIDE DISCOVERS DEFENDING IS OPTIONAL", howayCommentary: "Another afternoon to forget. The opposition turned up, did their job and left with the points. Newcastle supporters are advised to enjoy this one responsibly. Actually, don't.", breaking: false, shares: 0 },
-    { id: "00000000-0000-0000-0000-000000000002", slug: "preview-2", url: "#", source: "Sample Publisher", originalHeadline: "SAMPLE ONLY: Bottom club stick with manager", originalSummary: "", publishedAt: now, club: "sunderland", category: "championship-watch", keyFacts: [], howayHeadline: "CHAMPIONSHIP BOOKING OFFICE REPORTS INCREASED INTEREST", howayCommentary: "Placeholder copy for the design preview.", breaking: false, shares: 0 },
-    { id: "00000000-0000-0000-0000-000000000003", slug: "preview-3", url: "#", source: "Sample Publisher", originalHeadline: "SAMPLE ONLY: Injury setback on Wearside", originalSummary: "", publishedAt: now, club: "sunderland", category: "wearside-woes", keyFacts: [], howayHeadline: "THE TEAR JAR NEEDS A BIGGER FRIDGE", howayCommentary: "Placeholder copy for the design preview.", breaking: false, shares: 0 },
+    { id: "00000000-0000-0000-0000-000000000001", slug: "preview-1", url: "#", source: "Sample Publisher", originalHeadline: "SAMPLE ONLY: Sunderland beaten at home after defensive errors", originalSummary: "", publishedAt: now, club: "sunderland", category: "sunderland-slump", keyFacts: ["SAMPLE: placeholder fact — the live site only shows facts taken from the linked publisher."], howayHeadline: "SAMPLE: WEARSIDE FINDS OUT DEFENDING IS OPTIONAL", howayCommentary: "Another afternoon to forget on the Wear. The other lot turned up, did the job and went home with the points. Sample copy, mind — the real thing is written from the real story.", punchline: "Someone check on Sunderland. Actually, divvent bother.", storyType: null, breaking: false, shares: 0 },
+    { id: "00000000-0000-0000-0000-000000000002", slug: "preview-2", url: "#", source: "Sample Publisher", originalHeadline: "SAMPLE ONLY: Bottom club stick with manager", originalSummary: "", publishedAt: now, club: "sunderland", category: "championship-watch", keyFacts: [], howayHeadline: "SAMPLE: GAFFER STAYS. WEAR BRACES ITSELF", howayCommentary: "Sample copy. Backing the manager when you're in the bottom three. Bold. We'll see.", punchline: "Get the Championship fixture list printed, like.", storyType: null, breaking: false, shares: 0 },
+    { id: "00000000-0000-0000-0000-000000000003", slug: "preview-3", url: "#", source: "Sample Publisher", originalHeadline: "SAMPLE ONLY: Injury setback on Wearside", originalSummary: "", publishedAt: now, club: "sunderland", category: "wearside-woes", keyFacts: [], howayHeadline: "SAMPLE: PHYSIO ROOM BUSIER THAN THE CLUB SHOP", howayCommentary: "Sample copy. Another one on the treatment table. Wearside's getting used to it.", punchline: "Divvent worry, the bench is just as bad.", storyType: null, breaking: false, shares: 0 },
   ];
 }
 export async function getDailyMeme() { return null; }
 export async function getBanter() {
   return [
     { id: "b1", kind: "headline", text: "Sample banter line — on the live site every line is built from the real table.", for_date: now.slice(0, 10) },
-    { id: "b2", kind: "misery-report", text: "WEARSIDE EMERGENCY: 20th in the table. The Championship is getting closer.", for_date: now.slice(0, 10) },
+    { id: "b2", kind: "misery-report", text: "Sunderland 19th. The Championship's getting closer and you can hear it from here.", for_date: now.slice(0, 10) },
   ];
 }
 export async function getMemes() { return []; }

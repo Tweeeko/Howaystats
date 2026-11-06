@@ -18,6 +18,7 @@ export const fixtureToRow = (f: Fixture) => ({
   venue: f.venue ?? null,
   league_id: f.leagueId ?? 39,
   competition: f.competition ?? null,
+  attendance: f.attendance ?? null,
   updated_at: new Date().toISOString(),
 });
 
@@ -38,6 +39,7 @@ export const rowToFixture = (r: any): Fixture => ({
   venue: r.venue,
   leagueId: r.league_id ?? 39,
   competition: r.competition ?? null,
+  attendance: r.attendance ?? null,
 });
 
 export const clubToRow = (c: Club) => ({

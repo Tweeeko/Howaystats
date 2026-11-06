@@ -10,7 +10,7 @@ export const maxDuration = 300;
 type Action =
   | { action: "run"; job: JobName; force?: boolean }
   | { action: "moderate"; table: "news_articles" | "memes"; id: string; status: "published" | "rejected" | "pending" }
-  | { action: "edit-news"; id: string; howay_headline: string; howay_commentary: string; breaking?: boolean }
+  | { action: "edit-news"; id: string; howay_headline: string; howay_commentary: string; howay_punchline?: string; breaking?: boolean }
   | { action: "edit-banter"; id: string; text?: string; status?: "published" | "hidden" }
   | { action: "feature-meme"; id: string };
 
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     case "edit-news": {
       const { error } = await db
         .from("news_articles")
-        .update({ howay_headline: body.howay_headline.slice(0, 120), howay_commentary: body.howay_commentary.slice(0, 600), breaking: !!body.breaking, rewrite_model: `admin:${admin}`, updated_at: new Date().toISOString() })
+        .update({ howay_headline: body.howay_headline.slice(0, 120), howay_commentary: body.howay_commentary.slice(0, 600), howay_punchline: body.howay_punchline ? body.howay_punchline.slice(0, 200) : null, breaking: !!body.breaking, rewrite_model: `admin:${admin}`, updated_at: new Date().toISOString() })
         .eq("id", body.id);
       result = { ok: !error, error: error?.message };
       break;

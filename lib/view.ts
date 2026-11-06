@@ -5,6 +5,7 @@ import { computeStandings, countsTowardsTable } from "./football/standings";
 import { gloryMeter, mackemVerdict, northEastScore, safetyThreshold } from "./predictions/safety";
 import { dangerLevel, happiness, miseryEvents, miseryIndexAt, miseryLabel, tearJar, watchDistances } from "./misery/index";
 import type { Fixture } from "./types";
+import { tearsIndex, tearsLabel } from "./tears/index";
 
 export const pct = (p: number | undefined, dp = 0) => (p === undefined ? "—" : `${(p * 100).toFixed(dp)}%`);
 export const ordinal = (n: number) => {
@@ -95,33 +96,25 @@ export function miseryView(s: Snapshot) {
     .map((e) => e.label);
   const prevP = s.previousPredictions.get(SUNDERLAND_ID)?.pRelegation;
   const oddsMove = pSun && prevP !== undefined ? Math.round((pSun.pRelegation - prevP) * 100) : 0;
-  const lastCup = s.cupFixtures
-    .filter(countsTowardsTable)
-    .filter((f) => f.homeId === SUNDERLAND_ID || f.awayId === SUNDERLAND_ID)
-    .sort((a, b) => b.kickoff.localeCompare(a.kickoff))[0];
-  const lastLeagueAt = jar.history[0]?.at ?? "";
-  const cupNote =
-    lastCup && lastCup.kickoff > lastLeagueAt
-      ? (() => {
-          const home = lastCup.homeId === SUNDERLAND_ID;
-          const gf = home ? lastCup.homeGoals! : lastCup.awayGoals!;
-          const ga = home ? lastCup.awayGoals! : lastCup.homeGoals!;
-          const opp = clubName(s, home ? lastCup.awayId : lastCup.homeId);
-          const comp = lastCup.competition ?? "a cup";
-          return gf < ga
-            ? `Lost ${gf}-${ga} to ${opp} in the ${comp}. No league points in it, so the jar stays put — the Misery Index noticed though.`
-            : `${gf > ga ? "Beat" : "Drew with"} ${opp} ${gf}-${ga} in the ${comp}. Doesn't touch the jar.`;
-        })()
-      : null;
+  // Why the Tears Index moved: the latest result (any competition), what it triggered, and the odds shift.
+  const tears = tearsIndex({
+    leagueFixtures: s.fixtures,
+    cupFixtures: s.cupFixtures,
+    sunderlandId: SUNDERLAND_ID,
+    newcastleId: NEWCASTLE_ID,
+    nameOf: (id) => clubName(s, id),
+    totalGames: 2 * (s.table.length - 1),
+  });
   const jarReasons = [
-    ...(cupNote ? [cupNote] : []),
-    ...(jar.last ? [jar.last.added ? `${jar.last.label}: +${jar.last.added} in the jar` : `${jar.last.label}. Nothing in the jar this time. Annoying.`] : []),
+    ...(tears.latest ? [tears.latest] : []),
     ...extras,
     ...(oddsMove ? [`Relegation odds ${oddsMove > 0 ? "up" : "down"} ${Math.abs(oddsMove)} points`] : []),
   ];
   const nufc = s.newcastle;
   const pNufc = s.predictions.get(NEWCASTLE_ID);
+
   return {
+    tears: { ...tears, label: tearsLabel(tears.percent) },
     jarReasons,
     oddsMove,
     score,

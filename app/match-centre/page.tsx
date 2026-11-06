@@ -7,6 +7,7 @@ import { LiveScoreboards } from "@/components/live";
 import { FixtureTicket, Freshness, NotConnected, Stat, ukDateTime } from "@/components/football";
 import { PitchDivider, SectionHead } from "@/components/stadium";
 import { TearJar } from "@/components/tear-jar";
+import { EMPTY } from "@/lib/voice";
 
 export const revalidate = 30;
 export const metadata: Metadata = { title: "Match Centre", description: "Live Newcastle and Sunderland scores, events and league implications." };
@@ -56,7 +57,7 @@ export default async function MatchCentre() {
               </div>
             )}
             {sunLive && misery && (
-              <div className="panel flex justify-center p-4"><TearJar percent={misery.jar.percent} dropped={misery.jar.dropped} capacity={misery.jar.capacity} size={220} /></div>
+              <div className="panel flex justify-center p-4"><TearJar percent={misery.tears.percent} size={220} /></div>
             )}
             {howay && (
               <div className="panel panel-top p-4">
@@ -74,7 +75,7 @@ export default async function MatchCentre() {
           </div>
         </div>
       ) : (
-        <p className="panel p-5 text-mist">No Newcastle or Sunderland match in progress. Live scores appear here automatically from the provider feed — never invented.</p>
+        <p className="panel p-5 text-mist">{EMPTY.live}</p>
       )}
 
       {!s.table.length && <div className="mt-8"><NotConnected /></div>}

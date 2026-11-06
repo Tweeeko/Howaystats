@@ -85,15 +85,15 @@ export async function GET(req: NextRequest) {
           {m.biggest && <Line t={`Biggest mover: ${m.biggest}`} size={30} color={SILVER} />}
         </Frame>
       ) : (
-        <Frame mackem kicker="The Mackem Tear Jar">
+        <Frame mackem kicker="The Mackem Tears Index">
           <div style={{ display: "flex", alignItems: "center", gap: 60 }}>
             <div style={{ display: "flex", flexDirection: "column", justifyContent: "flex-end", width: 210, height: 330, border: `6px solid ${CHALK}`, borderTop: "none", background: "rgba(255,255,255,.04)" }}>
-              <div style={{ display: "flex", height: `${Math.max(2, m.jar.percent)}%`, background: RED }} />
+              <div style={{ display: "flex", height: `${Math.max(2, m.tears.percent)}%`, background: RED }} />
             </div>
             <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
-              <Big v={`${m.jar.percent.toFixed(0)}%`} size={210} />
-              <Line t="full" size={50} color={SILVER} />
-              <div style={{ display: "flex", marginTop: 18, fontSize: 36, fontWeight: 800, textTransform: "uppercase", lineHeight: 1.05 }}>{`${m.jar.dropped} of ${m.jar.capacity} points dropped`}</div>
+              <Big v={`${Math.round(m.tears.percent)}%`} size={210} />
+              <Line t="of a jar" size={50} color={SILVER} />
+              <div style={{ display: "flex", marginTop: 18, fontSize: 36, fontWeight: 800, textTransform: "uppercase", lineHeight: 1.05 }}>{m.tears.label}</div>
             </div>
           </div>
         </Frame>

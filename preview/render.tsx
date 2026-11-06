@@ -2,6 +2,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import Home from "../app/page";
 import MackemWatch from "../app/mackem-watch/page";
+import TearsPage from "../app/tear-jar/page";
 import { SiteHeader } from "../components/header";
 
 const css = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8").replace('@import "tailwindcss";', "");
@@ -10,7 +11,7 @@ async function page(title: string, el: any) {
   const body = renderToStaticMarkup(
     <>
       <div style={{ background: "#e0161f", color: "#f4f4f0", textAlign: "center", font: "800 13px/1.4 system-ui, sans-serif", padding: "6px 10px", position: "sticky", top: 0, zIndex: 60 }}>
-        FAKE SAMPLE NUMBERS — LAYOUT PREVIEW ONLY. The live site shows API-Football data.
+        FAKE SAMPLE NUMBERS — LAYOUT PREVIEW ONLY. The live site shows football-data.org data.
       </div>
       <div aria-hidden style={{ position: "fixed", inset: 0, zIndex: 55, pointerEvents: "none", display: "grid", placeItems: "center", overflow: "hidden" }}>
         <div style={{ transform: "rotate(-30deg)", font: "900 13vw/1 system-ui, sans-serif", color: "rgba(224,22,31,.10)", whiteSpace: "nowrap" }}>SAMPLE DATA</div>
@@ -37,5 +38,7 @@ const home = await page("HOWAYSTATS — design preview", await Home());
 writeFileSync(new URL("./home.html", import.meta.url), home);
 const mw = await page("HOWAYSTATS — Mackem Watch preview", await MackemWatch());
 writeFileSync(new URL("./mackem-watch.html", import.meta.url), mw);
+const tj = await page("HOWAYSTATS — Tears Index preview", await TearsPage());
+writeFileSync(new URL("./tear-jar.html", import.meta.url), tj);
 console.log("home", home.length, "mackem", mw.length);
 })();

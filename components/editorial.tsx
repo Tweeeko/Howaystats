@@ -31,17 +31,26 @@ export function NewsStory({ a, lead = false }: { a: NewsArticle; lead?: boolean 
           {a.originalHeadline}
         </a>
       </p>
-      {a.howayCommentary && <p className={`serif mt-3 ${lead ? "text-xl" : "text-[1.02rem]"} leading-snug text-mist`}>{a.howayCommentary}</p>}
-      {a.keyFacts.length > 0 && (
-        <ul className="mt-3 space-y-1 text-sm text-mist">
-          {a.keyFacts.map((k, i) => (
-            <li key={i} className="flex gap-2">
-              <span className="mt-[7px] h-1.5 w-1.5 shrink-0 bg-chalk" />
-              {k}
-            </li>
-          ))}
-        </ul>
+      {a.howayCommentary && (
+        <div className="mt-3">
+          <div className="kicker !text-[0.6rem]">The HOWAYSTATS take · satire</div>
+          <p className={`serif mt-1 ${lead ? "text-xl" : "text-[1.02rem]"} leading-snug text-mist`}>{a.howayCommentary}</p>
+        </div>
       )}
+      {a.keyFacts.length > 0 && (
+        <div className="mt-3">
+          <div className="kicker !text-[0.6rem]">The facts · from {a.source}</div>
+          <ul className="mt-1 space-y-1 text-sm text-mist">
+            {a.keyFacts.map((k, i) => (
+              <li key={i} className="flex gap-2">
+                <span className="mt-[7px] h-1.5 w-1.5 shrink-0 bg-chalk" />
+                {k}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {a.punchline && <p className={`display-i mt-3 ${lead ? "text-2xl" : "text-xl"} ${isSun ? "text-mackem" : "text-chalk"}`}>{a.punchline}</p>}
       <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-4">
         <a href={a.url} target="_blank" rel="noopener noreferrer" className="display text-base underline underline-offset-4">
           Read the full story at {a.source} →

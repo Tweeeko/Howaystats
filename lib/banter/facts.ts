@@ -28,7 +28,7 @@ export interface BanterFacts {
   sunderland: ClubFacts | null; // null when Sunderland are not in the league being tracked
   safetyPointsNeeded?: number;
   derbyNext?: boolean;
-  jarPercent?: number; // Tear Jar fill, 0..100
+  jarPercent?: number; // Tears Index, 0..100
   miseryIndex?: number; // 0..100
   latestNewsHeadline?: string; // a verified, published headline
 }

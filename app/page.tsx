@@ -53,7 +53,7 @@ export default async function Home() {
         leagueSize: s.table.length,
         pRel: safc.pred?.pRelegation,
         pEurope: nufc.pred?.pTop7,
-        jarPercent: misery?.jar.percent,
+        jarPercent: misery?.tears.percent,
         sunLastResult: res(safc) as "W" | "D" | "L" | null,
         nufcLastResult: res(nufc) as "W" | "D" | "L" | null,
       })
@@ -102,7 +102,7 @@ export default async function Home() {
           dateline={dateline}
           headline={head?.main ?? "Welcome to the Tyne. Hope you've brought a towel."}
           sub={head?.sub ?? "Premier League statistics. Geordie perspective. Mackem misery."}
-          jar={misery ? { percent: misery.jar.percent, dropped: misery.jar.dropped, capacity: misery.jar.capacity } : undefined}
+          jar={misery ? { percent: misery.tears.percent } : undefined}
           nufc={s.newcastle}
           safc={s.sunderland}
           nClub={s.clubs.get(NEWCASTLE_ID)}
@@ -139,9 +139,9 @@ export default async function Home() {
       {/* THE MACKEM TEAR DEPARTMENT */}
       {misery && safc && v && (
         <TearDepartment
-          title={v.tearDept}
-          caption={latestBanter(["misery-report", "headline"]) ?? v.tearCaption}
-          jar={{ percent: misery.jar.percent, dropped: misery.jar.dropped, capacity: misery.jar.capacity }}
+          title={v.tearsTitle}
+          caption={v.tearsCaption}
+          tears={misery.tears}
           reasons={misery.jarReasons}
           pRel={safc.pred?.pRelegation}
           oddsMove={misery.oddsMove}
@@ -165,7 +165,7 @@ export default async function Home() {
         <section className="mx-auto max-w-6xl px-4 py-8">
           <div className="grid gap-2 sm:grid-cols-[auto_1fr] sm:items-end sm:gap-6">
             <h2 className="masthead text-[3.6rem] sm:text-[6rem]">The table</h2>
-            <p className="serif pb-2 text-lg italic text-mist">Premier League {s.season}/{String(s.season + 1).slice(2)}. It never lies. Sometimes we wish it would.</p>
+            <p className="serif pb-2 text-lg italic text-mist">{v?.tableQuip || `Premier League ${s.season}/${String(s.season + 1).slice(2)}. The table doesn't lie.`}</p>
           </div>
           <div className="mt-4 border-t-4 border-chalk bg-black/60">
             <LeagueTable table={s.table} clubs={s.clubs} movement={tableMovement(s)} showMovement />
@@ -187,8 +187,8 @@ export default async function Home() {
           summary={latestBanter(["misery-report"])}
           stats={[
             { label: "Position", value: ordinal(safc.row.position), red: safc.row.position > s.table.length - 3 },
-            { label: "Behind 17th", value: safc.distances ? (safc.distances.toSeventeenth > 0 ? `${safc.distances.toSeventeenth} pts` : "Clear") : "—", red: true },
-            { label: safc.distances?.teamAboveId ? `To catch ${name(safc.distances.teamAboveId)}` : "Club above", value: safc.distances ? `${safc.distances.toTeamAbove} pts` : "—" },
+            { label: "Behind 17th", value: safc.distances ? (safc.distances.toSeventeenth > 0 ? `${safc.distances.toSeventeenth} pt${safc.distances.toSeventeenth === 1 ? "" : "s"}` : "Clear") : "—", red: true },
+            { label: safc.distances?.teamAboveId ? `To catch ${name(safc.distances.teamAboveId)}` : "Club above", value: safc.distances ? `${safc.distances.toTeamAbove} pt${safc.distances.toTeamAbove === 1 ? "" : "s"}` : "—" },
             { label: "Projected points", value: safc.pred ? `${Math.round(safc.pred.expectedPoints)}` : "—" },
             { label: "Relegation chance", value: safc.pred ? `${Math.round(safc.pred.pRelegation * 100)}%` : "—", red: true },
             { label: "Games left", value: `${safc.remaining}` },

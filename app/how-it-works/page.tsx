@@ -5,7 +5,7 @@ import { ago } from "@/components/football";
 import { PitchDivider, SectionHead } from "@/components/stadium";
 
 export const revalidate = 600;
-export const metadata: Metadata = { title: "How the numbers work", description: "The HOWAYSTATS method: league table rules, the Poisson team-strength model, 50,000-season Monte Carlo simulation, the Misery Index and the Tear Jar." };
+export const metadata: Metadata = { title: "How the numbers work", description: "The HOWAYSTATS method: league table rules, the Poisson team-strength model, 50,000-season Monte Carlo simulation, the Misery Index and the Tears Index." };
 
 export default async function HowItWorks() {
   const s = await getSnapshot();
@@ -31,8 +31,24 @@ export default async function HowItWorks() {
       <P>We then play the rest of the season 50,000 times. Every remaining fixture gets random scorelines drawn from the model, starting from the real current points, goal difference and goals. All twenty clubs are simulated together, so each simulated season has exactly one champion and exactly three relegated clubs — the probabilities always add up. A club&apos;s relegation chance is the share of seasons it finished 18th–20th; &ldquo;projected finish&rdquo; is the most common finishing position; the points range covers the middle 80% of outcomes. Ties in simulation are broken by points, goal difference and goals, then at random. With 50,000 runs the simulation error is under ±0.5 percentage points; the bigger uncertainty is the model itself, which is why we show a confidence level that rises as the season goes on.</P>
       <P>Fixture difficulty is the share of available points a club is expected not to win in its remaining games under the same model. Mathematical safety is computed separately and conservatively: the points total no more than sixteen other clubs can still reach.</P>
 
-      <SectionHead id="misery" title="4. The Tear Jar & Misery Index" mackem />
-      <P>The Tear Jar is simple on purpose. Every point Sunderland drop goes in: 3 for a defeat, 2 for a draw, nothing for a win. It holds 76 points — the most a club can drop over 38 games and still reach 38 points, the old survival mark. When it&apos;s full, 38 is mathematically gone. It empties every summer. The &ldquo;tears&rdquo; count is the points multiplied by 1,000, which we made up.</P>
+      <SectionHead id="misery" title="4. The Tears Index & Misery Index" mackem />
+      <P>The Tears Index measures how much Sunderland&apos;s supporters have got to cry about — not the club, the people in the seats. It&apos;s built only from things we can actually count and source. Each indicator is scored from 0 to 100%, then we take a weighted average of the ones that are available. Anything nobody publishes is marked unavailable and left out entirely, never estimated.</P>
+      <div className="panel mt-4 grid gap-1 p-5 font-mono text-sm">
+        {[
+          ["Derby defeats this season (share of derbies lost)", "×1.5"],
+          ["League games without a win (8+ = full marks)", "×1.2"],
+          ["Defeats in the last five, all competitions", "×1.2"],
+          ["Points thrown away from half-time leads (10+ = full)", "×1.0"],
+          ["League points dropped out of 76", "×1.0"],
+          ["Goals conceded in the last five (12+ = full)", "×0.8"],
+          [`Empty seats at the last home game vs ${(49000).toLocaleString("en-GB")} capacity (25% empty = full)`, "×0.8"],
+          ["Average home gate vs capacity", "×0.5"],
+          ["Away following · TV audience", "unavailable"],
+        ].map(([k, v]) => (
+          <p key={k} className="flex justify-between gap-4 border-b border-[var(--line)] py-0.5 text-mist"><span>{k}</span><span>{v}</span></p>
+        ))}
+        <p className="mt-2 text-silver">Results and goals come from the football data provider; attendances are the official figure where the provider supplies one (no figure, no indicator); capacity is from the Stadium of Light&apos;s public record. The &ldquo;tears&rdquo; count is the index × 1,000. We made that bit up, and we say so on the jar.</p>
+      </div>
       <P>The Misery Index (0–100) is the mood ring. It&apos;s three numbers added together, and we show all three wherever the index appears:</P>
       <div className="panel mt-4 grid gap-1 p-5 font-mono text-sm">
         <p>Relegation odds: 40 × the model&apos;s relegation chance (0–40)</p>
@@ -51,7 +67,10 @@ export default async function HowItWorks() {
 
       <SectionHead title="5. News, Memes & Banter" />
       <P>News comes from publisher RSS feeds (BBC Sport, The Guardian, Sky Sports) and, if configured, NewsAPI. A story is only used if it is clearly about Sunderland AFC (or Newcastle), and our rewrite is checked automatically: it may not contain any number, name-quote or claim that isn&apos;t in the publisher&apos;s own headline and summary. Stories that fail the check wait for a human. We always show the original headline, the publisher, the date and a link.</P>
-      <P>Memes come from GIPHY&apos;s API and Reddit&apos;s official API, shown from their source with credit. Reddit posts and community submissions are moderated before they appear. The banter engine is fed only today&apos;s real table, results, model output and tear-jar level, and any line containing a number we didn&apos;t supply is thrown away.</P>
+      <P>Memes come from GIPHY&apos;s API and Reddit&apos;s official API, shown from their source with credit. Reddit posts and community submissions are moderated before they appear. The banter engine is fed only today&apos;s real table, results, model output and Tears Index, and any line containing a number we didn&apos;t supply is thrown away.</P>
+      <SectionHead id="editorial" title="6. How we write" />
+      <P>Every Sunderland story — win, loss, draw, signing, sacking, even good news — gets the Newcastle treatment: our headline, a short take, the actual facts, a punchline and a link to the original. The facts and the take are shown separately and labelled, so you always know which bit is the publisher and which bit is us having a laugh.</P>
+      <P>Before anything goes live it&apos;s checked automatically: no numbers or names that aren&apos;t in the source, no invented quotes, no copying the original headline, no American spellings, no stock AI phrases, no more than one exclamation mark, and not so much dialect it reads like a parody. Fail any of those and it waits for a human in the admin queue. Geography is fixed too: Newcastle on the Tyne at St James&apos; Park, Sunderland on the Wear at the Stadium of Light.</P>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { parseFeed } from "../lib/news/rss";
 import { classifyStory } from "../lib/news/classify";
 import { passesFactGuard, type BanterFacts } from "../lib/banter/facts";
 import { templateBanter } from "../lib/banter/templates";
+import { voiceCheck } from "../lib/content/voice-check";
 
 test("canonical URL strips tracking, www and trailing slash", () => {
   assert.equal(
@@ -57,9 +58,22 @@ test("classification: relevant negative Sunderland story", () => {
   assert.equal(c.category, "championship-watch");
 });
 
-test("classification: ignores non-football Sunderland and positive stories", () => {
+test("classification: ignores non-football Sunderland, roasts every football story", () => {
   assert.equal(classifyStory("Sunderland City Council approves new bus lane").aboutSunderland, false);
-  assert.equal(classifyStory("Sunderland beat Chelsea in stunning win").category, null);
+  const win = classifyStory("Sunderland beat Chelsea in stunning win");
+  assert.equal(win.storyType, "win");
+  assert.equal(win.category, "carried-away");
+  assert.equal(classifyStory("Chelsea beat Sunderland 3-0").storyType, "loss");
+  assert.equal(classifyStory("Sunderland sack head coach after winless run").storyType, "sacking");
+  assert.equal(classifyStory("Sunderland sign striker on four-year deal").storyType, "signing");
+});
+
+test("voice check: blocks AI phrasing, Americanisms, shouting and copied headlines", () => {
+  assert.equal(voiceCheck("Sunderland lose again. Someone check on them.").ok, true);
+  assert.equal(voiceCheck("In a stunning turn of events, Sunderland fell to defeat.").ok, false);
+  assert.equal(voiceCheck("Sunderland's defense was a mess.").ok, false);
+  assert.equal(voiceCheck("Get in!! Get in!!").ok, false);
+  assert.equal(voiceCheck("Sunderland beaten by Chelsea at home", "Sunderland beaten by Chelsea at home", { isHeadline: true }).ok, false);
 });
 
 const facts: BanterFacts = {

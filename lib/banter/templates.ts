@@ -1,25 +1,15 @@
 import type { BanterFacts, ClubFacts } from "./facts";
+import { ord, pick } from "../voice";
 
 /**
- * Deterministic, fact-driven banter. Used when no AI key is configured, and as the
- * fallback whenever AI copy fails the fact guard. Every line is filled only from facts.
+ * Fact-driven banter in the HOWAYSTATS voice. Used when no AI key is configured, and whenever AI copy
+ * fails the fact guard. Every line is filled only from facts. Sunderland never get a clean compliment.
  */
-
-const ord = (n: number) => {
-  const s = ["th", "st", "nd", "rd"];
-  const v = n % 100;
-  return n + (s[(v - 20) % 10] || s[v] || s[0]);
-};
-
-const pick = <T,>(arr: T[], seed: string) => {
-  let h = 0;
-  for (const c of seed) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-  return arr[h % arr.length];
-};
 
 const scoreline = (c: ClubFacts) => (c.last ? `${c.last.goalsFor}-${c.last.goalsAgainst}` : "");
 const outcome = (c: ClubFacts) =>
   !c.last ? null : c.last.goalsFor > c.last.goalsAgainst ? "W" : c.last.goalsFor === c.last.goalsAgainst ? "D" : "L";
+const where = (c: ClubFacts) => (c.last?.competition ? ` in the ${c.last.competition}` : "");
 
 export interface BanterLine {
   kind: "headline" | "post-match" | "misery-report" | "celebration" | "social";
@@ -32,112 +22,63 @@ export function templateBanter(f: BanterFacts): BanterLine[] {
   const s = f.sunderland;
   const seed = f.date;
 
-  // Newcastle post-match
+  // ── Newcastle ──
   const no = outcome(n);
   if (n.last && no === "W") {
     out.push({
       kind: "celebration",
-      text: pick(
-        [
-          `${scoreline(n)} against ${n.last.opponent}. Three points in the bag. Howay the lads.`,
-          `Beat ${n.last.opponent} ${scoreline(n)}. Up to ${ord(n.position)} and the Toon are purring.`,
-          `${n.last.opponent} dispatched, ${scoreline(n)}. Get the kettle on, it's a good week on Tyneside.`,
-        ],
-        seed + "nw",
-      ),
+      text: pick([
+        `${scoreline(n)} against ${n.last.opponent}${where(n)}. Three points in the bag. Howay the lads.`,
+        `Beat ${n.last.opponent} ${scoreline(n)}${where(n)}. Canny afternoon, that.`,
+        `${n.last.opponent} sorted, ${scoreline(n)}. Wey aye.`,
+      ], seed, "nw"),
     });
   } else if (n.last && no === "D") {
-    out.push({
-      kind: "post-match",
-      text: pick(
-        [
-          `${scoreline(n)} with ${n.last.opponent}. A point's a point. Moving on.`,
-          `Shared the spoils with ${n.last.opponent}, ${scoreline(n)}. Not vintage, not a disaster.`,
-        ],
-        seed + "nd",
-      ),
-    });
+    out.push({ kind: "post-match", text: pick([`${scoreline(n)} with ${n.last.opponent}${where(n)}. A point. Gan on then.`, `Shared it with ${n.last.opponent}, ${scoreline(n)}. Not vintage. Not a disaster.`], seed, "nd") });
   } else if (n.last && no === "L") {
-    out.push({
-      kind: "post-match",
-      text: pick(
-        [
-          `Lost ${scoreline(n)} to ${n.last.opponent}. Not ideal, lads. Still, at least it wasn't a Mackem afternoon.`,
-          `${scoreline(n)} defeat to ${n.last.opponent}. We go again. Numbers don't lie, and these ones sting.`,
-        ],
-        seed + "nl",
-      ),
-    });
+    out.push({ kind: "post-match", text: pick([`Lost ${scoreline(n)} to ${n.last.opponent}${where(n)}. Nah. Not having that. We go again.`, `${scoreline(n)} defeat to ${n.last.opponent}. Rough one. Still not as rough as being a Mackem.`], seed, "nl") });
   }
 
   if (s) {
+    // ── Sunderland: win, lose or draw, there's always an angle ──
     const so = outcome(s);
-    if (s.last && so === "L") {
+    const L = s.last;
+    if (L && so === "L") {
       out.push({
         kind: "headline",
-        text: pick(
-          [
-            `Another three points donated to ${s.last.opponent}. Generous lot, aren't they?`,
-            `Sunderland lose ${s.last.goalsFor}-${s.last.goalsAgainst} to ${s.last.opponent}. Wearside's charity work continues.`,
-            `${s.last.opponent} ${s.last.goalsAgainst}, Sunderland ${s.last.goalsFor}. The Stadium of Light could do with a dimmer switch.`,
-          ],
-          seed + "sl",
-        ),
+        text: pick([
+          `Sunderland lose ${L.goalsFor}-${L.goalsAgainst} to ${L.opponent}${where(s)}. Another three points donated. Generous lot.`,
+          `${L.opponent} ${L.goalsAgainst}, Sunderland ${L.goalsFor}. The Stadium of Light could do with a dimmer switch.`,
+          `Beaten by ${L.opponent}${where(s)}. Excuses available on the Wear from about five o'clock.`,
+        ], seed, "sl"),
       });
-    } else if (s.last && so === "W") {
+    } else if (L && so === "W") {
       out.push({
         kind: "headline",
-        text: pick(
-          [
-            `Sunderland actually won, ${s.last.goalsFor}-${s.last.goalsAgainst} against ${s.last.opponent}. We checked the data twice. It's real. Grim.`,
-            `A Mackem win over ${s.last.opponent}. Statistically it was bound to happen eventually.`,
-          ],
-          seed + "sw",
-        ),
+        text:
+          L.goalsFor - L.goalsAgainst === 1
+            ? pick([`Sunderland scrape past ${L.opponent} ${L.goalsFor}-${L.goalsAgainst}${where(s)}. Calm down, it's one game.`, `${L.goalsFor}-${L.goalsAgainst} against ${L.opponent}. They're acting like they've won the league.`], seed, "sw1")
+            : pick([`Sunderland beat ${L.opponent} ${L.goalsFor}-${L.goalsAgainst}${where(s)}. We checked. Twice. Grim.`, `A Mackem win over ${L.opponent}. They'll be unbearable till Tuesday.`], seed, "sw2"),
       });
-    } else if (s.last && so === "D") {
-      out.push({
-        kind: "headline",
-        text: `Sunderland ${s.last.goalsFor}-${s.last.goalsAgainst} ${s.last.opponent}. A point. On Wearside that counts as a parade.`,
-      });
+    } else if (L && so === "D") {
+      out.push({ kind: "headline", text: pick([`Sunderland ${L.goalsFor}-${L.goalsAgainst} ${L.opponent}${where(s)}. Couldn't get the job done.`, `A ${L.goalsFor}-${L.goalsAgainst} draw with ${L.opponent}. On the Wear that's a parade.`], seed, "sd") });
     }
 
     if (s.position >= 18) {
-      out.push({
-        kind: "misery-report",
-        text: pick(
-          [
-            `WEARSIDE EMERGENCY: ${ord(s.position)} in the table. The Championship is getting closer.`,
-            `Sunderland sit ${ord(s.position)} on ${s.points} points. Somebody tell them the bottom three isn't a trophy.`,
-          ],
-          seed + "rz",
-        ),
-      });
+      out.push({ kind: "misery-report", text: pick([`${ord(s.position)} in the table. Not everyone can handle the Premier League.`, `Sunderland ${ord(s.position)} on ${s.points} points. The bottom three isn't a trophy, lads.`], seed, "rz") });
     }
 
     if (s.pRelegation !== undefined) {
       const pct = Math.round(s.pRelegation * 100);
       out.push({
         kind: "social",
-        text:
-          pct >= 50
-            ? `Sunderland relegation probability: ${pct}%. HOWAYSTATS — the numbers don't lie.`
-            : `Sunderland relegation probability: ${pct}%. Lower than we'd like. The season's long, mind.`,
+        text: pct >= 50 ? `Sunderland relegation chance: ${pct}%. HOWAYSTATS — the numbers don't lie.` : `Sunderland relegation chance: ${pct}%. Lower than we'd like. It's a long season, mind.`,
       });
     }
 
     const gap = n.points - s.points;
-    if (gap > 0) {
-      out.push({
-        kind: "headline",
-        text: `${gap} points between the Toon and the Mackems. The Tyne and the Wear have never been further apart.`,
-      });
-    } else if (gap < 0) {
-      out.push({
-        kind: "headline",
-        text: `Sunderland are ${-gap} points ahead of us. Aye, we know. It's in the table. We don't fiddle the numbers.`,
-      });
-    }
+    if (gap > 0) out.push({ kind: "headline", text: pick([`${gap} points between us and them. Not that we're counting. We are.`, `${gap} points clear of the Wear. Lovely.`], seed, "gap") });
+    else if (gap < 0) out.push({ kind: "headline", text: `Sunderland ${-gap} points above us. Aye. We know. The table doesn't lie and neither do we.` });
   }
 
   if (f.jarPercent !== undefined && s) {
@@ -145,25 +86,19 @@ export function templateBanter(f: BanterFacts): BanterLine[] {
     out.push({
       kind: "misery-report",
       text:
-        j >= 100 ? "THE TEAR JAR HAS OVERFLOWN. Wearside Emergency Services have been informed."
-        : j >= 75 ? `Tear Jar at ${j}%. It's going to need a bigger fridge.`
-        : j >= 50 ? `Tear Jar ${j}% full. The Wearside reservoir is filling nicely.`
-        : j >= 25 ? `Tear Jar at ${j}%. A steady drip from the Stadium of Light.`
-        : `Tear Jar only ${j}% full. Tear reserves running low on Wearside. Give it time.`,
+        j >= 70 ? `Tears Index at ${j}%. Full-on Wearside weeping.`
+        : j >= 50 ? `Tears Index ${j}%. Lip's going on the Wear.`
+        : j >= 30 ? `Tears Index ${j}%. Bit of a sniffle on Wearside.`
+        : `Tears Index only ${j}%. Quiet spell. Give it a fortnight.`,
     });
   }
   if (f.miseryIndex !== undefined && s) {
     const m = f.miseryIndex;
-    if (m >= 60) out.push({ kind: "headline", text: `Mackem Misery Index: ${m}. Another week, another Wearside wobble.` });
+    if (m >= 60) out.push({ kind: "headline", text: `Misery Index ${m}. Wearside meltdown, officially.` });
     else if (m < 20) out.push({ kind: "headline", text: `Misery Index down at ${m}. Let them enjoy it. It never lasts.` });
   }
 
-  if (f.derbyNext) {
-    out.push({ kind: "headline", text: "Derby next. The Tyne is ours — now go and prove it." });
-  }
-
-  if (out.length === 0) {
-    out.push({ kind: "headline", text: `Newcastle ${ord(n.position)} on ${n.points} points. Howay the lads.` });
-  }
+  if (f.derbyNext) out.push({ kind: "headline", text: "Derby next. The Tyne is ours — gan on and prove it." });
+  if (!out.length) out.push({ kind: "headline", text: `Newcastle ${ord(n.position)} on ${n.points} points. Howay the lads.` });
   return out;
 }

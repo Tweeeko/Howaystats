@@ -18,6 +18,7 @@ export interface FdMatch {
   awayTeam: FdTeam;
   score: { fullTime: { home: number | null; away: number | null }; halfTime?: { home: number | null; away: number | null } };
   venue?: string | null;
+  attendance?: number | null;
   goals?: { minute: number; injuryTime?: number | null; type?: string; team: { id: number }; scorer?: { name?: string } | null; assist?: { name?: string } | null }[];
   bookings?: { minute: number; team: { id: number }; player?: { name?: string } | null; card: string }[];
 }
@@ -59,6 +60,7 @@ export function mapFdMatch(m: FdMatch, seasonFallback: number): Fixture {
     venue: m.venue ?? null,
     leagueId: compId === FD_PREMIER_LEAGUE ? PREMIER_LEAGUE_ID : compId,
     competition: m.competition?.name ?? null,
+    attendance: typeof m.attendance === "number" && m.attendance > 0 ? m.attendance : null,
   };
 }
 

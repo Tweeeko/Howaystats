@@ -4,6 +4,8 @@ import { freshness, pct } from "@/lib/view";
 import { LeagueTable, TableTabs } from "@/components/league-table";
 import { Crest, FixtureTicket, Freshness, NotConnected } from "@/components/football";
 import { PitchDivider, SectionHead } from "@/components/stadium";
+import { NEWCASTLE_ID, SUNDERLAND_ID } from "@/lib/football/provider";
+import { tableQuip } from "@/lib/voice";
 
 export const revalidate = 60;
 export const metadata: Metadata = { title: "Premier League table", description: "Live Premier League table with home and away splits, form and 50,000-season projections." };
@@ -17,6 +19,9 @@ export default async function PremierLeague({ searchParams }: { searchParams: Pr
   const results = s.fixtures.filter((f) => f.status === "finished").slice(-12).reverse();
   const upcoming = s.fixtures.filter((f) => f.status !== "finished" && f.status !== "cancelled").slice(0, 12);
   const postponed = s.fixtures.filter((f) => f.status === "postponed");
+  const sunPos = s.table.find((r) => r.clubId === SUNDERLAND_ID)?.position;
+  const nufcPos = s.table.find((r) => r.clubId === NEWCASTLE_ID)?.position;
+  const quip = sunPos && nufcPos ? tableQuip(sunPos, nufcPos, s.table.length, `${s.season}-${sunPos}-${nufcPos}`) : null;
   const preds = [...s.predictions.values()].sort((a, b) => a.expectedPosition - b.expectedPosition);
 
   return (
@@ -29,6 +34,7 @@ export default async function PremierLeague({ searchParams }: { searchParams: Pr
       ) : (
         <>
           <SectionHead title="League Table" sub={`${s.season}/${String(s.season + 1).slice(2)} · ${view}`} />
+          {quip && <p className="serif mb-3 text-lg italic text-mist">{quip}</p>}
           <TableTabs view={view} />
           <div className="panel p-3 sm:p-5">
             <LeagueTable table={s.table} clubs={s.clubs} view={view} movement={view === "overall" ? projected : undefined} />

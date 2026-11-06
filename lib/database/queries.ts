@@ -195,6 +195,8 @@ export interface NewsArticle {
   keyFacts: string[];
   howayHeadline: string | null;
   howayCommentary: string | null;
+  punchline: string | null;
+  storyType: string | null;
   breaking: boolean;
   shares: number;
 }
@@ -212,6 +214,8 @@ const toNews = (r: any): NewsArticle => ({
   keyFacts: r.key_facts ?? [],
   howayHeadline: r.howay_headline,
   howayCommentary: r.howay_commentary,
+  punchline: r.howay_punchline ?? null,
+  storyType: r.story_type ?? null,
   breaking: r.breaking,
   shares: r.shares,
 });

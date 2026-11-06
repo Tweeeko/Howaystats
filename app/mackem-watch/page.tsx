@@ -14,7 +14,7 @@ import { ShareBar } from "@/components/share";
 export const revalidate = 60;
 export const metadata: Metadata = {
   title: "Mackem Watch — Sunderland relegation probability",
-  description: "Live Sunderland relegation watch: probability from 50,000 simulated seasons, points from safety, fixture difficulty and the Mackem Tear Jar.",
+  description: "Live Sunderland relegation watch: probability from 50,000 simulated seasons, points from safety, fixture difficulty and the Mackem Tears Index.",
   openGraph: { images: ["/api/og?type=relegation"] },
 };
 
@@ -141,10 +141,10 @@ export default async function MackemWatch() {
             <PitchDivider />
             <div className="grid gap-6 lg:grid-cols-[minmax(280px,380px)_1fr]">
               <div className="panel panel-top mackem flex flex-col items-center p-5">
-                <h2 className="display text-4xl">The Tear Jar</h2>
-                <p className="text-center text-sm text-silver">Every point dropped goes in. Holds {m.jar.capacity}.</p>
-                <TearJar percent={m.jar.percent} dropped={m.jar.dropped} capacity={m.jar.capacity} />
-                <Link href="/tear-jar" className="display mt-3 text-lg underline underline-offset-4">Jar history →</Link>
+                <h2 className="display text-4xl">The Tears Index</h2>
+                <p className="text-center text-sm text-silver">How much their supporters have got to cry about. {m.tears.label}</p>
+                <TearJar percent={m.tears.percent} />
+                <Link href="/tear-jar" className="display mt-3 text-lg underline underline-offset-4">The evidence →</Link>
               </div>
               <MiseryIndex score={m.score} label={m.label} movement={m.movement} biggest={m.biggest} spark={m.spark} parts={m.parts} />
             </div>

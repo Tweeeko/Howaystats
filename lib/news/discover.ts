@@ -3,7 +3,8 @@ import { adminDb } from "../database/client";
 import { env } from "../env";
 import { aiComplete, extractJson, GEORDIE_VOICE } from "../ai";
 import { canonicalUrl, hashOf, isDuplicate } from "../content/dedupe";
-import { classifyStory } from "./classify";
+import { ANGLES, classifyStory, type StoryType } from "./classify";
+import { voiceCheck } from "../content/voice-check";
 import { parseFeed, type FeedItem } from "./rss";
 
 /** Publisher RSS feeds. Headlines + short summaries are used under the feeds' intended syndication; we always link back. */
@@ -35,36 +36,59 @@ async function fetchNewsApi(): Promise<FeedItem[]> {
 }
 
 interface Rewrite {
-  headline: string;
-  commentary: string;
-  keyFacts: string[];
+  headline: string; // original HOWAYSTATS headline
+  summary: string; // short, funny Geordie summary
+  facts: string[]; // the actual football facts, neutral, from the source only
+  punchline: string; // the closing editorial jab
 }
 
-/** Every number in our copy must already appear in the publisher's headline/summary. */
+/** Every number in our copy must already appear in the publisher's headline/summary; no quotes. */
 export function rewriteFaithful(r: Rewrite, original: string): boolean {
   const orig = new Set(original.match(/\d+/g) ?? []);
-  const all = [r.headline, r.commentary, ...r.keyFacts].join(" ");
+  const all = [r.headline, r.summary, r.punchline, ...r.facts].join(" ");
   for (const n of all.match(/\d+/g) ?? []) if (!orig.has(n)) return false;
-  if (/["“][^"”]{12,}["”]/.test(all)) return false; // no quotes — we never put words in mouths
-  if (r.headline.length > 90 || r.commentary.length > 420) return false;
-  return r.keyFacts.length > 0 && r.keyFacts.length <= 3;
+  if (/["“][^"”]{12,}["”]/.test(all)) return false; // we never put words in mouths
+  if (r.headline.length > 100 || r.summary.length > 420 || r.punchline.length > 160) return false;
+  return r.facts.length > 0 && r.facts.length <= 3;
 }
 
-export async function rewriteStory(item: FeedItem, club: "sunderland" | "newcastle"): Promise<(Rewrite & { model: string }) | null> {
+/** Faithful AND in our voice: no AI clichés, no Americanisms, headline isn't a recycled original. */
+export function rewritePasses(r: Rewrite, item: { title: string; summary: string }): { ok: boolean; reason?: string } {
+  if (!rewriteFaithful(r, `${item.title} ${item.summary}`)) return { ok: false, reason: "not faithful to the source" };
+  const h = voiceCheck(r.headline, item.title, { isHeadline: true });
+  if (!h.ok) return h;
+  for (const part of [r.summary, r.punchline]) {
+    const v = voiceCheck(part);
+    if (!v.ok) return v;
+  }
+  return { ok: true };
+}
+
+export async function rewriteStory(item: FeedItem, club: "sunderland" | "newcastle", type: StoryType): Promise<(Rewrite & { model: string }) | null> {
+  const angle = club === "sunderland" ? ANGLES[type] : "A Newcastle story. Proud, dry, a bit smug. Find a way to work in a dig at Sunderland only if it's natural.";
   const system = `${GEORDIE_VOICE}
-You are given ONE real news item (headline + publisher summary). Produce JSON only:
-{"headline": "...", "commentary": "...", "keyFacts": ["...", "..."]}
-Rules:
-- keyFacts: 1–3 short factual bullet points restating ONLY what the headline/summary says, neutrally, in your own words.
-- headline: a witty ALL-CAPS alternative headline, max 12 words, true to the facts.
-- commentary: 2–3 short sentences of ${club === "sunderland" ? "sarcastic Geordie commentary at Sunderland's expense" : "proud, dry Geordie commentary"}.
-- Do NOT add any fact, number, injury, quote, name or allegation that is not in the input. If the story is a rumour, say "reportedly".
-- No quotation marks.`;
-  const text = await aiComplete(system, `Publisher: ${item.source}\nHeadline: ${item.title}\nSummary: ${item.summary}`);
-  const r = extractJson<Rewrite>(text);
-  if (!r || typeof r.headline !== "string" || typeof r.commentary !== "string" || !Array.isArray(r.keyFacts)) return null;
-  if (!rewriteFaithful(r, `${item.title} ${item.summary}`)) return null;
-  return { ...r, headline: r.headline.toUpperCase(), model: `${env.aiProvider()}:${env.aiModel() ?? "default"}` };
+
+You are given ONE real news item: the publisher's headline and summary. Work in this order:
+1. Understand what actually happened, using only the headline and summary.
+2. Find the funniest legitimate angle from a Newcastle supporter's point of view. ${angle}
+3. Write it up. Then check every fact against the source and cut anything that isn't there.
+
+Return JSON only:
+{"headline": "...", "summary": "...", "facts": ["...", "..."], "punchline": "..."}
+- headline: an ORIGINAL headline, max 12 words, sentence case. Must not reuse the publisher's wording.
+- summary: 2–3 short sentences of Geordie commentary on what happened.
+- facts: 1–3 plain, neutral bullet points of what the source actually reports, in your own words.
+- punchline: one short closing line. Dry. No exclamation mark.
+- If the source says something is a rumour or "reportedly", keep that wording. No quotation marks anywhere.
+
+Tone examples (style only, never copy): "Mackems get carried away after beating a team nobody's heard of" · "Three points? Calm down, they're acting like they've won the Champions League" · "Wearside celebrations reach dangerous levels after a scrappy draw" · "Another weekend, another excuse doing the rounds on Wearside".`;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const text = await aiComplete(system, `Publisher: ${item.source}\nHeadline: ${item.title}\nSummary: ${item.summary}${attempt ? "\n(Previous attempt failed our checks. Stick strictly to the source and the voice rules.)" : ""}`);
+    const r = extractJson<Rewrite>(text);
+    if (!r || typeof r.headline !== "string" || typeof r.summary !== "string" || typeof r.punchline !== "string" || !Array.isArray(r.facts)) continue;
+    if (rewritePasses(r, item).ok) return { ...r, model: `${env.aiProvider()}:${env.aiModel() ?? "default"}` };
+  }
+  return null;
 }
 
 const slug = (title: string, url: string) =>
@@ -96,7 +120,7 @@ export async function discoverNews() {
     const club = c.aboutSunderland ? "sunderland" : "newcastle";
     let rw: Awaited<ReturnType<typeof rewriteStory>> = null;
     try {
-      rw = await rewriteStory(item, club);
+      rw = await rewriteStory(item, club, c.storyType);
     } catch (e) {
       errors.push(`rewrite: ${(e as Error).message}`);
     }
@@ -113,9 +137,11 @@ export async function discoverNews() {
       club,
       category: c.category,
       negativity: c.negativity,
-      key_facts: rw?.keyFacts ?? [],
+      key_facts: rw?.facts ?? [],
       howay_headline: rw?.headline ?? null,
-      howay_commentary: rw?.commentary ?? null,
+      howay_commentary: rw?.summary ?? null,
+      howay_punchline: rw?.punchline ?? null,
+      story_type: c.storyType,
       rewrite_model: rw?.model ?? null,
       status,
     });

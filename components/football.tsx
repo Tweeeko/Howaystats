@@ -1,5 +1,6 @@
 /* Football primitives: crests, form, freshness, empty states, fixture tickets. Server-safe. */
 import Link from "next/link";
+import { EMPTY } from "@/lib/voice";
 import type { Club, Fixture, FormResult } from "@/lib/types";
 
 export function Crest({ club, size = 22 }: { club?: Club; size?: number }) {
@@ -60,10 +61,9 @@ export function NotConnected({ what = "football data" }: { what?: string }) {
   return (
     <div className="panel seats flex flex-col items-start gap-3 p-6">
       <span className="kicker">Awaiting kick-off</span>
-      <p className="display text-3xl">No {what} loaded yet.</p>
+      <p className="display text-3xl">{what === "football data" ? EMPTY.footballTitle : `No ${what} yet.`}</p>
       <p className="max-w-prose text-sm text-mist">
-        HOWAYSTATS never shows made-up numbers. This section fills in automatically once the data provider is connected and the first
-        refresh has run. Admins can trigger one from the <Link className="underline" href="/admin">admin dashboard</Link>.
+        {EMPTY.footballBody} Admins can kick it off from the <Link className="underline" href="/admin">admin dashboard</Link>.
       </p>
     </div>
   );

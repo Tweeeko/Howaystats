@@ -48,7 +48,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <nav aria-label="Footer">
               <div className="kicker mb-2">Sections</div>
               <ul className="grid grid-cols-2 gap-1 text-sm">
-                {[...NAV, { href: "/tear-jar", label: "Tear Jar" }, { href: "/how-it-works", label: "How the numbers work" }].map((n) => (
+                {[...NAV, { href: "/tear-jar", label: "Tears Index" }, { href: "/how-it-works", label: "How the numbers work" }].map((n) => (
                   <li key={n.href}>
                     <Link className="text-mist hover:text-chalk" href={n.href}>
                       {n.label}

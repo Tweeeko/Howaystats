@@ -2,7 +2,7 @@
 
 **The numbers don't lie.** Premier League statistics. Geordie perspective. Mackem misery.
 
-An independent Newcastle United fan site: a live Premier League table, a proper Monte Carlo prediction engine, a Sunderland relegation watch, the Mackem Tear Jar, the Misery Index, a Geordie-voiced newsroom, a daily meme feed and a matchday centre. Created by **Leeko**.
+An independent Newcastle United fan site: a live Premier League table, a proper Monte Carlo prediction engine, a Sunderland relegation watch, the Mackem Tears Index, the Misery Index, a Geordie-voiced newsroom, a daily meme feed and a matchday centre. Created by **Leeko**.
 
 > Independent fan entertainment. Not affiliated with Newcastle United FC, Sunderland AFC, the Premier League or any official organisation. Statistics are real; tears are fictional.
 
@@ -19,7 +19,7 @@ app/                 pages, API routes, OG images, sitemap, robots
   newcastle/         Newcastle dashboard + Geordie Glory Meter
   mackem-watch/      Sunderland relegation watch (/sunderland and /relegation-watch redirect here)
   tyne/              Newcastle v Sunderland comparison, "Who owns the North East?"
-  tear-jar/          the Mackem Tear Jar, history and archive
+  tear-jar/          the Mackem Tears Index: indicators, sources, points history, archive
   news/              The Mackem Newsroom (+ /news/[slug])
   memes/             The Mackem Crying Room + community submissions
   match-centre/      live scoreboards, derby mode, Howay of the Match
@@ -31,7 +31,10 @@ app/                 pages, API routes, OG images, sitemap, robots
 components/          design system: stadium backdrop, lower-thirds, tickets, table, tear jar, gauges…
 lib/football         provider adapter (API-Football), table + PL tie-breakers, sync
 lib/predictions      Poisson ratings, 50,000-season Monte Carlo, safety maths, comparison score
-lib/misery           Misery Index, Tear Jar, danger levels, happiness meter
+lib/misery           Misery Index, points-dropped history, danger levels, happiness meter
+lib/tears            Tears Index (supporter misery from sourced indicators)
+lib/voice.ts         the Geordie voice: headlines, quips, empty/loading/error copy
+lib/content          dedupe + voiceCheck (editorial quality control)
 lib/news             RSS parsing, classification, discovery + fact-checked rewrites
 lib/memes            GIPHY + Reddit discovery, dedupe, daily feature
 lib/banter           fact pack, fact guard, templates, Meltdown Generator
@@ -108,7 +111,7 @@ One key covers:
 - **Newcastle and Sunderland in every competition** (Europa League/Champions League, FA Cup, League Cup), fetched with `/fixtures?team=…&season=…`;
 - live scores and match events (goals, cards).
 
-Premier League games drive the table, the model and the Tear Jar. European and cup games show up in results, fixtures, the match centre and the headlines, and a Sunderland defeat in one adds to the Misery Index.
+Premier League games drive the table and the model. European and cup games show up in results, fixtures, the match centre and the headlines, and a Sunderland defeat in one adds to the Misery Index.
 
 **Plan sizing:** the daily refresh uses about 25 calls a day (teams, fixtures, both clubs' all-competition fixtures, standings check, ×4 runs). That fits the free tier of 100 calls a day. Minute-by-minute live polling during a match uses about 1 call a minute, so for live scores on matchdays you'll need a paid API-Football plan.
 
@@ -121,7 +124,8 @@ The design preview uses **fake sample numbers** (and says so). The real site nev
 - **No fabricated data anywhere.** Empty tables show an "awaiting kick-off" state, not placeholders. Live means the live job succeeded in the last 3 minutes; everything shows "updated X ago", and data over 36 hours old is flagged stale.
 - **Table**: rebuilt from stored results (W3 D1 L0), ordered by points → GD → goals → head-to-head points → head-to-head away goals; still-level clubs are flagged. Our table is verified against the provider's after every sync; mismatches are logged.
 - **Predictions**: Poisson attack/defence ratings (time-decayed, last season at 35% weight, shrunk towards priors), then 50,000 full-league simulated seasons. Every run is stored with its seed and input hash, and only re-runs when results change.
-- **Tear Jar**: every point Sunderland drop goes in (3 per defeat, 2 per draw). Capacity 76 = the most a club can drop over 38 games and still reach 38 points. "Fictional tears" = points × 1,000. The panel underneath explains each change: the result, a drop into the bottom three, the shift in relegation odds.
+- **Tears Index**: how much Sunderland supporters have got to cry about, from measurable, sourced indicators — derby defeats, winless run, recent defeats, goals conceded, points thrown from half-time leads, league points dropped (of 76), and empty seats vs the 49,000 Stadium of Light capacity (when the provider supplies attendance). Away following and TV audience have no reliable public source, so they're shown as unavailable and left out. Each indicator scores 0–100%, the index is the weighted average of the available ones. "Fictional tears" = index × 1,000.
+- **Editorial quality control**: every Sunderland story (win, loss, draw, signing, sacking, good news) is rewritten from a Newcastle view as headline + take + facts + punchline + link. `lib/content/voice-check.ts` rejects AI clichés, Americanisms, emoji, more than one "!", dialect overload and headlines too close to the original; the fact guard rejects any number or name not in the source. Failures wait in /admin, where the headline, take and punchline can be edited.
 - **Misery Index**: relegation odds (0–40) + league position (0–20) + recent results (−20 to +40, fading over a fortnight). All three parts are shown wherever the index appears. Recomputed from scratch from real fixtures, so nothing is double-counted.
 - **News**: publisher RSS (BBC Sport, The Guardian, Sky Sports) + optional NewsAPI. AI rewrites are rejected automatically if they contain any number or quote not in the original headline/summary; rejected ones wait for an admin. Original headline, publisher, date and link are always shown.
 - **Memes**: GIPHY (auto-published with attribution) and Reddit's official API (moderated). Media stays on the source host. No new meme today → the best previously approved meme, labelled "From the archive".
@@ -129,7 +133,7 @@ The design preview uses **fake sample numbers** (and says so). The real site nev
 
 ## Maintenance
 
-- **New season**: nothing to do. The season rolls over on 1 July (override with `FOOTBALL_SEASON`), promoted clubs get a below-average prior, last season's ratings become priors, and the old Tear Jar is archived.
+- **New season**: nothing to do. The season rolls over on 1 July (override with `FOOTBALL_SEASON`), promoted clubs get a below-average prior, last season's ratings become priors, and the old season's Tears Index is archived.
 - **API health / logs / moderation / banter edits**: `/admin`.
 - **Hero photo**: "Newcastle st-james-park stadium.jpg" by Arne Müseler (arne-mueseler.com), Wikimedia Commons, CC BY-SA 3.0 DE — credited in the footer. Swap it with `NEXT_PUBLIC_HERO_IMAGE`.
 - **Club crests** come from the data provider and are used only to identify clubs.

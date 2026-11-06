@@ -75,7 +75,7 @@ export default async function Admin() {
               <div className="flex flex-wrap items-center gap-2 font-mono text-[11px] uppercase text-silver"><span>{n.status}</span>·<span>{n.category}</span>·<span>{n.source}</span>·<a className="underline" href={n.url} target="_blank" rel="noreferrer">original</a></div>
               <p className="mt-1 text-sm text-mist">Original: {n.original_headline}</p>
               <p className="text-xs text-silver">{n.original_summary}</p>
-              <EditNews id={n.id} headline={n.howay_headline ?? ""} commentary={n.howay_commentary ?? ""} breaking={n.breaking} />
+              <EditNews id={n.id} headline={n.howay_headline ?? ""} commentary={n.howay_commentary ?? ""} punchline={n.howay_punchline ?? ""} breaking={n.breaking} />
               <div className="mt-2 flex gap-2">
                 <AdminButton body={{ action: "moderate", table: "news_articles", id: n.id, status: "published" }} label="Approve" />
                 <AdminButton body={{ action: "moderate", table: "news_articles", id: n.id, status: "rejected" }} label="Reject / remove" danger />

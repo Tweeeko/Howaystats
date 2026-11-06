@@ -7,6 +7,7 @@ import { ordinal } from "@/lib/view";
 import { Crest, Form, ukDay } from "./football";
 import { TearJar } from "./tear-jar";
 import { ShareBar } from "./share";
+import { EMPTY, formQuip, h2hQuip } from "@/lib/voice";
 
 /* ─────────── Tape band: tilted ticker strip used as a divider ─────────── */
 export function TapeBand({ lines, tone = "red", reverse = false }: { lines: string[]; tone?: "red" | "white" | "black"; reverse?: boolean }) {
@@ -46,7 +47,7 @@ export function FrontPage({
   dateline: string;
   headline: string;
   sub: string;
-  jar?: { percent: number; dropped: number; capacity: number };
+  jar?: { percent: number };
   nufc?: StandingRow;
   safc?: StandingRow;
   nClub?: Club;
@@ -63,7 +64,7 @@ export function FrontPage({
       </div>
 
       {/* the masthead */}
-      <h1 className="masthead mt-2 select-none whitespace-nowrap text-[clamp(3.6rem,17.5vw,12rem)] text-chalk" aria-label="HOWAYSTATS">
+      <h1 className="masthead mt-2 select-none whitespace-nowrap text-[clamp(3.6rem,15.5vw,12rem)] text-chalk" aria-label="HOWAYSTATS">
         HOWAY<span className="text-outline">STATS</span>
       </h1>
       <div className="flex items-center gap-2">
@@ -79,10 +80,10 @@ export function FrontPage({
         </div>
         {jar && (
           <Link href="#tear-department" className="relative mx-auto block w-[170px] shrink-0 sm:w-[220px]" aria-label="Jump to the Tear Department">
-            <TearJar percent={jar.percent} dropped={jar.dropped} capacity={jar.capacity} size={210} showCounts={false} />
+            <TearJar percent={jar.percent} size={210} showCounts={false} />
             <Sticker className="round wobble absolute -left-3 top-6 h-20 w-20 text-[1.35rem]">
               {Math.round(jar.percent)}%
-              <small className="block text-[.55rem] tracking-wider">full</small>
+              <small className="block text-[.5rem] tracking-wider">tears index</small>
             </Sticker>
           </Link>
         )}
@@ -169,6 +170,7 @@ export function FightPoster({ n, s, h2h, scoreA, headline }: { n: Side; s: Side;
             </li>
           ))}
         </ul>
+        <p className="serif mt-3 text-lg">{h2hQuip(h2h.aWins, h2h.bWins, h2h.draws)}</p>
 
         <div className="mt-6 grid items-center gap-4 sm:grid-cols-[auto_1fr]">
           <div className="display text-2xl leading-none">Who owns<br />the North East?</div>
@@ -195,11 +197,13 @@ export function FightPoster({ n, s, h2h, scoreA, headline }: { n: Side; s: Side;
 }
 const sign = (v: number) => (v > 0 ? `+${v}` : `${v}`);
 
-/* ─────────── 3. THE MACKEM TEAR DEPARTMENT (exhibit) ─────────── */
+/* ─────────── 3. THE TEARS INDEX (exhibit) ─────────── */
+export interface TearIndicatorView { key: string; label: string; value: string; available: boolean; score: number; source: string; sourceUrl?: string; line: string }
+
 export function TearDepartment({
   title,
   caption,
-  jar,
+  tears,
   reasons,
   pRel,
   oddsMove,
@@ -207,62 +211,81 @@ export function TearDepartment({
 }: {
   title: string;
   caption: string;
-  jar: { percent: number; dropped: number; capacity: number };
+  tears: { percent: number; tears: number; label: string; indicators: TearIndicatorView[] };
   reasons: string[];
   pRel?: number;
   oddsMove?: number;
   children?: React.ReactNode;
 }) {
+  const live = tears.indicators.filter((i) => i.available);
+  const missing = tears.indicators.filter((i) => !i.available);
   return (
     <section id="tear-department" className="relative overflow-hidden bg-[#1a0204] edge-zig-top">
-      <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(70% 55% at 50% 45%, rgba(224,22,31,.55), rgba(26,2,4,0) 70%)" }} />
+      <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(70% 55% at 50% 30%, rgba(224,22,31,.5), rgba(26,2,4,0) 70%)" }} />
       <div className="pointer-events-none absolute -right-10 top-10 hidden select-none font-[family-name:var(--font-display)] text-[16rem] font-black italic leading-none text-mackem/10 lg:block">TEARS</div>
       <div className="relative mx-auto max-w-6xl px-4 py-12 sm:py-16">
-        <div className="specimen text-xs text-mist">Exhibit A · Specimen: Wearside tears · Season {new Date().getUTCFullYear()}</div>
+        <div className="specimen text-xs text-mist">The Mackem Tear Department · Specimen: Wearside supporters</div>
         <h2 className="tabloid mt-2 text-[3rem] leading-[.85] text-chalk sm:text-[6rem]">{title}</h2>
         <p className="serif mt-2 max-w-2xl text-xl italic text-mist">{caption}</p>
 
-        <div className="mt-6 grid items-center gap-8 lg:grid-cols-[1fr_minmax(320px,440px)_1fr]">
-          {/* left annotations */}
-          <div className="order-2 grid gap-5 lg:order-1 lg:text-right">
-            <div>
-              <div className="specimen text-[11px] text-mist">Fill level</div>
-              <div className="scoreboard-num text-7xl leading-none text-chalk">{Math.round(jar.percent)}<span className="text-4xl">%</span></div>
-              <div className="text-sm text-mist">{jar.dropped} of {jar.capacity} league points dropped. Fill it and 38 points is gone.</div>
-            </div>
-            <div>
-              <div className="specimen text-[11px] text-mist">Fictional tear count</div>
-              <div className="scoreboard-num text-4xl text-chalk">{(jar.dropped * 1000).toLocaleString("en-GB")}</div>
-              <div className="text-xs text-silver">1,000 per point dropped. Made up. The points aren&apos;t.</div>
+        <div className="mt-6 grid items-center gap-8 lg:grid-cols-[minmax(300px,420px)_1fr]">
+          <div className="flex flex-col items-center">
+            <TearJar percent={tears.percent} size={360} showCounts={false} />
+            <div className="mt-2 text-center">
+              <div className="scoreboard-num text-6xl leading-none text-chalk">{Math.round(tears.percent)}<span className="text-3xl">%</span></div>
+              <div className="display mt-1 text-2xl text-mackem">{tears.label}</div>
+              <div className="mt-1 text-xs text-silver">{tears.tears.toLocaleString("en-GB")} tears · made up, obviously. The stats underneath aren&apos;t.</div>
             </div>
           </div>
 
-          <div className="order-1 flex justify-center lg:order-2">
-            <TearJar percent={jar.percent} dropped={jar.dropped} capacity={jar.capacity} size={380} showCounts={false} />
-          </div>
-
-          {/* right annotations */}
-          <div className="order-3 grid gap-5">
-            {pRel !== undefined && (
-              <div>
-                <div className="specimen text-[11px] text-mist">Chance of going down (real)</div>
-                <div className="scoreboard-num text-7xl leading-none text-mackem">{Math.round(pRel * 100)}%</div>
-                {oddsMove ? <div className={`text-sm ${oddsMove > 0 ? "text-chalk" : "text-pitch"}`}>{oddsMove > 0 ? "▲ up" : "▼ down"} {Math.abs(oddsMove)} since the last model run</div> : null}
-              </div>
-            )}
+          <div className="grid gap-4">
             {reasons.length > 0 && (
               <div className="relative bg-chalk p-4 text-ink shadow-[6px_6px_0_#e0161f]">
                 <span className="tape" />
-                <div className="specimen text-[11px] text-mackem">Latest trigger</div>
+                <div className="specimen text-[11px] text-mackem">Latest from the Wear</div>
                 <ul className="mt-1 space-y-1 text-sm font-semibold">{reasons.map((r) => <li key={r}>{r}</li>)}</ul>
+              </div>
+            )}
+            {pRel !== undefined && (
+              <div className="flex items-end gap-4">
+                <div>
+                  <div className="specimen text-[11px] text-mist">Chance of going down</div>
+                  <div className="scoreboard-num text-6xl leading-none text-mackem">{Math.round(pRel * 100)}%</div>
+                </div>
+                {oddsMove ? <div className={`pb-1 text-sm ${oddsMove > 0 ? "text-chalk" : "text-pitch"}`}>{oddsMove > 0 ? "▲ up" : "▼ down"} {Math.abs(oddsMove)} since the last model run</div> : null}
               </div>
             )}
           </div>
         </div>
 
+        {/* the evidence */}
+        <div className="mt-10">
+          <div className="specimen text-xs text-mist">The evidence · what their supporters have got to cry about</div>
+          <ul className="mt-3 grid gap-px bg-mackem/30 sm:grid-cols-2 lg:grid-cols-3">
+            {live.map((i) => (
+              <li key={i.key} className="bg-[#1a0204] p-4">
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="text-sm text-mist">{i.label}</span>
+                  <span className="scoreboard-num text-2xl text-chalk">{i.value}</span>
+                </div>
+                <div className="mt-2 h-1.5 bg-black/60"><div className="h-full bg-mackem" style={{ width: `${Math.round(i.score * 100)}%` }} /></div>
+                <p className="mt-2 text-[0.95rem] text-chalk">{i.line}</p>
+                <p className="mt-1 font-mono text-[10px] uppercase tracking-wider text-silver">Source: {i.sourceUrl ? <a className="underline" href={i.sourceUrl} target="_blank" rel="noopener noreferrer">{i.source}</a> : i.source}</p>
+              </li>
+            ))}
+          </ul>
+          {missing.length > 0 && (
+            <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs text-silver">
+              {missing.map((i) => (
+                <li key={i.key}><span className="text-mist">{i.label}:</span> unavailable — {i.line}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-          <ShareBar path="/tear-jar" text={`The Mackem Tear Jar is ${Math.round(jar.percent)}% full. ${jar.dropped} league points dropped. HOWAYSTATS.`} graphic="/api/og?type=jar" />
-          <Link href="/tear-jar" className="text-sm text-mist underline underline-offset-4">How the jar works · game by game</Link>
+          <ShareBar path="/tear-jar" text={`The Mackem Tears Index is at ${Math.round(tears.percent)}%. ${tears.label} HOWAYSTATS.`} graphic="/api/og?type=jar" />
+          <Link href="/tear-jar" className="text-sm text-mist underline underline-offset-4">How the Tears Index works</Link>
         </div>
         {children && <div className="mt-10">{children}</div>}
       </div>
@@ -294,6 +317,8 @@ export function DropZone({
 }) {
   const n = table.length;
   const bottom = table.slice(Math.max(0, n - 7));
+  const focusForm = (table.find((r) => r.clubId === focusId)?.form ?? []).join("");
+  const fq = formQuip(focusForm, focusForm + n);
   return (
     <section className="relative bg-ink">
       <div className="hazard h-5" />
@@ -315,6 +340,7 @@ export function DropZone({
               <div className="mb-1 flex justify-between text-sm text-silver"><span>The season so far</span><span>{pips.filter((p) => !p).length} to play</span></div>
               <div className="flex gap-[3px]">{pips.map((p, i) => <span key={i} className={`h-6 flex-1 ${p === "W" ? "bg-chalk" : p === "D" ? "bg-iron" : p === "L" ? "bg-mackem" : "bg-slate"}`} />)}</div>
               <p className="mt-1 text-xs text-silver">Red defeat · grey draw · white win · dark still to play (league only)</p>
+              {fq && <p className="serif mt-3 text-lg text-mist"><span className="font-mono text-sm font-bold text-mackem">LAST FIVE {focusForm.split("").join(" ")}</span> · {fq}</p>}
             </div>
           </div>
 
@@ -415,9 +441,9 @@ export function WearsideWoes({ title, stories }: { title: string; stories: NewsA
           <h2 className="font-[family-name:var(--font-serif4)] text-[2.6rem] font-semibold leading-none tracking-tight sm:text-[4.5rem]">{title}</h2>
           <span className="stamp hidden text-mackem sm:inline-block">Real news · our opinion</span>
         </div>
-        <p className="mt-1 font-mono text-[11px] uppercase tracking-wider text-ink/60">Genuine stories from genuine publishers, linked. The headlines and the cheek are ours.</p>
+        <p className="mt-1 font-mono text-[11px] uppercase tracking-wider text-ink/60">Real stories from real publishers, linked. Facts are theirs. The headlines and the cheek are ours.</p>
         {!lead ? (
-          <p className="serif mt-6 text-xl">Nothing bad has been reported on Wearside yet today. Give it time. We don&apos;t make stories up — we wait.</p>
+          <p className="serif mt-6 text-xl">{EMPTY.woes}</p>
         ) : (
           <div className="mt-6 grid gap-8 lg:grid-cols-[1.6fr_1fr] lg:divide-x lg:divide-ink/30">
             <article className="lg:pr-8">
@@ -428,7 +454,13 @@ export function WearsideWoes({ title, stories }: { title: string; stories: NewsA
               <h3 className="tabloid mt-2 text-[2.6rem] leading-[.88] sm:text-[4rem]"><Link href={`/news/${lead.slug}`} className="hover:underline">{lead.howayHeadline ?? lead.originalHeadline}</Link></h3>
               <p className="mt-3 border-l-4 border-mackem pl-3 text-sm"><span className="font-bold uppercase">What they said:</span> <a href={lead.url} target="_blank" rel="noopener noreferrer" className="underline">{lead.originalHeadline}</a></p>
               {lead.howayCommentary && <p className="serif mt-4 text-xl leading-snug first-letter:float-left first-letter:mr-2 first-letter:text-6xl first-letter:font-bold first-letter:leading-[.8] first-letter:text-mackem">{lead.howayCommentary}</p>}
-              {lead.keyFacts.length > 0 && <ul className="mt-3 space-y-1 text-sm">{lead.keyFacts.map((k) => <li key={k}>■ {k}</li>)}</ul>}
+              {lead.keyFacts.length > 0 && (
+                <div className="mt-4 border-t border-ink/30 pt-3">
+                  <div className="font-mono text-[11px] font-bold uppercase tracking-wider">The facts, from {lead.source}</div>
+                  <ul className="mt-1 space-y-1 text-sm">{lead.keyFacts.map((k) => <li key={k}>■ {k}</li>)}</ul>
+                </div>
+              )}
+              {lead.punchline && <p className="tabloid mt-4 text-2xl text-mackem sm:text-3xl">{lead.punchline}</p>}
               <div className="mt-4 flex flex-wrap items-center gap-3">
                 <a href={lead.url} target="_blank" rel="noopener noreferrer" className="display bg-ink px-3 py-1.5 text-lg text-chalk">Read it at {lead.source}</a>
                 <div className="[&_button]:!border-ink [&_button]:!text-ink [&_a]:!border-ink [&_a]:!text-ink"><ShareBar path={`/news/${lead.slug}`} text={lead.howayHeadline ?? lead.originalHeadline} graphic={`/api/og?type=news&slug=${lead.slug}`} trackId={lead.id} trackTable="news_articles" /></div>
@@ -439,6 +471,7 @@ export function WearsideWoes({ title, stories }: { title: string; stories: NewsA
                 <article key={a.id} className="border-b border-ink/30 pb-4">
                   <h4 className="display text-2xl leading-tight"><Link href={`/news/${a.slug}`} className="hover:underline">{a.howayHeadline ?? a.originalHeadline}</Link></h4>
                   {a.howayCommentary && <p className="serif mt-1 line-clamp-3 text-base">{a.howayCommentary}</p>}
+                  {a.punchline && <p className="mt-1 font-bold text-mackem">{a.punchline}</p>}
                   <p className="mt-1 font-mono text-[11px] text-ink/60">Original: <a href={a.url} target="_blank" rel="noopener noreferrer" className="underline">{a.originalHeadline}</a> · {a.source}{a.publishedAt ? ` · ${ukDay(a.publishedAt)}` : ""}</p>
                 </article>
               ))}
@@ -478,8 +511,8 @@ export function Terrace({ title, featured, fromArchive, memes, original }: { tit
           {!featured && !memes.length && (
             <div className="relative -rotate-1 bg-chalk p-5 text-ink">
               <span className="tape" />
-              <p className="display text-2xl">The terrace is quiet.</p>
-              <p className="mt-1 text-sm">No approved memes today. We won&apos;t fake one. <Link href="/memes" className="font-bold underline">Hand one in</Link>.</p>
+              <p className="display text-2xl">Nowt on the wall today.</p>
+              <p className="mt-1 text-sm">{EMPTY.terrace} <Link href="/memes" className="font-bold underline">Hand one in</Link>.</p>
             </div>
           )}
         </div>

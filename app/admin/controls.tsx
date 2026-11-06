@@ -31,18 +31,20 @@ export function AdminButton({ body, label, danger }: { body: unknown; label: str
   );
 }
 
-export function EditNews({ id, headline, commentary, breaking }: { id: string; headline: string; commentary: string; breaking: boolean }) {
+export function EditNews({ id, headline, commentary, punchline = "", breaking }: { id: string; headline: string; commentary: string; punchline?: string; breaking: boolean }) {
   const [h, setH] = useState(headline);
   const [c, setC] = useState(commentary);
+  const [pl, setPl] = useState(punchline);
   const [b, setB] = useState(breaking);
   const [saved, setSaved] = useState(false);
   return (
     <div className="mt-2 grid gap-2">
       <input value={h} onChange={(e) => setH(e.target.value)} placeholder="HOWAYSTATS headline" className="border border-[var(--line-strong)] bg-black/60 px-2 py-1 font-bold uppercase" />
-      <textarea value={c} onChange={(e) => setC(e.target.value)} rows={2} placeholder="Commentary (facts must match the original)" className="border border-[var(--line-strong)] bg-black/60 px-2 py-1 text-sm" />
+      <textarea value={c} onChange={(e) => setC(e.target.value)} rows={2} placeholder="The take (facts must match the original)" className="border border-[var(--line-strong)] bg-black/60 px-2 py-1 text-sm" />
+      <input value={pl} onChange={(e) => setPl(e.target.value)} placeholder="Punchline (one line, no invented quotes)" className="border border-[var(--line-strong)] bg-black/60 px-2 py-1 text-sm" />
       <div className="flex items-center gap-3">
         <label className="flex items-center gap-1 text-xs"><input type="checkbox" checked={b} onChange={(e) => setB(e.target.checked)} />Breaking ribbon (only if genuinely justified)</label>
-        <button className="display border border-[var(--line-strong)] px-3 py-1 text-sm hover:bg-chalk hover:text-ink" onClick={async () => { await post({ action: "edit-news", id, howay_headline: h, howay_commentary: c, breaking: b }); setSaved(true); }}>Save copy</button>
+        <button className="display border border-[var(--line-strong)] px-3 py-1 text-sm hover:bg-chalk hover:text-ink" onClick={async () => { await post({ action: "edit-news", id, howay_headline: h, howay_commentary: c, howay_punchline: pl, breaking: b }); setSaved(true); }}>Save copy</button>
         {saved && <span className="font-mono text-[10px] text-pitch">saved</span>}
       </div>
     </div>

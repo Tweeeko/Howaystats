@@ -11,29 +11,26 @@ const QUIPS = [
 ];
 
 /**
- * THE MACKEM TEAR JAR — the house icon.
- * Fill = league points Sunderland have dropped ÷ capacity (lib/misery tearJar). This component only draws it:
+ * THE TEARS INDEX JAR — the house icon.
+ * Fill = the Tears Index (lib/tears): how much Sunderland supporters have got to cry about. This component only draws it:
  * a glass jar with a sloshing liquid (spring physics driven by scroll, pointer and taps), bubbles,
  * reflections, a printed label and milestone reactions.
  */
 export function TearJar({
   percent,
-  dropped,
-  capacity,
   size = 300,
   showCounts = true,
   label = true,
 }: {
-  percent: number;
-  dropped: number;
-  capacity: number;
+  percent: number; // the Tears Index, 0..100
   size?: number;
   showCounts?: boolean;
   label?: boolean;
 }) {
+  const tears = Math.round(percent * 1000); // fictional, and labelled as such
   const target = Math.max(0, Math.min(100, percent));
   const [level, setLevel] = useState(target); // true level on the server; replayed on first view
-  const [count, setCount] = useState(dropped);
+  const [count, setCount] = useState(tears);
   const [tilt, setTilt] = useState(0);
   const [pop, setPop] = useState<number | null>(null);
   const [quip, setQuip] = useState<string | null>(null);
@@ -84,7 +81,7 @@ export function TearJar({
           const k = Math.min(1, (t - t0) / 2400);
           const ease = 1 - Math.pow(1 - k, 3);
           setLevel(target * ease);
-          setCount(Math.round(dropped * ease));
+          setCount(Math.round(tears * ease));
           if (k < 1) requestAnimationFrame(tick);
           else {
             const m = [100, 75, 50, 25].find((x) => target >= x);
@@ -101,7 +98,7 @@ export function TearJar({
     );
     io.observe(el);
     return () => io.disconnect();
-  }, [target, dropped]);
+  }, [target, tears]);
 
   const W = 260, H = 340;
   const top = 92, bottom = 302, h = bottom - top;
@@ -114,7 +111,7 @@ export function TearJar({
       <button
         type="button"
         className="relative cursor-pointer select-none touch-manipulation"
-        aria-label={`The Mackem Tear Jar: ${target.toFixed(0)} percent full. Tap to shake it.`}
+        aria-label={`The Tears Index: ${target.toFixed(0)} percent. Tap the jar to shake it.`}
         onPointerMove={(e) => (phys.current.force += Math.max(-2, Math.min(2, e.movementX * 0.05)))}
         onClick={() => {
           phys.current.force += (Math.random() > 0.5 ? 1 : -1) * 9;
@@ -242,15 +239,12 @@ export function TearJar({
       {showCounts && (
         <div className="mt-1 grid w-full grid-cols-2 gap-3 text-center">
           <div>
-            <div className="scoreboard-num text-2xl text-chalk">
-              {count}
-              <span className="text-base text-silver">/{capacity}</span>
-            </div>
-            <div className="text-xs text-silver">league points dropped (real)</div>
+            <div className="scoreboard-num text-2xl text-chalk">{level.toFixed(0)}%</div>
+            <div className="text-xs text-silver">Tears Index (from real stats)</div>
           </div>
           <div>
-            <div className="scoreboard-num text-2xl text-chalk">{(count * 1000).toLocaleString("en-GB")}</div>
-            <div className="text-xs text-silver">tears (fictional, obviously)</div>
+            <div className="scoreboard-num text-2xl text-chalk">{count.toLocaleString("en-GB")}</div>
+            <div className="text-xs text-silver">tears (made up, obviously)</div>
           </div>
         </div>
       )}

@@ -38,6 +38,8 @@ export interface Fixture {
   leagueId?: number;
   /** Competition name for display, e.g. "UEFA Europa League", "FA Cup". */
   competition?: string | null;
+  /** Official attendance, when the data supplier provides it. Never estimated. */
+  attendance?: number | null;
 }
 
 export interface Split {
