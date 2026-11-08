@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { scheduleCatchUp } from "@/lib/catchup";
 import { getSnapshot } from "@/lib/database/queries";
 import { LeagueTable, TableTabs } from "@/components/league-table";
 import { NotConnected } from "@/components/football";
@@ -12,6 +13,7 @@ export default async function PremierLeague({ searchParams }: { searchParams: Pr
   const { view: v } = await searchParams;
   const view = v === "home" || v === "away" ? v : "overall";
   const s = await getSnapshot();
+  scheduleCatchUp();
   const sunPos = s.table.find((r) => r.clubId === SUNDERLAND_ID)?.position;
   const nufcPos = s.table.find((r) => r.clubId === NEWCASTLE_ID)?.position;
   const quip = sunPos && nufcPos ? tableQuip(sunPos, nufcPos, s.table.length, `${s.season}-${sunPos}-${nufcPos}`) : null;

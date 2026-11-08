@@ -87,8 +87,14 @@ Or sign in at `/admin` and press the buttons.
 |---|---|---|
 | 06:17 | `daily` | football → predictions → news → misery → memes → banter → cleanup (each step isolated) |
 | 13:07 | `news` | midday news sweep |
-| 17:47 | `football` | refresh after afternoon games (re-models automatically if results changed) |
-| 22:53 | `football` | refresh after evening games |
+| 17:05 | `football` | after the 12:30, 14:00 and 15:00 kick-offs (re-models automatically if results changed) |
+| 19:05 | `football` | after the 16:30 and 17:30 kick-offs |
+| 22:05 | `football` | after the 19:30, 19:45 and 20:00 kick-offs |
+
+Times are UTC (UK time in winter, an hour behind UK time in summer). On Vercel Hobby a cron fires
+somewhere inside its hour, so these are a backstop. Results normally land sooner: every page load
+checks (after the response, at most every 10 minutes) for games that kicked off 1h55m+ ago but
+aren't stored as finished, and pulls the feed straight away (`lib/catchup.ts`).
 
 Live scores don't depend on cron: `/api/live` polls the provider at most once a minute, only while a match is on, triggered by visitors on the homepage (the scoreboard only appears while Newcastle or Sunderland are playing). On **Pro** you can add `{"path": "/api/cron/live", "schedule": "* * * * *"}` for unattended minute-by-minute polling (≈ 90 calls per matchday — check your football-data.org plan).
 

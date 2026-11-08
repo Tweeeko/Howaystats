@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { scheduleCatchUp } from "@/lib/catchup";
 import { getNews, getSnapshot } from "@/lib/database/queries";
 import { NEWCASTLE_ID } from "@/lib/football/provider";
 import { clubName, clubView, ordinal, toonFacts } from "@/lib/view";
@@ -17,6 +18,7 @@ const day = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { weekday
 
 export default async function Newcastle() {
   const s = await getSnapshot();
+  scheduleCatchUp();
   const c = clubView(s, NEWCASTLE_ID);
   const news = await getNews({ club: "newcastle", limit: 6 });
   if (!c) {

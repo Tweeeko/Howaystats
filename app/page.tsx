@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { scheduleCatchUp } from "@/lib/catchup";
 import { getNews, getSnapshot } from "@/lib/database/queries";
 import { buildLivePayload } from "@/lib/live";
 import { NEWCASTLE_ID, SUNDERLAND_ID } from "@/lib/football/provider";
@@ -25,6 +26,7 @@ const when = (iso: string) =>
  */
 export default async function Home() {
   const s = await getSnapshot();
+  scheduleCatchUp();
   const [sunNews, toonNews, live] = await Promise.all([
     getNews({ club: "sunderland", limit: 3 }),
     getNews({ club: "newcastle", limit: 3 }),

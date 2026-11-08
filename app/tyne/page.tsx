@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { scheduleCatchUp } from "@/lib/catchup";
 import { getDerbies, getSnapshot } from "@/lib/database/queries";
 import { NEWCASTLE_ID, SUNDERLAND_ID } from "@/lib/football/provider";
 import { clubName, ordinal } from "@/lib/view";
@@ -24,6 +25,7 @@ const MOMENTS = [
 
 export default async function Derby() {
   const s = await getSnapshot();
+  scheduleCatchUp();
   const derbies = (await getDerbies(NEWCASTLE_ID, SUNDERLAND_ID)).filter((f) => f.status === "finished" && f.homeGoals !== null);
   const n = s.newcastle;
   const u = s.sunderland;

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { scheduleCatchUp } from "@/lib/catchup";
 import Link from "next/link";
 import { getSnapshot } from "@/lib/database/queries";
 import { SUNDERLAND_ID } from "@/lib/football/provider";
@@ -20,6 +21,7 @@ const day = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "n
 
 export default async function MackemWatch() {
   const s = await getSnapshot();
+  scheduleCatchUp();
   const c = clubView(s, SUNDERLAND_ID);
   const m = meterView(s);
   if (!c || !m) {
